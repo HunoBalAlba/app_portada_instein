@@ -559,7 +559,7 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
                 # --- Ícono indicador ---
                 rx.box(
                     rx.icon(
-                        "help-circle",
+                        "circle_help",
                         size=16,
                         color=rx.cond(esta_abierta, "#ffffff", color_carrera),
                     ),
@@ -656,7 +656,7 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
         rx.flex(
             # --- Icono en caja tintada ---
             rx.box(
-                rx.icon("help-circle", size=20, color=color_carrera),
+                rx.icon("circle_help", size=20, color=color_carrera),
                 padding="0.625rem",
                 border_radius="0.75rem",
                 background=color_carrera + "15",
@@ -750,7 +750,7 @@ def _pestanas_secciones_detalle() -> rx.Component:
             _pestana_trigger("Perfil", "target", value="perfil"),
             _pestana_trigger(
                 "Preguntas",
-                "help-circle",
+                "circle_help",
                 value="preguntas_frecuentes",
             ),
             width="100%",
