@@ -145,7 +145,7 @@ def _tarjeta_telefono() -> rx.Component:
             # --- Botones ---
             rx.flex(
                 _boton_accion(
-                    icono="message_circle",
+                    icono="message-circle",
                     etiqueta="WhatsApp",
                     href=WHATSAPP_URL,
                     color=COLOR_VERDE,

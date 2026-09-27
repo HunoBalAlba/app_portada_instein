@@ -419,7 +419,7 @@ def _hero_titulo_y_cta() -> rx.Component:
             # CTA secundario: Conocer más
             enlace_navegacion(
                 "/contacto",
-                rx.icon("message_circle", size=18),
+                rx.icon("message-circle", size=18),
                 rx.text("Conocer más", as_="span", font_weight="600"),
                 display="flex",
                 align_items="center",

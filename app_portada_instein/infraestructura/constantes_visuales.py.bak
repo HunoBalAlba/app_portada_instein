@@ -93,25 +93,25 @@ WHATSAPP_CANAL_URL = "https://whatsapp.com/channel/instein"
 REDES_SOCIALES: list[dict] = [
     {
         "nombre": "Facebook",
-        "icono": "users",
+        "icono": "facebook",
         "url": FACEBOOK_URL,
         "color": "#1877F2",
     },
     {
         "nombre": "Instagram",
-        "icono": "camera",
+        "icono": "instagram",
         "url": INSTAGRAM_URL,
         "color": "#E4405F",
     },
     {
         "nombre": "TikTok",
-        "icono": "music_2",
+        "icono": "music-2",
         "url": TIKTOK_URL,
         "color": "#000000",
     },
     {
         "nombre": "YouTube",
-        "icono": "circle_play",
+        "icono": "youtube",
         "url": YOUTUBE_URL,
         "color": "#FF0000",
     },
@@ -123,7 +123,7 @@ REDES_SOCIALES: list[dict] = [
     },
     {
         "nombre": "Discord",
-        "icono": "message_circle",
+        "icono": "message-circle",
         "url": DISCORD_URL,
         "color": "#5865F2",
     },
