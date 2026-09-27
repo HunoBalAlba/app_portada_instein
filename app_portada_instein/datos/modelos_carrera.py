@@ -8,21 +8,18 @@ from typing import TypedDict
 
 class PlanAnual(TypedDict):
     """Representa un año del plan de estudios con su lista de materias."""
-
     anio: str
     materias: list[str]
 
 
 class PreguntaFrecuente(TypedDict):
     """Representa una pregunta frecuente con su respuesta."""
-
     pregunta: str
     respuesta: str
 
 
 class IconoAnimado(TypedDict):
     """Icono que orbita alrededor de la imagen principal de la carrera."""
-
     nombre: str
     semieje_mayor: float
     excentricidad: float
@@ -35,9 +32,25 @@ class IconoAnimado(TypedDict):
     keyframe_orbita: str
 
 
+class EstadisticasCarrera(TypedDict):
+    """Métricas cuantitativas de una carrera."""
+    demanda_laboral: str  # 'alta' | 'media' | 'baja'
+    puntuacion: float
+    estudiantes_inscritos: int
+    estudiantes_graduados: int
+    tasa_empleabilidad: int
+    salario_promedio_bs: int
+
+
+class CaracteristicaCarrera(TypedDict):
+    """Característica específica de una carrera (badge informativo)."""
+    icono: str
+    etiqueta: str
+    descripcion: str
+
+
 class Carrera(TypedDict):
     """Estructura completa de una carrera técnica ofrecida por el instituto."""
-
     id: int
     nombre: str
     nombre_corto: str
@@ -51,19 +64,19 @@ class Carrera(TypedDict):
     icono: str
     color_principal: str
     color_suave: str
-
-    # --- Imágenes de la carrera ---
     imagen_archivo: str
-    """Imagen cuadrada (1:1) para tarjetas y listas."""
-
     imagen_banner: str
-    """Imagen horizontal (16:9) para el carrusel de banners."""
-
     iconos_animados: list[IconoAnimado]
+
+    # --- NUEVOS CAMPOS ---
+    estadisticas: EstadisticasCarrera
+    caracteristicas: list[CaracteristicaCarrera]
+    modalidad: str
+    turnos: list[str]
+    cupos_disponibles: int
 
 
 class CarreraConEtiqueta(TypedDict):
     """Combina una carrera con su etiqueta contextual."""
-
     carrera: Carrera
     etiqueta: str

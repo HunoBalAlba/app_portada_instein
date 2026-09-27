@@ -35,13 +35,23 @@ def tutorial_crear_cuenta_usuario(
 ) -> rx.Component:
     return rx.card(
         rx.inset(
-            rx.image(
-                src="/laptop2.webp",
-                alt="Carrera banner",
-                width="100%",
-                height="auto",
-                max_height="20rem",
+            rx.color_mode_cond(
+                rx.image(
+                    src="/image_blanco.png",
+                    alt="Carrera banner",
+                    width="100%",
+                    height="auto",
+                    max_height="20rem",
+                ),
+                rx.image(
+                                src="/image.png",
+                                alt="Carrera banner",
+                                width="100%",
+                                height="auto",
+                                max_height="20rem",
+                            ),
             ),
+            
             side="top",
             pb="current",
         ),

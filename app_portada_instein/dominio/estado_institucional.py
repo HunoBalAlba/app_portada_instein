@@ -38,6 +38,10 @@ class EstadoInstitucional(rx.State):
     # Estado persistente
     # ==================================================================
 
+    # Estado de la página de carreras
+    filtro_activo: str = "demanda_alta"
+    orden_activo: str = "puntuacion_desc"
+
     # --- Catálogo de carreras ---
     carreras: list[Carrera] = CATALOGO_CARRERAS
 
@@ -262,19 +266,29 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def carreras_destacadas_con_etiquetas(self) -> list[CarreraConEtiqueta]:
-        """Devuelve las primeras 3 carreras con su etiqueta contextual."""
+        """
+        Devuelve TODAS las carreras del catálogo con su etiqueta contextual.
+
+        Las etiquetas rotan cíclicamente para no repetirse cuando hay
+        más carreras que etiquetas disponibles.
+        """
         etiquetas = [
             "Inscripciones abiertas",
             "Cupos limitados",
             "Últimos lugares",
+            "Alta demanda",
+            "Nuevo plan 2026",
         ]
 
         resultado: list[CarreraConEtiqueta] = []
-        for i, carrera in enumerate(self.carreras[:3]):
+        for i, carrera in enumerate(self.carreras):
+            # Rotación cíclica de etiquetas: si hay más carreras que
+            # etiquetas, se repiten desde el inicio.
+            etiqueta = etiquetas[i % len(etiquetas)]
             resultado.append(
                 {
                     "carrera": carrera,
-                    "etiqueta": etiquetas[i] if i < len(etiquetas) else "Destacada",
+                    "etiqueta": etiqueta,
                 }
             )
         return resultado
@@ -435,3 +449,85 @@ class EstadoInstitucional(rx.State):
             }
             for i, plan_anual in enumerate(carrera["plan_estudios"])
         ]
+
+
+
+
+
+
+
+
+    @rx.var
+    def carreras_filtradas_y_ordenadas(self) -> list[Carrera]:
+        """Devuelve las carreras filtradas y ordenadas según los filtros activos."""
+        carreras = list(self.carreras)
+
+        # --- Filtro por demanda laboral ---
+        if self.filtro_activo == "demanda_alta":
+            carreras = [
+                c for c in carreras
+                if c["estadisticas"]["demanda_laboral"] == "alta"
+            ]
+        elif self.filtro_activo == "puntuacion_top":
+            carreras = [
+                c for c in carreras
+                if c["estadisticas"]["puntuacion"] >= 4.7
+            ]
+        elif self.filtro_activo == "mas_inscritos":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_inscritos"],
+                reverse=True,
+            )[:3]
+        elif self.filtro_activo == "mas_graduados":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_graduados"],
+                reverse=True,
+            )[:3]
+
+        # --- Ordenamiento ---
+        if self.orden_activo == "puntuacion_desc":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["puntuacion"],
+                reverse=True,
+            )
+        elif self.orden_activo == "inscritos_desc":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_inscritos"],
+                reverse=True,
+            )
+        elif self.orden_activo == "graduados_desc":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_graduados"],
+                reverse=True,
+            )
+        elif self.orden_activo == "empleabilidad_desc":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["tasa_empleabilidad"],
+                reverse=True,
+            )
+        elif self.orden_activo == "salario_desc":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["salario_promedio_bs"],
+                reverse=True,
+            )
+
+        return carreras
+
+
+    @rx.event
+    def cambiar_filtro(self, filtro: str):
+        """Cambia el filtro activo de la lista de carreras."""
+        self.filtro_activo = filtro
+
+
+    @rx.event
+    def cambiar_orden(self, orden: str):
+        """Cambia el ordenamiento activo de la lista de carreras."""
+        self.orden_activo = orden

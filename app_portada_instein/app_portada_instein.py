@@ -26,6 +26,23 @@ from app_portada_instein.styles import (
     HOJAS_DE_ESTILO_BASE,
 )
 
+# ======================================================================
+# ⚠️ IMPORT CRÍTICO: REGISTRA LAS PÁGINAS
+# ======================================================================
+# Este import NO se usa directamente, pero es OBLIGATORIO porque al
+# importar los módulos de vistas se ejecutan sus decoradores
+# `@rx.page(...)`, que registran las rutas en la app de Reflex.
+#
+# Si comentas o eliminas este import, la app arranca SIN páginas y
+# verás una pantalla en blanco en http://localhost:3000
+# ======================================================================
+from app_portada_instein.vistas import (  # noqa: F401
+    vista_carreras,
+    vista_contacto,
+    vista_detalle_carrera,
+    vista_inicio,
+)
+
 
 # ======================================================================
 # Keyframes de UI (independientes del motor kepleriano)
@@ -131,11 +148,11 @@ app = rx.App(
         appearance="light",
         accent_color="blue",
         radius="medium",
-        font_family=FUENTE_PRINCIPAL,  # ← fuerza Inter en el tema de Radix
+        font_family=FUENTE_PRINCIPAL,
     ),
     style=ESTILOS_GLOBALES,
     stylesheets=[
-        *HOJAS_DE_ESTILO_BASE,  # Google Fonts (Inter + JetBrains Mono)
-        "/styles/global.css",  # CSS personalizado (etiquetas HTML)
+        *HOJAS_DE_ESTILO_BASE,
+        "/styles/global.css",  # ahora sí, con el archivo creado
     ],
 )

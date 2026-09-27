@@ -11,6 +11,8 @@ También incluye:
 - Preguntas frecuentes específicas por cada carrera.
 - Imagen cuadrada (`imagen_archivo`) para tarjetas y listas.
 - Imagen horizontal (`imagen_banner`) para el carrusel de banners.
+- Estadísticas cuantitativas (demanda, puntuación, inscritos, graduados).
+- Características destacadas (badges informativos).
 
 NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
 (https://lucide.dev/icons) usando snake_case: `code_xml`, `chart_line`,
@@ -207,6 +209,40 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
             ),
         ],
+        # --- NUEVOS CAMPOS ---
+        "estadisticas": {
+            "demanda_laboral": "alta",
+            "puntuacion": 4.8,
+            "estudiantes_inscritos": 87,
+            "estudiantes_graduados": 234,
+            "tasa_empleabilidad": 95,
+            "salario_promedio_bs": 4500,
+        },
+        "caracteristicas": [
+            {
+                "icono": "cpu",
+                "etiqueta": "Laboratorios equipados",
+                "descripcion": "20 PCs con hardware moderno",
+            },
+            {
+                "icono": "award",
+                "etiqueta": "Certificación Cisco",
+                "descripcion": "Preparación para CCNA",
+            },
+            {
+                "icono": "code-2",
+                "etiqueta": "Proyecto real",
+                "descripcion": "Desarrollo con clientes reales",
+            },
+            {
+                "icono": "briefcase",
+                "etiqueta": "Pasantías",
+                "descripcion": "Convenios con 15+ empresas de TI",
+            },
+        ],
+        "modalidad": "Presencial",
+        "turnos": ["Mañana", "Tarde", "Noche"],
+        "cupos_disponibles": 30,
     },
     # ------------------------------------------------------------------
     # Carrera 1 — Contaduría General
@@ -330,6 +366,35 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
             ),
         ],
+        # --- NUEVOS CAMPOS ---
+        "estadisticas": {
+            "demanda_laboral": "alta",
+            "puntuacion": 4.7,
+            "estudiantes_inscritos": 72,
+            "estudiantes_graduados": 198,
+            "tasa_empleabilidad": 92,
+            "salario_promedio_bs": 4200,
+        },
+        "caracteristicas": [
+            {
+                "icono": "calculator",
+                "etiqueta": "Software contable",
+                "descripcion": "SIAT, SICON, hojas de cálculo",
+            },
+            {
+                "icono": "award",
+                "etiqueta": "Auxiliar tributario",
+                "descripcion": "Preparación en impuestos",
+            },
+            {
+                "icono": "file-text",
+                "etiqueta": "Declaraciones reales",
+                "descripcion": "Práctica con empresas",
+            },
+        ],
+        "modalidad": "Presencial",
+        "turnos": ["Mañana", "Noche"],
+        "cupos_disponibles": 25,
     },
     # ------------------------------------------------------------------
     # Carrera 2 — Secretariado Ejecutivo
@@ -454,6 +519,35 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
             ),
         ],
+        # --- NUEVOS CAMPOS ---
+        "estadisticas": {
+            "demanda_laboral": "media",
+            "puntuacion": 4.6,
+            "estudiantes_inscritos": 45,
+            "estudiantes_graduados": 156,
+            "tasa_empleabilidad": 88,
+            "salario_promedio_bs": 3500,
+        },
+        "caracteristicas": [
+            {
+                "icono": "languages",
+                "etiqueta": "Inglés técnico",
+                "descripcion": "2 niveles conversacionales",
+            },
+            {
+                "icono": "users",
+                "etiqueta": "Protocolo empresarial",
+                "descripcion": "Etiqueta y eventos",
+            },
+            {
+                "icono": "briefcase",
+                "etiqueta": "Atención al cliente",
+                "descripcion": "Prácticas con clientes reales",
+            },
+        ],
+        "modalidad": "Presencial",
+        "turnos": ["Mañana", "Tarde"],
+        "cupos_disponibles": 20,
     },
     # ------------------------------------------------------------------
     # Carrera 3 — Comercio Internacional
@@ -577,6 +671,35 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"
             ),
         ],
+        # --- NUEVOS CAMPOS ---
+        "estadisticas": {
+            "demanda_laboral": "alta",
+            "puntuacion": 4.9,
+            "estudiantes_inscritos": 58,
+            "estudiantes_graduados": 145,
+            "tasa_empleabilidad": 94,
+            "salario_promedio_bs": 5000,
+        },
+        "caracteristicas": [
+            {
+                "icono": "globe",
+                "etiqueta": "SIDUNEA",
+                "descripcion": "Sistema aduanero oficial",
+            },
+            {
+                "icono": "ship",
+                "etiqueta": "Logística global",
+                "descripcion": "Importación y exportación",
+            },
+            {
+                "icono": "file-check",
+                "etiqueta": "Tratados comerciales",
+                "descripcion": "MERCOSUR, CAN",
+            },
+        ],
+        "modalidad": "Presencial",
+        "turnos": ["Mañana", "Noche"],
+        "cupos_disponibles": 25,
     },
     # ------------------------------------------------------------------
     # Carrera 4 — Electrónica
@@ -697,5 +820,34 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
             ),
         ],
+        # --- NUEVOS CAMPOS ---
+        "estadisticas": {
+            "demanda_laboral": "alta",
+            "puntuacion": 4.7,
+            "estudiantes_inscritos": 52,
+            "estudiantes_graduados": 178,
+            "tasa_empleabilidad": 91,
+            "salario_promedio_bs": 4800,
+        },
+        "caracteristicas": [
+            {
+                "icono": "circuit-board",
+                "etiqueta": "PLC y automatización",
+                "descripcion": "Siemens, Schneider",
+            },
+            {
+                "icono": "cpu",
+                "etiqueta": "Microcontroladores",
+                "descripcion": "Arduino, PIC, ESP32",
+            },
+            {
+                "icono": "zap",
+                "etiqueta": "Energía solar",
+                "descripcion": "Instalación fotovoltaica",
+            },
+        ],
+        "modalidad": "Presencial",
+        "turnos": ["Mañana", "Tarde", "Noche"],
+        "cupos_disponibles": 30,
     },
 ]

@@ -296,20 +296,12 @@ def _indicadores_dots() -> rx.Component:
 # Carrusel completo
 # ======================================================================
 
-
 def _carrusel_carreras() -> rx.Component:
-    """
-    Carrusel de banners destacados con:
-    - Un banner visible a la vez (el actual).
-    - Flechas de navegación laterales.
-    - Indicadores de posición debajo.
-    """
+    """Carrusel de banners + miniaturas."""
     return rx.box(
         # --- Contenedor con flechas + banner ---
         rx.box(
-            # --- Banner actual ---
             _banner_carrera(EstadoInstitucional.item_carrusel_actual),
-            # --- Flechas de navegación ---
             _flecha_navegacion("izquierda"),
             _flecha_navegacion("derecha"),
             position="relative",
@@ -317,12 +309,83 @@ def _carrusel_carreras() -> rx.Component:
             max_width="64rem",
             margin="0 auto",
         ),
-        # --- Indicadores de posición ---
+        # --- Indicadores de posición (dots) ---
         _indicadores_dots(),
+        # --- Miniaturas clicables ---
+        _miniaturas_carreras(),
         width="100%",
     )
 
+def _miniaturas_carreras() -> rx.Component:
+    """
+    Fila de miniaturas clicables debajo del carrusel.
 
+    Cada miniatura muestra el icono de la carrera y al hacer clic
+    navega al banner correspondiente.
+    """
+    return rx.flex(
+        rx.foreach(
+            EstadoInstitucional.carreras_destacadas_con_etiquetas,
+            lambda item, idx: rx.box(
+                rx.flex(
+                    rx.box(
+                        rx.image(
+                            src="/" + item["carrera"]["imagen_archivo"],
+                            alt=item["carrera"]["nombre"],
+                            width="100%",
+                            height="100%",
+                            object_fit="cover",
+                            border_radius="0.5rem",
+                        ),
+                        width="2.5rem",
+                        height="2.5rem",
+                        flex_shrink="0",
+                        border_radius="0.5rem",
+                        overflow="hidden",
+                    ),
+                    rx.text(
+                        item["carrera"]["nombre_corto"],
+                        font_size="0.75rem",
+                        font_weight="600",
+                        color=rx.cond(
+                            EstadoInstitucional.indice_carrusel == idx,
+                            item["carrera"]["color_principal"],
+                            rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        ),
+                        white_space="nowrap",
+                    ),
+                    align="center",
+                    gap="0.5rem",
+                ),
+                padding="0.5rem 0.875rem",
+                border_radius="9999px",
+                background=rx.cond(
+                    EstadoInstitucional.indice_carrusel == idx,
+                    item["carrera"]["color_suave"],
+                    rx.color_mode_cond(light="#f8fafc", dark="#1e293b"),
+                ),
+                border="1px solid "
+                + rx.cond(
+                    EstadoInstitucional.indice_carrusel == idx,
+                    item["carrera"]["color_principal"] + "66",
+                    rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+                ),
+                cursor="pointer",
+                transition="all 0.2s",
+                on_click=lambda: EstadoInstitucional.ir_a_banner(idx),
+                _hover={
+                    "transform": "translateY(-2px)",
+                    "box_shadow": "0 8px 20px -8px rgba(0, 0, 0, 0.15)",
+                },
+            ),
+        ),
+        gap="0.5rem",
+        justify="center",
+        align="center",
+        flex_wrap="wrap",
+        margin_top="1.5rem",
+        width="100%",
+    )
 # ======================================================================
 # Hero completo
 # ======================================================================
