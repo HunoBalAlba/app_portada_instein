@@ -1,6 +1,8 @@
+cd "/home/kat/proyectos reflex/proyecto_instein/app_portada_instein"
+
+cat > .github/workflows/codeql.yml << 'EOF'
 # =====================================================================
 # Análisis de seguridad con CodeQL
-# Repo: https://github.com/HunoBalAlba/app_portada_instein
 # =====================================================================
 
 name: CodeQL
@@ -44,3 +46,7 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+EOF
+
+echo "✅ codeql.yml creado"
+ls -la .github/workflows/
