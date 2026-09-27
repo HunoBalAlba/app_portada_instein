@@ -25,15 +25,12 @@ env:
   UV_VERSION: "0.5.11"
 
 jobs:
-  # ===================================================================
-  # Job 1: Lint + Formato (Ruff)
-  # ===================================================================
   lint:
     name: 🔍 Lint & Format (Ruff)
     runs-on: ubuntu-latest
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
@@ -56,9 +53,6 @@ jobs:
       - name: 🎨 Ruff format check
         run: uv run ruff format --check .
 
-  # ===================================================================
-  # Job 2: Tests + Cobertura
-  # ===================================================================
   test:
     name: 🧪 Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
@@ -68,7 +62,7 @@ jobs:
         python-version: ["3.12"]
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🐍 Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -103,16 +97,13 @@ jobs:
           path: htmlcov/
           retention-days: 7
 
-  # ===================================================================
-  # Job 3: Umbral de Cobertura
-  # ===================================================================
   coverage-check:
     name: 🎯 Coverage Threshold (100%)
     runs-on: ubuntu-latest
     needs: test
     steps:
       - name: 📥 Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5

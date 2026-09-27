@@ -1,0 +1,5 @@
+[![CI](https://github.com/HunoBalAlba/app_portada_instein/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/HunoBalAlba/app_portada_instein/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/HunoBalAlba/app_portada_instein/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/HunoBalAlba/app_portada_instein/actions/workflows/codeql.yml)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
