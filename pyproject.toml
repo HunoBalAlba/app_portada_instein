@@ -75,3 +75,8 @@ ignore = [
     # Los TypedDict con clases vacías son legítimos.
     "RUF012",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.2",
+]
