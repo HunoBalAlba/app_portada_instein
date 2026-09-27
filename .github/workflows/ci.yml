@@ -1,11 +1,7 @@
-cd "/home/kat/proyectos reflex/proyecto_instein/app_portada_instein"
-
-mkdir -p .github/workflows
-
-cat > .github/workflows/ci.yml << 'EOF'
 # =====================================================================
 # CI/CD Pipeline para INSTEIN
 # Repo: https://github.com/HunoBalAlba/app_portada_instein
+# Rama: master
 # =====================================================================
 
 name: CI
@@ -132,7 +128,3 @@ jobs:
             --cov-branch \
             --no-header \
             -q
-EOF
-
-echo "✅ ci.yml creado"
-ls -la .github/workflows/
