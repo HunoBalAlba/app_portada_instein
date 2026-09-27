@@ -6,6 +6,15 @@ achatadas verticalmente (perspectiva 3D tipo "disco visto de lado").
 
 Los semiejes mayores están calibrados para que las órbitas se alejen
 visiblemente del centro y cada icono tenga su propia trayectoria.
+
+También incluye:
+- Preguntas frecuentes específicas por cada carrera.
+- Imagen cuadrada (`imagen_archivo`) para tarjetas y listas.
+- Imagen horizontal (`imagen_banner`) para el carrusel de banners.
+
+NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
+(https://lucide.dev/icons) usando snake_case: `code_xml`, `chart_line`,
+`calendar_clock`, `file_text`, `circuit_board`, `plug_zap`.
 """
 
 from ..datos.modelos_carrera import Carrera, IconoAnimado
@@ -42,7 +51,7 @@ def _icono_orbital_config(
     Construye un IconoAnimado con los parámetros orbitales de su elipse.
 
     Args:
-        nombre: Identificador del icono Lucide.
+        nombre: Identificador del icono Lucide (snake_case, ej: "code_xml").
         semieje_mayor: Radio horizontal de la elipse en % del contenedor.
         excentricidad: Excentricidad orbital (0 = círculo).
         factor_perspectiva: Aplanamiento vertical (0.5 = disco de lado).
@@ -104,6 +113,43 @@ CATALOGO_CARRERAS: list[Carrera] = [
             "Emprendimientos tecnológicos independientes.",
             "Soporte técnico y consultoría informática.",
         ],
+        "preguntas_frecuentes": [
+            {
+                "pregunta": "¿Necesito saber programar antes de entrar?",
+                "respuesta": (
+                    "No, empezamos desde cero. En el primer año aprenderás "
+                    "lógica de programación y fundamentos de informática."
+                ),
+            },
+            {
+                "pregunta": "¿Qué lenguajes de programación voy a aprender?",
+                "respuesta": (
+                    "Python, JavaScript, SQL y fundamentos de Java. Además, "
+                    "HTML/CSS para desarrollo web y frameworks modernos."
+                ),
+            },
+            {
+                "pregunta": "¿Puedo trabajar mientras estudio?",
+                "respuesta": (
+                    "Sí, ofrecemos turno nocturno (19:00-22:00) especialmente "
+                    "diseñado para estudiantes que trabajan."
+                ),
+            },
+            {
+                "pregunta": "¿Qué equipos necesito tener?",
+                "respuesta": (
+                    "Contamos con laboratorios equipados. Si quieres practicar "
+                    "en casa, una laptop básica con 8GB de RAM es suficiente."
+                ),
+            },
+            {
+                "pregunta": "¿Qué salidas laborales tengo al egresar?",
+                "respuesta": (
+                    "Desarrollador junior, soporte técnico, administrador de "
+                    "redes, tester QA, analista de sistemas y más."
+                ),
+            },
+        ],
         "plan_estudios": [
             {
                 "anio": "Primer Año",
@@ -146,8 +192,9 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "color_principal": "#2563eb",
         "color_suave": "#eff6ff",
         "imagen_archivo": "sistemas.png",
+        "imagen_banner": "sistemas_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("code-2", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#2563eb", True),
+            _icono_orbital_config("code_xml", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#2563eb", True),
             _icono_orbital_config("database", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"),
             _icono_orbital_config("wifi", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"),
             _icono_orbital_config("terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"),
@@ -180,6 +227,44 @@ CATALOGO_CARRERAS: list[Carrera] = [
             "Instituciones públicas y organizaciones sin fines de lucro.",
             "Estudios contables y de auditoría.",
             "Emprendimientos propios como asesor contable.",
+        ],
+        "preguntas_frecuentes": [
+            {
+                "pregunta": "¿Necesito conocimientos previos de contabilidad?",
+                "respuesta": (
+                    "No, comenzamos desde contabilidad básica. Solo se requiere "
+                    "manejo de matemática básica y ganas de aprender."
+                ),
+            },
+            {
+                "pregunta": "¿Qué software contable voy a aprender?",
+                "respuesta": (
+                    "Aprenderás sistemas contables computarizados, manejo de "
+                    "hojas de cálculo y software tributario boliviano."
+                ),
+            },
+            {
+                "pregunta": "¿Puedo firmar balances al egresar?",
+                "respuesta": (
+                    "Como Técnico Superior puedes llevar contabilidad de empresas, "
+                    "aunque la firma oficial de balances requiere título profesional "
+                    "universitario."
+                ),
+            },
+            {
+                "pregunta": "¿La carrera incluye práctica tributaria?",
+                "respuesta": (
+                    "Sí, en segundo y tercer año trabajarás con casos reales de "
+                    "declaraciones de impuestos y normativa vigente."
+                ),
+            },
+            {
+                "pregunta": "¿Qué salidas laborales tengo al egresar?",
+                "respuesta": (
+                    "Auxiliar contable, asistente tributario, contador de "
+                    "microempresas, analista de costos y más."
+                ),
+            },
         ],
         "plan_estudios": [
             {
@@ -223,10 +308,11 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "color_principal": "#0891b2",
         "color_suave": "#ecfeff",
         "imagen_archivo": "contaduria.png",
+        "imagen_banner": "contaduria_banner.avif",
         "iconos_animados": [
             _icono_orbital_config("receipt", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#0891b2", True),
             _icono_orbital_config("coins", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#16a34a"),
-            _icono_orbital_config("chart-line", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"),
+            _icono_orbital_config("chart_line", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"),
             _icono_orbital_config("wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"),
         ],
     },
@@ -258,6 +344,44 @@ CATALOGO_CARRERAS: list[Carrera] = [
             "Instituciones públicas y privadas.",
             "Recepción y atención al cliente.",
             "Coordinación de eventos corporativos.",
+        ],
+        "preguntas_frecuentes": [
+            {
+                "pregunta": "¿Qué habilidades voy a desarrollar?",
+                "respuesta": (
+                    "Redacción ejecutiva, manejo de agendas, organización de eventos, "
+                    "atención al cliente y herramientas ofimáticas avanzadas."
+                ),
+            },
+            {
+                "pregunta": "¿Se enseña inglés?",
+                "respuesta": (
+                    "Sí, Inglés Técnico I y II en los dos primeros años, "
+                    "enfocado a comunicación empresarial y protocolo."
+                ),
+            },
+            {
+                "pregunta": "¿Qué software aprenderé?",
+                "respuesta": (
+                    "Word, Excel avanzado, PowerPoint, herramientas de gestión "
+                    "documental y sistemas de gestión ejecutiva."
+                ),
+            },
+            {
+                "pregunta": "¿Puedo trabajar en empresas grandes?",
+                "respuesta": (
+                    "Sí, el perfil está diseñado para trabajar en gerencias, "
+                    "direcciones ejecutivas y atención al cliente en empresas "
+                    "e instituciones."
+                ),
+            },
+            {
+                "pregunta": "¿Qué salidas laborales tengo al egresar?",
+                "respuesta": (
+                    "Secretaria ejecutiva, asistente administrativa, recepcionista "
+                    "bilingüe, coordinadora de eventos y más."
+                ),
+            },
         ],
         "plan_estudios": [
             {
@@ -301,11 +425,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "color_principal": "#7c3aed",
         "color_suave": "#f5f3ff",
         "imagen_archivo": "secretariado.png",
+        "imagen_banner": "secretariado_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("calendar-clock", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#7c3aed", True),
+            _icono_orbital_config("calendar_clock", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#7c3aed", True),
             _icono_orbital_config("mail", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#db2777"),
             _icono_orbital_config("users", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#0891b2"),
-            _icono_orbital_config("file-text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"),
+            _icono_orbital_config("file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"),
         ],
     },
 
@@ -336,6 +461,43 @@ CATALOGO_CARRERAS: list[Carrera] = [
             "Empresas importadoras y exportadoras.",
             "Operadores logísticos y de transporte internacional.",
             "Instituciones aduaneras y comerciales.",
+        ],
+        "preguntas_frecuentes": [
+            {
+                "pregunta": "¿Qué es el SIDUNEA?",
+                "respuesta": (
+                    "Es el Sistema Informático Aduanero usado en Bolivia y varios "
+                    "países de la región. Aprenderás a usarlo en tercer año."
+                ),
+            },
+            {
+                "pregunta": "¿Se enseña normativa aduanera?",
+                "respuesta": (
+                    "Sí, Legislación Aduanera I y II cubren toda la normativa "
+                    "vigente boliviana y tratados internacionales."
+                ),
+            },
+            {
+                "pregunta": "¿Puedo trabajar en agencias despachantes?",
+                "respuesta": (
+                    "Sí, es una de las principales salidas. También en "
+                    "importadoras, exportadoras y operadores logísticos."
+                ),
+            },
+            {
+                "pregunta": "¿Qué idiomas se enseñan?",
+                "respuesta": (
+                    "Inglés Técnico I y II enfocado a comercio exterior. "
+                    "Se recomienda inglés básico previo pero no es obligatorio."
+                ),
+            },
+            {
+                "pregunta": "¿Qué salidas laborales tengo al egresar?",
+                "respuesta": (
+                    "Auxiliar de despachante, asistente de comercio exterior, "
+                    "operador logístico, analista de importaciones y más."
+                ),
+            },
         ],
         "plan_estudios": [
             {
@@ -379,10 +541,11 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "color_principal": "#ea580c",
         "color_suave": "#fff7ed",
         "imagen_archivo": "comercio.png",
+        "imagen_banner": "comercio_banner.avif",
         "iconos_animados": [
             _icono_orbital_config("ship", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#ea580c", True),
             _icono_orbital_config("package", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"),
-            _icono_orbital_config("file-text", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"),
+            _icono_orbital_config("file_text", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"),
             _icono_orbital_config("truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"),
         ],
     },
@@ -413,6 +576,43 @@ CATALOGO_CARRERAS: list[Carrera] = [
             "Industria de automatización y control.",
             "Servicios técnicos especializados.",
             "Emprendimientos independientes de reparación e instalación.",
+        ],
+        "preguntas_frecuentes": [
+            {
+                "pregunta": "¿Qué equipos voy a usar en los laboratorios?",
+                "respuesta": (
+                    "Osciloscopios, multímetros, generadores de señales, estaciones "
+                    "de soldadura y microcontroladores PIC/Arduino/ESP32."
+                ),
+            },
+            {
+                "pregunta": "¿Se enseña programación de microcontroladores?",
+                "respuesta": (
+                    "Sí, en tercer año. Trabajarás con Arduino, PIC y ESP32 "
+                    "para proyectos de automatización y domótica."
+                ),
+            },
+            {
+                "pregunta": "¿Puedo reparar equipos electrónicos al egresar?",
+                "respuesta": (
+                    "Sí, tendrás todas las competencias para reparar equipos "
+                    "domésticos, industriales y de telecomunicaciones."
+                ),
+            },
+            {
+                "pregunta": "¿La carrera incluye automatización industrial?",
+                "respuesta": (
+                    "Sí, es parte del tercer año. Aprenderás PLCs, sensores "
+                    "y sistemas de control industrial."
+                ),
+            },
+            {
+                "pregunta": "¿Qué salidas laborales tengo al egresar?",
+                "respuesta": (
+                    "Técnico electrónico, mantenedor industrial, instalador de "
+                    "telecomunicaciones y emprendedor de servicios técnicos."
+                ),
+            },
         ],
         "plan_estudios": [
             {
@@ -456,11 +656,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "color_principal": "#16a34a",
         "color_suave": "#f0fdf4",
         "imagen_archivo": "electronica.png",
+        "imagen_banner": "electronica_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("circuit-board", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#16a34a", True),
+            _icono_orbital_config("circuit_board", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#16a34a", True),
             _icono_orbital_config("cpu", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#2563eb"),
             _icono_orbital_config("radio", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"),
-            _icono_orbital_config("plug-zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"),
+            _icono_orbital_config("plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"),
         ],
     },
 ]

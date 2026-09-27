@@ -1,62 +1,24 @@
 """
-Vista de la página de inicio (ruta "/").
+Vista de la página de inicio (ruta "/") — versión refactorizada.
 """
 
 import reflex as rx
 
 from ..componentes.barra_navegacion import barra_navegacion_superior
-from ..componentes.widgets_home import hero_bienvenida
+from ..componentes.hero_principal import hero_principal
+from ..componentes.multimedia_institucional import (
+    seccion_multimedia_institucional,
+)
+from ..componentes.por_que_instein import seccion_por_que_instein
+from ..componentes.estadisticas_instituto import seccion_estadisticas
+from ..componentes.preguntas_frecuentes import seccion_preguntas_frecuentes
+from ..componentes.banner_cta_final import banner_cta_final
+from ..componentes.pie_pagina import pie_pagina_institucional
 from ..infraestructura.constantes_visuales import (
-    NOMBRE_COMPLETO_INSTITUTO,
     NOMBRE_INSTITUTO,
     TELEFONO_PRINCIPAL,
     UBICACION_FISICA,
 )
-
-# Nota: estas dos importaciones provienen de módulos externos
-# que debes conservar en tu proyecto (portada con video y tutoriales).
-from .portada_con_video import portada_inicio_con_video
-
-
-def _tarjeta_certificacion_institucional() -> rx.Component:
-    """Tarjeta con las certificaciones legales del instituto."""
-    return rx.box(
-        rx.heading(
-            "Certificación Institucional",
-            size="3",
-            text_transform="uppercase",
-            margin_bottom="1rem",
-        ),
-        rx.flex(
-            rx.icon("shield-check", size=20, color="#22c55e", margin_top="0.25rem"),
-            rx.box(
-                rx.text("Resoluciones Ministeriales Vigentes", font_weight="bold"),
-                rx.text(
-                    "Autorización legal R.M. 0871/2016",
-                    color_scheme="gray",
-                ),
-            ),
-            gap="0.75rem",
-        ),
-        rx.flex(
-            rx.icon("award", size=20, color="#3b82f6", margin_top="0.25rem"),
-            rx.box(
-                rx.text("Nivel Técnico Superior", font_weight="bold"),
-                rx.text(
-                    "Título en Provisión Nacional.",
-                    color_scheme="gray",
-                ),
-            ),
-            gap="0.75rem",
-            padding_top="1rem",
-            margin_top="1rem",
-        ),
-        padding="1.5rem",
-        border_radius="1.5rem",
-        border=f"1px solid {rx.color('accent', 8)}",
-        box_shadow="0 1px 2px 0 rgb(0 0 0 / 0.05)",
-        margin="0 1rem 1rem 1rem",
-    )
 
 
 def _boton_ver_carreras() -> rx.Component:
@@ -96,9 +58,7 @@ def _tarjetas_informacion_rapida() -> rx.Component:
     """Bloque con ubicación e informes de contacto rápido."""
     return rx.flex(
         rx.box(
-            rx.icon(
-                "map-pin", size=20, color="#60a5fa", margin_bottom="0.5rem"
-            ),
+            rx.icon("map-pin", size=20, color="#60a5fa", margin_bottom="0.5rem"),
             rx.text(
                 "Ubicación",
                 color_scheme="gray",
@@ -114,9 +74,7 @@ def _tarjetas_informacion_rapida() -> rx.Component:
             min_width="0",
         ),
         rx.box(
-            rx.icon(
-                "phone-call", size=20, color="#60a5fa", margin_bottom="0.5rem"
-            ),
+            rx.icon("phone-call", size=20, color="#60a5fa", margin_bottom="0.5rem"),
             rx.text(
                 "Informes",
                 font_size="0.625rem",
@@ -144,40 +102,47 @@ def _tarjetas_informacion_rapida() -> rx.Component:
 def vista_inicio() -> rx.Component:
     """Página principal de bienvenida del instituto."""
     return rx.vstack(
+        # --- Barra de navegación ---
         barra_navegacion_superior(),
+
+        # --- Contenido principal ---
         rx.box(
-            rx.flex(hero_bienvenida(), direction="column", spacing="4"),
+            # Hero unificado: título + CTA + carrera destacada + selector
+            hero_principal(),
+
+            # Multimedia institucional (video + info + redes sociales)
+            seccion_multimedia_institucional(),
+
+            # Estadísticas del instituto
+            seccion_estadisticas(),
+
+            # Sección "¿Por qué INSTEIN?"
+            seccion_por_que_instein(),
+
+            # # CTA hacia carreras
+            # _boton_ver_carreras(),
+
+            # # Información rápida (ubicación + informes)
+            # _tarjetas_informacion_rapida(),
+
+            # FAQ
+            seccion_preguntas_frecuentes(),
+
+            # Banner final
             rx.box(
-                rx.vstack(
-                    rx.box(
-                        rx.icon("graduation-cap", size=40, color="#ffffff"),
-                        background=rx.color("accent", 11),
-                        padding="0.75rem",
-                        border_radius="1rem",
-                        box_shadow="0 10px 25px -5px rgb(37 99 235 / 0.25)",
-                        display="flex",
-                    ),
-                    rx.heading(NOMBRE_INSTITUTO, size="8"),
-                    rx.text(
-                        NOMBRE_COMPLETO_INSTITUTO,
-                        color=rx.color("accent", 11),
-                        text_transform="uppercase",
-                        text_align="center",
-                        max_width="280px",
-                    ),
-                    align="center",
-                    text_align="center",
-                    padding="3rem 1.5rem",
-                ),
+                banner_cta_final(),
+                padding="0 1.5rem 3rem 1.5rem",
+                width="100%",
             ),
-            rx.vstack(portada_inicio_con_video(), margin_bottom="1rem"),
-            _tarjeta_certificacion_institucional(),
-            _boton_ver_carreras(),
-            _tarjetas_informacion_rapida(),
+
             padding_bottom="3rem",
-            max_width="72rem",
+            max_width="100%",
             width="100%",
         ),
+
+        # --- Pie de página ---
+        pie_pagina_institucional(),
+
         align="center",
         min_height="100vh",
         width="100%",

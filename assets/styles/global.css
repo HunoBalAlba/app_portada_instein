@@ -1,0 +1,49 @@
+/* ==================================================================
+   Tipografías globales del INSTEIN
+
+   - Inter → texto general (misma que reflex.dev/docs).
+   - JetBrains Mono → bloques de código y contenido técnico.
+
+   Reflex carga este archivo vía `stylesheets=["/styles/global.css"]`.
+   ================================================================== */
+
+/* ---------- 1. Base global ---------- */
+
+html,
+body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- 2. Código y contenido monoespaciado ---------- */
+
+code,
+pre,
+kbd,
+samp {
+    font-family: "JetBrains Mono", "SF Mono", Monaco, "Cascadia Code",
+        "Roboto Mono", Consolas, "Courier New", monospace;
+    font-feature-settings: "liga" 1, "calt" 1;
+}
+
+/* ---------- 3. Controles de formulario ---------- */
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+}
+
+/* ---------- 4. Escala tipográfica recomendada por Radix ---------- */
+/* (comentado: úsalo solo si quieres control fino por etiqueta) */
+
+/*
+h1 { font-family: "Inter", sans-serif; font-weight: 900; }
+h2 { font-family: "Inter", sans-serif; font-weight: 800; }
+h3 { font-family: "Inter", sans-serif; font-weight: 700; }
+p  { font-family: "Inter", sans-serif; font-weight: 400; }
+*/

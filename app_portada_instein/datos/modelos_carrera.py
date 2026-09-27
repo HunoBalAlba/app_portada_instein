@@ -13,45 +13,26 @@ class PlanAnual(TypedDict):
     materias: list[str]
 
 
-class IconoAnimado(TypedDict):
-    """
-    Icono que orbita alrededor de la imagen central siguiendo las leyes
-    de Kepler, con una elipse aplastada para simular perspectiva 3D
-    (vista de disco inclinado, como en la ilustración del sistema solar).
+class PreguntaFrecuente(TypedDict):
+    """Representa una pregunta frecuente con su respuesta."""
 
-    La trayectoria se precalcula en el backend y se convierte en keyframes
-    CSS. El icono NUNCA rota sobre su propio eje.
-    """
+    pregunta: str
+    respuesta: str
+
+
+class IconoAnimado(TypedDict):
+    """Icono que orbita alrededor de la imagen principal de la carrera."""
 
     nombre: str
-    """Identificador del icono Lucide (ej: "cpu", "database")."""
-
     semieje_mayor: float
-    """Radio horizontal de la elipse (en % del contenedor)."""
-
     excentricidad: float
-    """Excentricidad orbital (0 = círculo, 0.5 = elipse marcada)."""
-
     factor_perspectiva: float
-    """Factor de aplanamiento vertical (0.5 = disco visto de lado)."""
-
     angulo_inicial: int
-    """Ángulo inicial en grados para distribuir los iconos."""
-
     periodo: float
-    """Duración en segundos de una vuelta completa."""
-
     desfase_temporal: float
-    """Retraso inicial en segundos para desincronizar los iconos."""
-
     color: str
-    """Color del icono en formato hexadecimal."""
-
     tiene_anillos: bool
-    """Si el icono debe dibujarse con anillos (estilo Saturno)."""
-
     keyframe_orbita: str
-    """Nombre del keyframe CSS de la trayectoria orbital."""
 
 
 class Carrera(TypedDict):
@@ -65,9 +46,24 @@ class Carrera(TypedDict):
     descripcion: str
     perfil_profesional: list[str]
     campo_laboral: list[str]
+    preguntas_frecuentes: list[PreguntaFrecuente]
     plan_estudios: list[PlanAnual]
     icono: str
     color_principal: str
     color_suave: str
+
+    # --- Imágenes de la carrera ---
     imagen_archivo: str
+    """Imagen cuadrada (1:1) para tarjetas y listas."""
+
+    imagen_banner: str
+    """Imagen horizontal (16:9) para el carrusel de banners."""
+
     iconos_animados: list[IconoAnimado]
+
+
+class CarreraConEtiqueta(TypedDict):
+    """Combina una carrera con su etiqueta contextual."""
+
+    carrera: Carrera
+    etiqueta: str

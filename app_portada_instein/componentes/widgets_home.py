@@ -1,7 +1,10 @@
 """
-Widgets que componen la página de inicio (hero, carrera destacada,
-tarjeta de resumen multimedia con iconos orbitando elípticamente,
-fondo estrellado y líneas de fuga radiales, CTA, etc.).
+Widgets que componen la sección de "carrera destacada" del home:
+- Estrellas de fondo.
+- Líneas de fuga radiales.
+- Iconos orbitando elípticamente.
+- Imagen central (el "Sol").
+- Selector de carrera.
 """
 
 import random
@@ -16,7 +19,7 @@ from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 
 
 # ======================================================================
-# Estrellas de fondo (posiciones precalculadas, reproducibles)
+# Estrellas de fondo
 # ======================================================================
 
 def _generar_estrellas(cantidad: int = 80, semilla: int = 42) -> list[dict]:
@@ -40,12 +43,7 @@ ESTRELLAS_FONDO = _generar_estrellas()
 
 
 def _estrella_fondo(estrella: dict) -> rx.Component:
-    """
-    Renderiza una estrella individual del fondo.
-
-    En modo claro usa color oscuro (para contraste con fondo claro);
-    en modo oscuro usa color blanco.
-    """
+    """Renderiza una estrella individual del fondo."""
     return rx.box(
         position="absolute",
         left=f"{estrella['x']}%",
@@ -65,110 +63,23 @@ def _estrella_fondo(estrella: dict) -> rx.Component:
 
 
 # ======================================================================
-# Líneas de fuga radiales (16 rayos desde el centro)
+# Líneas de fuga radiales
 # ======================================================================
 
 def _linea_fuga(angulo: int, color_claro: str) -> rx.Component:
-    """
-    Renderiza una línea de fuga radial desde el centro del contenedor.
-
-    En modo claro usa un color tenue oscuro; en modo oscuro usa el
-    color principal de la carrera con opacidad media.
-    """
+    """Renderiza una línea de fuga radial desde el centro del contenedor."""
     return rx.box(
         position="absolute",
         top="50%",
         left="50%",
         width="150%",
         height="1px",
-        background=rx.color_mode_cond(
-            light="#94a3b8",
-            dark=color_claro,
-        ),
+        background=rx.color_mode_cond(light="#94a3b8", dark=color_claro),
         opacity=rx.color_mode_cond(light="0.15", dark="0.25"),
         transform_origin="0 50%",
         transform=f"translate(0, -50%) rotate({angulo}deg)",
         z_index="1",
         pointer_events="none",
-    )
-
-
-# ======================================================================
-# Pastilla selector de carrera destacada
-# ======================================================================
-
-def pastilla_carrera_destacada(carrera: dict) -> rx.Component:
-    """Pastilla seleccionable para elegir la carrera destacada en el home."""
-    esta_activa = EstadoInstitucional.id_carrera_destacada == carrera["id"]
-
-    return contenedor_clicable(
-        rx.box(
-            rx.icon(
-                carrera["icono"],
-                size=26,
-                color=rx.cond(esta_activa, "#ffffff", carrera["color_principal"]),
-            ),
-            padding="0.75rem",
-            background=rx.cond(esta_activa, carrera["color_principal"], "transparent"),
-            border=f"1px solid {carrera['color_principal']}",
-            border_radius="1rem",
-            box_shadow=rx.cond(
-                esta_activa,
-                "0 10px 25px -5px rgb(37 99 235 / 0.25)",
-                "none",
-            ),
-            transition="all 0.2s",
-            display="flex",
-        ),
-        rx.text(
-            carrera["nombre_corto"],
-            size="1",
-            color=rx.cond(esta_activa, carrera["color_principal"], "gray"),
-            margin_top="0.375rem",
-        ),
-        al_hacer_clic=lambda: EstadoInstitucional.seleccionar_carrera_destacada(carrera["id"]),
-        display="flex",
-        flex_direction="column",
-        align_items="center",
-        justify_content="center",
-        flex_shrink="0",
-    )
-
-
-# ======================================================================
-# Bloque de texto descriptivo de la carrera destacada
-# ======================================================================
-
-def bloque_texto_carrera_destacada() -> rx.Component:
-    """Texto descriptivo (nombre, lema y CTA) de la carrera destacada."""
-    return rx.box(
-        rx.heading(EstadoInstitucional.carrera_destacada["nombre"], size="8"),
-        rx.text(
-            EstadoInstitucional.carrera_destacada["lema"],
-            color_scheme="gray",
-        ),
-        enlace_navegacion(
-            "/carreras",
-            rx.text(
-                "Explorar Carreras",
-                as_="span",
-                font_size="0.875rem",
-                font_weight="700",
-            ),
-            rx.icon("layout-grid", size=16, color=rx.color("accent", 11)),
-            display="flex",
-            align_items="center",
-            gap="0.5rem",
-            margin_top="1rem",
-            background=rx.color("accent", 1),
-            color=rx.color("accent", 11),
-            padding="0.625rem 1.25rem",
-            border_radius="9999px",
-            width="fit-content",
-            box_shadow="0 10px 25px -5px rgb(37 99 235 / 0.25)",
-            transition="transform 0.2s",
-        ),
-        padding="1.25rem 1.5rem 1rem 1.5rem",
     )
 
 
@@ -213,11 +124,6 @@ def _icono_orbital(icono_animado: dict) -> rx.Component:
     """
     Renderiza un icono con su propia trayectoria elíptica kepleriana
     alrededor de la imagen central (como un planeta alrededor del Sol).
-
-    - NO rota sobre su propio eje.
-    - Sigue su propia órbita con excentricidad y perspectiva únicas.
-    - Puede tener anillos (si `tiene_anillos=True`) mediante rx.cond.
-    - NO tiene efecto wobble: orbita suavemente.
     """
     periodo = icono_animado["periodo"]
     keyframe_orbita = icono_animado["keyframe_orbita"]
@@ -226,7 +132,6 @@ def _icono_orbital(icono_animado: dict) -> rx.Component:
     tiene_anillos = icono_animado["tiene_anillos"]
 
     return rx.box(
-        # --- Icono con decoración condicional de anillos ---
         rx.box(
             rx.cond(
                 tiene_anillos,
@@ -243,7 +148,6 @@ def _icono_orbital(icono_animado: dict) -> rx.Component:
             justify_content="center",
             position="relative",
         ),
-        # --- Contenedor con la animación orbital elíptica ---
         position="absolute",
         top="50%",
         left="50%",
@@ -254,30 +158,26 @@ def _icono_orbital(icono_animado: dict) -> rx.Component:
 
 
 # ======================================================================
-# Contenedor orbital completo (fondo espacial + iconos + imagen central)
+# Contenedor orbital completo
 # ======================================================================
 
-def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
+def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
     """
     Contenedor que ocupa TODO el espacio de la tarjeta con:
-    - Fondo espacial adaptativo al modo claro/oscuro (estrellas + líneas).
-    - Iconos orbitando libremente.
+    - Fondo espacial adaptativo (estrellas + líneas de fuga).
+    - Iconos orbitando con elipses keplerianas.
     - Imagen central (el "Sol").
-
-    El fondo espacial YA NO es circular, se extiende por toda la tarjeta.
     """
     color_principal = carrera["color_principal"]
     color_suave = carrera["color_suave"]
-
-    # Precalculamos los ángulos de las líneas de fuga (16 rayos)
     angulos_lineas = [i * 22.5 for i in range(16)]
 
     return rx.box(
         # ==============================================================
-        # CAPA 1: Fondo espacial (ocupa toda la tarjeta)
+        # CAPA 1: Fondo espacial
         # ==============================================================
         rx.box(
-            # --- Estrellas de fondo ---
+            # --- Estrellas ---
             rx.box(
                 *[_estrella_fondo(estrella) for estrella in ESTRELLAS_FONDO],
                 position="absolute",
@@ -288,13 +188,9 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
                 z_index="0",
                 pointer_events="none",
             ),
-
-            # --- Líneas de fuga radiales ---
+            # --- Líneas de fuga ---
             rx.box(
-                *[
-                    _linea_fuga(angulo, color_principal)
-                    for angulo in angulos_lineas
-                ],
+                *[_linea_fuga(angulo, color_principal) for angulo in angulos_lineas],
                 position="absolute",
                 top="0",
                 left="0",
@@ -303,8 +199,7 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
                 z_index="1",
                 pointer_events="none",
             ),
-
-            # --- Halo radial del color de la carrera ---
+            # --- Halo radial ---
             rx.box(
                 position="absolute",
                 top="0",
@@ -321,8 +216,7 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
                 z_index="2",
                 pointer_events="none",
             ),
-
-            # --- Fondo base: adaptativo al modo claro/oscuro ---
+            # --- Fondo base ---
             position="absolute",
             top="0",
             left="0",
@@ -349,7 +243,7 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
         ),
 
         # ==============================================================
-        # CAPA 3: Imagen central (el "Sol")
+        # CAPA 3: Imagen central
         # ==============================================================
         rx.box(
             rx.image(
@@ -375,7 +269,7 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
         ),
 
         # ==============================================================
-        # CONTENEDOR PRINCIPAL (ocupa todo, fondo completo)
+        # CONTENEDOR PRINCIPAL
         # ==============================================================
         position="relative",
         width="100%",
@@ -393,16 +287,15 @@ def _contenedor_animacion_orbital(carrera: dict) -> rx.Component:
 
 def cuadro_resumen_multimedia() -> rx.Component:
     """
-    Tarjeta principal del home.
-
-    Ahora el fondo espacial ocupa TODO el contenedor rectangular
-    de la tarjeta (no solo un círculo interior).
+    Tarjeta principal con:
+    - Contenedor orbital (imagen central + iconos).
+    - Etiquetas superpuestas (RESUMEN, duración).
+    - CTA al detalle.
     """
     carrera = EstadoInstitucional.carrera_destacada
 
     return rx.box(
-        # --- Contenedor orbital que ocupa todo el espacio ---
-        _contenedor_animacion_orbital(carrera),
+        contenedor_animacion_orbital(carrera),
 
         # --- Etiqueta superior izquierda: RESUMEN ---
         rx.flex(
@@ -455,10 +348,7 @@ def cuadro_resumen_multimedia() -> rx.Component:
                 rx.icon(
                     "image_upscale",
                     size=20,
-                    color=rx.color_mode_cond(
-                        light=carrera["color_principal"],
-                        dark=carrera["color_principal"],
-                    ),
+                    color=carrera["color_principal"],
                     margin_left="0.125rem",
                 ),
                 height="2.75rem",
@@ -482,106 +372,185 @@ def cuadro_resumen_multimedia() -> rx.Component:
             background="linear-gradient(to top, rgba(0,0,0,0.6), transparent)",
         ),
 
-        # --- Contenedor de la tarjeta: ocupa TODO el ancho disponible ---
         position="relative",
         width="100%",
-        height="28rem",
+        height="18rem",
         border_radius="1.5rem",
         overflow="hidden",
-        border="1px solid " + carrera["color_principal"] + "44",
+        border="2px solid " + carrera["color_principal"] + "44",
         box_shadow="0 20px 40px -10px " + carrera["color_principal"] + "55",
     )
 
 
 # ======================================================================
-# Hero completo del home
+# Pastilla selector de carrera destacada
 # ======================================================================
 
-def hero_bienvenida() -> rx.Component:
-    """Sección hero del home con carrera destacada y selector."""
+def pastilla_carrera_destacada(carrera: dict) -> rx.Component:
+    """Pastilla seleccionable para elegir la carrera destacada en el home."""
+    esta_activa = EstadoInstitucional.id_carrera_destacada == carrera["id"]
+
+    return contenedor_clicable(
+        rx.box(
+            rx.icon(
+                carrera["icono"],
+                size=26,
+                color=rx.cond(esta_activa, "#ffffff", carrera["color_principal"]),
+            ),
+            padding="0.75rem",
+            background=rx.cond(esta_activa, carrera["color_principal"], "transparent"),
+            border=f"1px solid {carrera['color_principal']}",
+            border_radius="1rem",
+            box_shadow=rx.cond(
+                esta_activa,
+                f"0 10px 25px -5px {carrera['color_principal']}66",
+                "none",
+            ),
+            transition="all 0.2s",
+            display="flex",
+        ),
+        rx.text(
+            carrera["nombre_corto"],
+            size="1",
+            color=rx.cond(esta_activa, carrera["color_principal"], "gray"),
+            margin_top="0.375rem",
+        ),
+        al_hacer_clic=lambda: EstadoInstitucional.seleccionar_carrera_destacada(carrera["id"]),
+        display="flex",
+        flex_direction="column",
+        align_items="center",
+        justify_content="center",
+        flex_shrink="0",
+    )
+
+
+# ======================================================================
+# Bloque de texto descriptivo de la carrera destacada
+# ======================================================================
+
+def bloque_texto_carrera_destacada() -> rx.Component:
+    """
+    Texto descriptivo de la carrera destacada con badge "CARRERA DESTACADA".
+    """
+    carrera = EstadoInstitucional.carrera_destacada
+    color_principal = carrera["color_principal"]
+
+    return rx.box(
+        # --- Badge "CARRERA DESTACADA" ---
+        rx.flex(
+            rx.icon("star", size=12, color="#ffffff"),
+            rx.text(
+                "CARRERA DESTACADA",
+                font_size="0.625rem",
+                font_weight="800",
+                color="#ffffff",
+                letter_spacing="0.1em",
+            ),
+            align="center",
+            gap="0.375rem",
+            background=color_principal,
+            padding="0.375rem 0.75rem",
+            border_radius="9999px",
+            width="fit-content",
+            box_shadow=f"0 4px 12px -2px {color_principal}66",
+            margin_bottom="1rem",
+        ),
+        # --- Título grande ---
+        rx.heading(
+            carrera["nombre"],
+            size="8",
+            color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+        ),
+        # --- Lema ---
+        rx.text(
+            carrera["lema"],
+            font_size="1rem",
+            color=rx.color_mode_cond(light="#475569", dark="#94a3b8"),
+            margin_top="0.5rem",
+        ),
+        # --- CTA ---
+        enlace_navegacion(
+            "/carreras",
+            rx.text(
+                "Explorar Carreras",
+                as_="span",
+                font_size="0.875rem",
+                font_weight="700",
+            ),
+            rx.icon("layout-grid", size=16),
+            display="flex",
+            align_items="center",
+            gap="0.5rem",
+            margin_top="1.5rem",
+            background=color_principal,
+            color="#ffffff",
+            padding="0.75rem 1.5rem",
+            border_radius="9999px",
+            width="fit-content",
+            box_shadow=f"0 10px 25px -5px {color_principal}66",
+            transition="all 0.2s",
+            _hover={
+                "transform": "translateY(-2px)",
+                "box_shadow": f"0 15px 35px -5px {color_principal}88",
+            },
+        ),
+        padding="1.5rem 1.5rem 1rem 1.5rem",
+    )
+
+
+# ======================================================================
+# Selector completo de carrera destacada
+# ======================================================================
+
+def selector_carrera_destacada() -> rx.Component:
+    """
+    Bloque con:
+    - Encabezado "Elige una carrera" + contador.
+    - Fila de pastillas selectoras.
+    """
     return rx.box(
         rx.flex(
-            rx.flex(
-                rx.box(
-                    height="0.5rem",
-                    width="0.5rem",
-                    border_radius="9999px",
-                    background="#22c55e",
-                ),
-                rx.text("INSCRIPCIONES ABIERTAS", size="1"),
-                align="center",
-                gap="0.5rem",
-                border=f"1px solid {rx.color('accent', 8)}",
-                border_radius="9999px",
-                padding="0.375rem 0.75rem",
-                width="fit-content",
-                box_shadow="0 1px 2px 0 rgb(0 0 0 / 0.05)",
+            rx.text(
+                "Elige una carrera",
+                color_scheme="gray",
+                size="1",
+                text_transform="uppercase",
+                font_weight="600",
+                letter_spacing="0.05em",
             ),
-            rx.text("Gestión 2026", size="1", color_scheme="gray"),
+            rx.text(
+                (EstadoInstitucional.id_carrera_destacada + 1).to_string()
+                + " / "
+                + EstadoInstitucional.carreras.length().to_string(),
+                color_scheme="gray",
+                size="1",
+                font_weight="600",
+            ),
             align="center",
             justify="between",
-            padding="1.5rem 1.5rem 1rem 1.5rem",
+            padding="0 1.5rem",
+            margin_bottom="1.75rem",
         ),
-        rx.flex(
+        rx.vstack(
             rx.box(
-                bloque_texto_carrera_destacada(),
-                width=["100%", "100%", "100%", "40%"],
-            ),
-            rx.box(
-                cuadro_resumen_multimedia(),
-                width=["100%", "100%", "100%", "60%"],
-            ),
-            width="100%",
-            justify="center",
-            align="center",
-            flex_direction=[
-                "column-reverse",
-                "column-reverse",
-                "column-reverse",
-                "row",
-            ],
-        ),
-        rx.box(
-            rx.flex(
-                rx.text(
-                    "Elige una carrera",
-                    color_scheme="gray",
-                    size="1",
-                    text_transform="uppercase",
-                ),
-                rx.text(
-                    (EstadoInstitucional.id_carrera_destacada + 1).to_string()
-                    + " / "
-                    + EstadoInstitucional.carreras.length().to_string(),
-                    color_scheme="gray",
-                    size="1",
-                ),
-                align="center",
-                justify="between",
-                padding="0 1.5rem",
-                margin_bottom="1.75rem",
-            ),
-            rx.vstack(
-                rx.box(
-                    rx.flex(
-                        rx.foreach(
-                            EstadoInstitucional.carreras,
-                            pastilla_carrera_destacada,
-                        ),
-                        justify="between",
-                        align="center",
-                        width="100%",
-                        direction="row",
+                rx.flex(
+                    rx.foreach(
+                        EstadoInstitucional.carreras,
+                        pastilla_carrera_destacada,
                     ),
+                    justify="between",
+                    align="center",
                     width="100%",
-                    max_width="30em",
+                    direction="row",
                 ),
-                align="center",
-                justify="center",
+                width="100%",
+                max_width="30em",
             ),
             align="center",
             justify="center",
-            padding_top="1rem",
-            padding_bottom="1rem",
         ),
+        align="center",
+        justify="center",
+        padding_top="1rem",
+        padding_bottom="1rem",
     )

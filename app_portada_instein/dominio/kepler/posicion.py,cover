@@ -1,0 +1,90 @@
+> """
+> Cálculo de la posición (x, y) de un cuerpo en una órbita elíptica.
+  
+> Convención: el foco está en el origen (0, 0), el periastro en (a(1-e), 0)
+> y el apoastro en (-a(1+e), 0). El eje X es el semieje mayor y el eje Y
+> el semieje menor.
+> """
+  
+> from __future__ import annotations
+  
+> import math
+> from typing import NamedTuple
+  
+> from .constantes import (
+>     EXCENTRICIDAD_MAXIMA,
+>     EXCENTRICIDAD_MINIMA,
+> )
+> from .resolver import ErrorKepler, resolver_kepler
+  
+  
+> class PosicionOrbital(NamedTuple):
+>     """Posición de un cuerpo en su órbita, en unidades del semieje mayor.
+  
+>     Attributes:
+>         x: Coordenada horizontal en porcentaje del semieje mayor.
+>         y: Coordenada vertical en porcentaje del semieje mayor.
+>         semieje_menor: Semieje menor b = a·√(1-e²).
+>         anomalia_excentrica: E resuelta, en radianes.
+>     """
+  
+>     x: float
+>     y: float
+>     semieje_menor: float
+>     anomalia_excentrica: float
+  
+  
+> def calcular_posicion_orbital(
+>     anomalia_media: float,
+>     semieje_mayor: float,
+>     excentricidad: float,
+> ) -> PosicionOrbital:
+>     """
+>     Calcula la posición de un cuerpo en una órbita elíptica.
+  
+>     Dado M (anomalía media), a (semieje mayor) y e (excentricidad),
+>     resuelve la Ecuación de Kepler y devuelve las coordenadas (x, y)
+>     en el sistema de referencia del foco:
+  
+>         x = a · (cos(E) - e)
+>         y = b · sin(E)      con b = a · √(1 - e²)
+  
+>     Args:
+>         anomalia_media: Ángulo M en radianes.
+>         semieje_mayor: Semieje mayor a (en % del contenedor).
+>         excentricidad: Excentricidad orbital e ∈ [0, 0.99].
+  
+>     Returns:
+>         PosicionOrbital con las coordenadas y metadatos.
+  
+>     Raises:
+>         ErrorKepler: Si algún parámetro está fuera de rango.
+  
+>     Examples:
+>         >>> p = calcular_posicion_orbital(0.0, 50.0, 0.0)
+>         >>> round(p.x, 6), round(p.y, 6)
+>         (50.0, 0.0)
+>     """
+>     if semieje_mayor <= 0:
+>         raise ErrorKepler(f"Semieje mayor debe ser > 0: {semieje_mayor}")
+  
+>     if not (EXCENTRICIDAD_MINIMA <= excentricidad <= EXCENTRICIDAD_MAXIMA):
+>         raise ErrorKepler(
+>             f"Excentricidad fuera de rango: {excentricidad}"
+>         )
+  
+>     semieje_menor = semieje_mayor * math.sqrt(1.0 - excentricidad ** 2)
+>     E = resolver_kepler(anomalia_media, excentricidad)
+  
+>     x = semieje_mayor * (math.cos(E) - excentricidad)
+>     y = semieje_menor * math.sin(E)
+  
+>     return PosicionOrbital(
+>         x=x,
+>         y=y,
+>         semieje_menor=semieje_menor,
+>         anomalia_excentrica=E,
+>     )
+  
+  
+> __all__ = ["calcular_posicion_orbital", "PosicionOrbital"]

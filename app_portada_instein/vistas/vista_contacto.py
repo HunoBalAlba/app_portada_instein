@@ -14,6 +14,8 @@ from ..infraestructura.constantes_visuales import (
     UBICACION_FISICA,
     WHATSAPP_URL,
 )
+from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+
 
 # Nota: este componente proviene de un módulo externo que debes conservar.
 from .tutorial_crear_cuenta import cuadro_de_tutorial
@@ -191,6 +193,7 @@ def vista_contacto() -> rx.Component:
                     _tarjeta_telefono(),
                     _tarjeta_direccion(),
                     _tarjeta_horario(),
+                    
                     gap="1rem",
                     width="100%",
                 ),
@@ -200,6 +203,7 @@ def vista_contacto() -> rx.Component:
             max_width="72rem",
             width="100%",
         ),
+        pie_pagina_institucional(),
         align="center",
         min_height="100vh",
         width="100%",

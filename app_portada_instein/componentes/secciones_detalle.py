@@ -1,7 +1,7 @@
 """
 Secciones que componen la vista de detalle de una carrera:
 - Información general
-- Plan de estudios
+- Plan de estudios (con selector segmentado de años)
 - Perfil profesional y campo laboral
 """
 
@@ -12,7 +12,7 @@ from ..componentes.primitivos import (
     enlace_navegacion,
     tarjeta_informacion_pequena,
 )
-from ..componentes.tarjetas_carrera import fila_materia, pastilla_anio
+from ..componentes.tarjetas_carrera import fila_materia
 from ..componentes.vinetas import (
     vineta_campo_laboral,
     vineta_perfil_profesional,
@@ -20,6 +20,10 @@ from ..componentes.vinetas import (
 from ..dominio.estado_institucional import EstadoInstitucional
 from ..infraestructura.constantes_visuales import SOMBRA_SUAVE
 
+
+# ======================================================================
+# Estilos auxiliares
+# ======================================================================
 
 def _estilo_tarjeta_detalle() -> dict:
     """Devuelve el estilo común para tarjetas de detalle."""
@@ -30,6 +34,46 @@ def _estilo_tarjeta_detalle() -> dict:
         box_shadow=SOMBRA_SUAVE,
     )
 
+
+# ======================================================================
+# Estado del selector segmentado del plan de estudios
+# ======================================================================
+
+class EstadoPlanEstudios(rx.State):
+    """Estado del selector segmentado para seleccionar el año del plan."""
+
+    anio_seleccionado: str = "0"
+    """Valor del año seleccionado como string (ej: "0", "1", "2")."""
+
+    @rx.event
+    def cambiar_anio(self, valor: str | list[str]):
+        """
+        Cambia el año seleccionado desde el selector segmentado.
+
+        El `on_change` de `rx.segmented_control.root` envía el valor
+        como `str` o `list[str]` según el modo. Normalizamos ambos
+        casos a un string simple.
+
+        Args:
+            valor: Valor del item seleccionado. Puede ser "1" o ["1"].
+        """
+        if isinstance(valor, list):
+            self.anio_seleccionado = valor[0] if valor else "0"
+        else:
+            self.anio_seleccionado = str(valor)
+
+    @rx.var
+    def indice_anio_actual(self) -> int:
+        """Devuelve el índice del año seleccionado como int."""
+        try:
+            return int(self.anio_seleccionado)
+        except (ValueError, TypeError):
+            return 0
+
+
+# ======================================================================
+# Sección: INFORMACIÓN
+# ======================================================================
 
 def seccion_informacion() -> rx.Component:
     """Sección de información general de la carrera."""
@@ -88,7 +132,6 @@ def seccion_informacion() -> rx.Component:
             border_radius="1rem",
             box_shadow="0 10px 25px -5px rgb(37 99 235 / 0.25)",
             transition="all 0.2s",
-            # Ya no es necesario text_decoration="none"; el helper lo aplica.
         ),
         gap="1rem",
         direction="column",
@@ -96,9 +139,32 @@ def seccion_informacion() -> rx.Component:
     )
 
 
+# ======================================================================
+# Sección: PLAN DE ESTUDIOS (con selector segmentado)
+# ======================================================================
+
+def _opcion_anio_segmento(opcion: dict) -> rx.Component:
+    """
+    Renderiza un item del selector segmentado de años.
+
+    Recibe un dict con `etiqueta` y `valor` precalculados en el State,
+    por lo que no necesita el índice adicional.
+    """
+    return rx.segmented_control.item(
+        opcion["etiqueta"],
+        value=opcion["valor"],
+    )
+
+
 def seccion_plan_estudios() -> rx.Component:
-    """Sección con el plan de estudios dividido por años."""
+    """
+    Sección con el plan de estudios dividido por años.
+
+    Usa `rx.segmented_control.root` (selector segmentado) con items
+    precalculados en el State (`opciones_anio_plan`).
+    """
     return rx.box(
+        # --- Encabezado ---
         rx.box(
             rx.heading(
                 "Plan de Estudios",
@@ -107,28 +173,38 @@ def seccion_plan_estudios() -> rx.Component:
                 text_transform="uppercase",
                 margin_bottom="0.75rem",
             ),
-            rx.box(
+
+            # --- Selector segmentado de años ---
+            rx.segmented_control.root(
                 rx.foreach(
-                    EstadoInstitucional.carrera_seleccionada["plan_estudios"],
-                    lambda plan_anual, indice: pastilla_anio(plan_anual, indice),
+                    EstadoInstitucional.opciones_anio_plan,
+                    _opcion_anio_segmento,
                 ),
-                display="flex",
-                gap="0.5rem",
-                overflow_x="auto",
-                padding_bottom="0.5rem",
-                padding_left="0.25rem",
-                padding_right="0.25rem",
-                margin_left="-0.25rem",
-                margin_right="-0.25rem",
+                on_change=EstadoPlanEstudios.cambiar_anio,
+                value=EstadoPlanEstudios.anio_seleccionado,
+                width="100%",
+                size="3",
+                variant="surface",
+                radius="large",
             ),
             margin_bottom="1rem",
         ),
+
+        # --- Contenido del año seleccionado ---
         rx.card(
             rx.flex(
                 rx.box(
-                    rx.text(EstadoInstitucional.plan_anual_seleccionado["anio"]),
                     rx.text(
-                        EstadoInstitucional.plan_anual_seleccionado["materias"]
+                        EstadoInstitucional.carrera_seleccionada["plan_estudios"][
+                            EstadoPlanEstudios.indice_anio_actual
+                        ]["anio"],
+                        size="3",
+                        font_weight="700",
+                    ),
+                    rx.text(
+                        EstadoInstitucional.carrera_seleccionada["plan_estudios"][
+                            EstadoPlanEstudios.indice_anio_actual
+                        ]["materias"]
                         .length()
                         .to_string()
                         + " materias",
@@ -149,7 +225,9 @@ def seccion_plan_estudios() -> rx.Component:
             ),
             rx.vstack(
                 rx.foreach(
-                    EstadoInstitucional.plan_anual_seleccionado["materias"],
+                    EstadoInstitucional.carrera_seleccionada["plan_estudios"][
+                        EstadoPlanEstudios.indice_anio_actual
+                    ]["materias"],
                     lambda materia, indice: fila_materia(materia, indice),
                 ),
                 gap="0.5rem",
@@ -158,6 +236,10 @@ def seccion_plan_estudios() -> rx.Component:
         ),
     )
 
+
+# ======================================================================
+# Sección: PERFIL Y CAMPO LABORAL
+# ======================================================================
 
 def seccion_perfil_y_campo_laboral() -> rx.Component:
     """Sección con perfil profesional y campo laboral."""
