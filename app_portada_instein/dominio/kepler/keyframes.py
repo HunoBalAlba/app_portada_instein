@@ -129,9 +129,7 @@ def generar_pasos_orbita(
         x_rem = coord.x * factor_conversion_rem
         y_rem = coord.y * factor_conversion_rem
 
-        escala, opacidad = _calcular_escala_opacidad(
-            coord.y_perspectiva, semieje_mayor
-        )
+        escala, opacidad = _calcular_escala_opacidad(coord.y_perspectiva, semieje_mayor)
 
         pasos[f"{int(fraccion * 100)}%"] = {
             "transform": (
@@ -162,15 +160,12 @@ def generar_keyframes_css(
         >>> generar_keyframes_css(defs)
         {'@keyframes orbita_0_55': {'0%': {...}}}
     """
-    return {
-        f"@keyframes {d['nombre']}": d["pasos"]
-        for d in definiciones
-    }
+    return {f"@keyframes {d['nombre']}": d["pasos"] for d in definiciones}
 
 
 __all__ = [
-    "generar_pasos_orbita",
-    "generar_keyframes_css",
     "DefinicionKeyframe",
     "KeyframeStep",
+    "generar_keyframes_css",
+    "generar_pasos_orbita",
 ]

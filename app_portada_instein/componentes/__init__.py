@@ -19,14 +19,8 @@ Cada módulo agrupa componentes con una responsabilidad concreta:
 # ======================================================================
 # Primitivos
 # ======================================================================
-from .primitivos import (
-    contenedor_clicable,
-    enlace_navegacion,
-    tarjeta_estilizada,
-    tarjeta_informacion_pequena,
-)
+from .banner_cta_final import banner_cta_final
 
-from .multimedia_institucional import seccion_multimedia_institucional
 # ======================================================================
 # Navegación
 # ======================================================================
@@ -34,32 +28,7 @@ from .barra_navegacion import (
     barra_navegacion_superior,
     elemento_menu,
 )
-
-# ======================================================================
-# Tarjetas de carrera y plan de estudios
-# ======================================================================
-from .tarjetas_carrera import (
-    tarjeta_carrera,
-    pastilla_anio,
-    fila_materia,
-)
-
-# ======================================================================
-# Viñetas
-# ======================================================================
-from .vinetas import (
-    vineta_perfil_profesional,
-    vineta_campo_laboral,
-)
-
-# ======================================================================
-# Secciones de detalle
-# ======================================================================
-from .secciones_detalle import (
-    seccion_informacion,
-    seccion_plan_estudios,
-    seccion_perfil_y_campo_laboral,
-)
+from .estadisticas_instituto import seccion_estadisticas
 
 # ======================================================================
 # Explorador de carrera (estilo Leonardo AI)
@@ -70,60 +39,82 @@ from .explorador_carrera import explorador_carrera_destacada
 # Hero principal
 # ======================================================================
 from .hero_principal import hero_principal
-
-# ======================================================================
-# Secciones adicionales del home
-# ======================================================================
-from .por_que_instein import seccion_por_que_instein
-from .estadisticas_instituto import seccion_estadisticas
-from .preguntas_frecuentes import seccion_preguntas_frecuentes
-from .banner_cta_final import banner_cta_final
+from .multimedia_institucional import seccion_multimedia_institucional
 
 # ======================================================================
 # Pie de página
 # ======================================================================
 from .pie_pagina import pie_pagina_institucional
 
+# ======================================================================
+# Secciones adicionales del home
+# ======================================================================
+from .por_que_instein import seccion_por_que_instein
+from .preguntas_frecuentes import seccion_preguntas_frecuentes
+from .primitivos import (
+    contenedor_clicable,
+    enlace_navegacion,
+    tarjeta_estilizada,
+    tarjeta_informacion_pequena,
+)
+
+# ======================================================================
+# Secciones de detalle
+# ======================================================================
+from .secciones_detalle import (
+    seccion_informacion,
+    seccion_perfil_y_campo_laboral,
+    seccion_plan_estudios,
+)
+
+# ======================================================================
+# Tarjetas de carrera y plan de estudios
+# ======================================================================
+from .tarjetas_carrera import (
+    fila_materia,
+    pastilla_anio,
+    tarjeta_carrera,
+)
+
+# ======================================================================
+# Viñetas
+# ======================================================================
+from .vinetas import (
+    vineta_campo_laboral,
+    vineta_perfil_profesional,
+)
+
 
 __all__ = [
-    # --- Primitivos ---
-    "contenedor_clicable",
-    "enlace_navegacion",
-    "tarjeta_estilizada",
-    "tarjeta_informacion_pequena",
-
+    "banner_cta_final",
     # --- Navegación ---
     "barra_navegacion_superior",
+    # --- Primitivos ---
+    "contenedor_clicable",
     "elemento_menu",
-
-    # --- Tarjetas ---
-    "tarjeta_carrera",
-    "pastilla_anio",
-    "fila_materia",
-
-    # --- Viñetas ---
-    "vineta_perfil_profesional",
-    "vineta_campo_laboral",
-
-    # --- Secciones de detalle ---
-    "seccion_informacion",
-    "seccion_plan_estudios",
-    "seccion_perfil_y_campo_laboral",
-
+    "enlace_navegacion",
     # --- Explorador de carrera ---
     "explorador_carrera_destacada",
-
+    "fila_materia",
     # --- Hero principal ---
     "hero_principal",
-
-    # --- Secciones adicionales ---
-    "seccion_por_que_instein",
-    "seccion_estadisticas",
-    "seccion_preguntas_frecuentes",
-    "banner_cta_final",
-
+    "pastilla_anio",
     # --- Pie de página ---
     "pie_pagina_institucional",
-
+    "seccion_estadisticas",
+    # --- Secciones de detalle ---
+    "seccion_informacion",
     "seccion_multimedia_institucional",
+    "seccion_perfil_y_campo_laboral",
+    "seccion_plan_estudios",
+    # --- Secciones adicionales ---
+    "seccion_por_que_instein",
+    "seccion_preguntas_frecuentes",
+    # --- Tarjetas ---
+    "tarjeta_carrera",
+    "tarjeta_estilizada",
+    "tarjeta_informacion_pequena",
+    "vineta_campo_laboral",
+    # --- Viñetas ---
+    "vineta_perfil_profesional",
 ]

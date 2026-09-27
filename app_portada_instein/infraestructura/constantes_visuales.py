@@ -32,7 +32,6 @@ GITHUB_URL = "https://github.com/tu-usuario/instein"
 EMAIL_CONTACTO = "contacto@instein.edu.bo"
 
 
-
 """
 Constantes visuales reutilizables a lo largo de toda la aplicación:
 sombras, radios y estilos comunes.

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Final
 
+
 # ======================================================================
 # Conversión de porcentaje a rem
 # ======================================================================
@@ -90,18 +91,18 @@ En e = 1 la órbita es parabólica y la fórmula falla.
 
 __all__ = [
     "ANCHO_CONTENEDOR_REM",
+    "ESCALA_BASE",
+    "ESCALA_MAXIMA",
+    "ESCALA_MINIMA",
+    "ESCALA_VARIACION",
+    "EXCENTRICIDAD_MAXIMA",
+    "EXCENTRICIDAD_MINIMA",
     "FACTOR_CONVERSION_REM",
     "MAX_ITERACIONES_KEPLER",
-    "TOLERANCIA_KEPLER",
     "NUM_PASOS_KEYFRAMES",
-    "ESCALA_BASE",
-    "ESCALA_VARIACION",
-    "ESCALA_MINIMA",
-    "ESCALA_MAXIMA",
     "OPACIDAD_BASE",
-    "OPACIDAD_VARIACION",
-    "OPACIDAD_MINIMA",
     "OPACIDAD_MAXIMA",
-    "EXCENTRICIDAD_MINIMA",
-    "EXCENTRICIDAD_MAXIMA",
+    "OPACIDAD_MINIMA",
+    "OPACIDAD_VARIACION",
+    "TOLERANCIA_KEPLER",
 ]

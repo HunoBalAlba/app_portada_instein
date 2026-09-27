@@ -8,12 +8,13 @@ Hero para la página de carreras, estilo Google Play Store:
 
 import reflex as rx
 
-from ..dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 
 
 # ======================================================================
 # Grid de perspectiva de fondo
 # ======================================================================
+
 
 def _grid_perspectiva() -> rx.Component:
     """Grid de líneas radiales que simulan perspectiva."""
@@ -50,6 +51,7 @@ def _grid_perspectiva() -> rx.Component:
 # ======================================================================
 # Banner individual destacado (estilo Google Play)
 # ======================================================================
+
 
 def _banner_carrera(item: dict) -> rx.Component:
     """
@@ -95,7 +97,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                 ),
                 z_index="1",
             ),
-
             # --- Contenido sobre la imagen ---
             rx.vstack(
                 # --- Etiqueta superior ---
@@ -112,10 +113,8 @@ def _banner_carrera(item: dict) -> rx.Component:
                     border_radius="0.375rem",
                     width="fit-content",
                 ),
-
                 # --- Espaciador ---
                 rx.box(flex="1"),
-
                 # --- Título grande ---
                 rx.heading(
                     carrera["nombre"],
@@ -125,7 +124,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                     line_height="1.2",
                     max_width="90%",
                 ),
-
                 # --- Footer: icono + subtítulo + CTA ---
                 rx.flex(
                     # Icono circular
@@ -182,7 +180,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                     width="100%",
                     margin_top="1rem",
                 ),
-
                 align="start",
                 justify="between",
                 spacing="2",
@@ -192,7 +189,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                 position="relative",
                 z_index="2",
             ),
-
             position="relative",
             height="20rem",
             border_radius="1rem",
@@ -212,6 +208,7 @@ def _banner_carrera(item: dict) -> rx.Component:
 # ======================================================================
 # Flecha de navegación (izquierda / derecha)
 # ======================================================================
+
 
 def _flecha_navegacion(direccion: str) -> rx.Component:
     """
@@ -242,8 +239,7 @@ def _flecha_navegacion(direccion: str) -> rx.Component:
         width="2.75rem",
         border_radius="9999px",
         background=rx.color_mode_cond(light="#ffffff", dark="#1e293b"),
-        border="1px solid "
-        + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+        border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
         box_shadow="0 4px 12px -2px rgba(0,0,0,0.15)",
         display="flex",
         align_items="center",
@@ -263,6 +259,7 @@ def _flecha_navegacion(direccion: str) -> rx.Component:
 # ======================================================================
 # Indicadores de posición (dots)
 # ======================================================================
+
 
 def _indicadores_dots() -> rx.Component:
     """Fila de dots que indican la posición actual del carrusel."""
@@ -299,6 +296,7 @@ def _indicadores_dots() -> rx.Component:
 # Carrusel completo
 # ======================================================================
 
+
 def _carrusel_carreras() -> rx.Component:
     """
     Carrusel de banners destacados con:
@@ -311,20 +309,16 @@ def _carrusel_carreras() -> rx.Component:
         rx.box(
             # --- Banner actual ---
             _banner_carrera(EstadoInstitucional.item_carrusel_actual),
-
             # --- Flechas de navegación ---
             _flecha_navegacion("izquierda"),
             _flecha_navegacion("derecha"),
-
             position="relative",
             width="100%",
             max_width="64rem",
             margin="0 auto",
         ),
-
         # --- Indicadores de posición ---
         _indicadores_dots(),
-
         width="100%",
     )
 
@@ -333,6 +327,7 @@ def _carrusel_carreras() -> rx.Component:
 # Hero completo
 # ======================================================================
 
+
 def hero_carreras() -> rx.Component:
     """
     Hero de la página de carreras estilo Google Play Store con carrusel.
@@ -340,7 +335,6 @@ def hero_carreras() -> rx.Component:
     return rx.box(
         # --- Grid de perspectiva de fondo ---
         _grid_perspectiva(),
-
         # --- Carrusel ---
         rx.box(
             _carrusel_carreras(),
@@ -351,7 +345,6 @@ def hero_carreras() -> rx.Component:
             z_index="1",
             width="100%",
         ),
-
         # --- Contenedor principal ---
         position="relative",
         width="100%",

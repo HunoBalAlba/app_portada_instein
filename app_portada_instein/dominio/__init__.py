@@ -8,4 +8,5 @@ de estudios visible.
 
 from .estado_institucional import EstadoInstitucional
 
+
 __all__ = ["EstadoInstitucional"]

@@ -1,0 +1,138 @@
+cd "/home/kat/proyectos reflex/proyecto_instein/app_portada_instein"
+
+mkdir -p .github/workflows
+
+cat > .github/workflows/ci.yml << 'EOF'
+# =====================================================================
+# CI/CD Pipeline para INSTEIN
+# Repo: https://github.com/HunoBalAlba/app_portada_instein
+# =====================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.5.11"
+
+jobs:
+  lint:
+    name: 🔍 Lint & Format (Ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: 📦 Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: 🔍 Ruff check
+        run: uv run ruff check --output-format=github .
+
+      - name: 🎨 Ruff format check
+        run: uv run ruff format --check .
+
+  test:
+    name: 🧪 Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12"]
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: 📦 Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: 🧪 Run tests with coverage
+        run: |
+          uv run pytest \
+            --cov=app_portada_instein.dominio.kepler \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-branch \
+            -v
+
+      - name: 📊 Upload coverage HTML artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html-py${{ matrix.python-version }}
+          path: htmlcov/
+          retention-days: 7
+
+  coverage-check:
+    name: 🎯 Coverage Threshold (100%)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: ⚡ Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: 📦 Install dependencies
+        run: uv sync --extra dev --frozen
+
+      - name: 🎯 Verify 100% coverage
+        run: |
+          uv run pytest \
+            --cov=app_portada_instein.dominio.kepler \
+            --cov-fail-under=100 \
+            --cov-branch \
+            --no-header \
+            -q
+EOF
+
+echo "✅ ci.yml creado"
+ls -la .github/workflows/

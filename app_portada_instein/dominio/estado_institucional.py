@@ -19,12 +19,8 @@ import random
 
 import reflex as rx
 
-from ..datos.catalogo_carreras import CATALOGO_CARRERAS, PALETA_COLORES
-from ..datos.modelos_carrera import (
-    Carrera,
-    CarreraConEtiqueta,
-    PlanAnual,
-)
+from app_portada_instein.datos.catalogo_carreras import CATALOGO_CARRERAS, PALETA_COLORES
+from app_portada_instein.datos.modelos_carrera import Carrera, CarreraConEtiqueta, PlanAnual
 
 
 # ======================================================================
@@ -253,10 +249,7 @@ class EstadoInstitucional(rx.State):
                     left=f"{x}%",
                     top=f"{y}%",
                     opacity=f"{opacidad}",
-                    animation=(
-                        f"flotar_icono_particula {duracion}s ease-in-out "
-                        f"{delay}s infinite"
-                    ),
+                    animation=(f"flotar_icono_particula {duracion}s ease-in-out {delay}s infinite"),
                     pointer_events="none",
                 )
             )
@@ -412,21 +405,18 @@ class EstadoInstitucional(rx.State):
         if len(paleta_disponible) >= cantidad:
             seleccionados = random.sample(paleta_disponible, cantidad)
         else:
-            seleccionados = [
-                random.choice(paleta_disponible) for _ in range(cantidad)
-            ]
+            seleccionados = [random.choice(paleta_disponible) for _ in range(cantidad)]
 
         random.shuffle(seleccionados)
 
         carreras_actualizadas: list[Carrera] = []
-        for carrera, (color, color_suave) in zip(self.carreras, seleccionados):
+        for carrera, (color, color_suave) in zip(self.carreras, seleccionados, strict=False):
             nueva_carrera = dict(carrera)
             nueva_carrera["color_principal"] = color
             nueva_carrera["color_suave"] = color_suave
             carreras_actualizadas.append(nueva_carrera)
 
         self.carreras = carreras_actualizadas
-
 
     @rx.var
     def opciones_anio_plan(self) -> list[dict]:

@@ -25,12 +25,6 @@ from app_portada_instein.styles import (
     FUENTE_PRINCIPAL,
     HOJAS_DE_ESTILO_BASE,
 )
-from app_portada_instein.vistas import (
-    vista_carreras,
-    vista_contacto,
-    vista_detalle_carrera,
-    vista_inicio,
-)
 
 
 # ======================================================================
@@ -88,6 +82,7 @@ KEYFRAMES_UI: dict = {
 # Keyframes de órbitas keplerianas (delegadas al motor)
 # ======================================================================
 
+
 def _iconos_unicos_por_keyframe() -> dict[str, dict]:
     """Recopila los iconos animados únicos de todas las carreras."""
     vistos: dict[str, dict] = {}
@@ -140,7 +135,7 @@ app = rx.App(
     ),
     style=ESTILOS_GLOBALES,
     stylesheets=[
-        *HOJAS_DE_ESTILO_BASE,          # Google Fonts (Inter + JetBrains Mono)
-        "/styles/global.css",           # CSS personalizado (etiquetas HTML)
+        *HOJAS_DE_ESTILO_BASE,  # Google Fonts (Inter + JetBrains Mono)
+        "/styles/global.css",  # CSS personalizado (etiquetas HTML)
     ],
 )

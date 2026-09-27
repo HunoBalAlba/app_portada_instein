@@ -4,7 +4,7 @@ Viñetas reutilizables para listas con icono (perfil, campo laboral, etc.).
 
 import reflex as rx
 
-from ..dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 
 
 def vineta_perfil_profesional(elemento: str) -> rx.Component:

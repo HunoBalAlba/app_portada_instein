@@ -57,9 +57,7 @@ def aplicar_perspectiva_y_rotacion(
         (1.0, 0.0)
     """
     if not (0.0 < factor_perspectiva <= 1.0):
-        raise ValueError(
-            f"factor_perspectiva debe estar en (0, 1]: {factor_perspectiva}"
-        )
+        raise ValueError(f"factor_perspectiva debe estar en (0, 1]: {factor_perspectiva}")
 
     y_plano = y_elipse * factor_perspectiva
     rad = math.radians(angulo_inicial_grados)
@@ -87,7 +85,7 @@ def convertir_a_rem(valor_pct: float, factor_conversion: float) -> float:
 
 
 __all__ = [
+    "CoordenadaPerspectiva",
     "aplicar_perspectiva_y_rotacion",
     "convertir_a_rem",
-    "CoordenadaPerspectiva",
 ]

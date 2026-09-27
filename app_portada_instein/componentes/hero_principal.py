@@ -30,17 +30,46 @@ from app_portada_instein.styles import (
 
 ICONOS_PARTICULAS: list[str] = [
     # Sistemas Informáticos
-    "cpu", "code-2", "database", "wifi", "terminal", "binary", "hard-drive",
+    "cpu",
+    "code-2",
+    "database",
+    "wifi",
+    "terminal",
+    "binary",
+    "hard-drive",
     # Contaduría General
-    "calculator", "receipt", "coins", "chart-line", "wallet", "trending-up",
+    "calculator",
+    "receipt",
+    "coins",
+    "chart-line",
+    "wallet",
+    "trending-up",
     # Secretariado Ejecutivo
-    "briefcase", "calendar-clock", "mail", "users", "file-text", "clipboard-list",
+    "briefcase",
+    "calendar-clock",
+    "mail",
+    "users",
+    "file-text",
+    "clipboard-list",
     # Comercio Internacional
-    "globe", "ship", "package", "truck", "plane",
+    "globe",
+    "ship",
+    "package",
+    "truck",
+    "plane",
     # Electrónica
-    "zap", "circuit-board", "radio", "plug-zap", "settings",
+    "zap",
+    "circuit-board",
+    "radio",
+    "plug-zap",
+    "settings",
     # Académicos generales
-    "graduation-cap", "book-open", "award", "lightbulb", "target", "rocket",
+    "graduation-cap",
+    "book-open",
+    "award",
+    "lightbulb",
+    "target",
+    "rocket",
 ]
 
 
@@ -99,6 +128,7 @@ ICONOS_PARTICULAS_FONDO = _generar_iconos_particulas()
 # CAPA 2: Partículas (iconos flotantes)
 # ======================================================================
 
+
 def _icono_particula(particula: dict) -> rx.Component:
     """
     Renderiza un icono de carrera como partícula flotante en gris.
@@ -151,6 +181,7 @@ def _capa_iconos_particulas() -> rx.Component:
 # ======================================================================
 # CAPA 1: Líneas luminosas diagonales
 # ======================================================================
+
 
 def _linea_luminosa(
     angulo: int,
@@ -207,6 +238,7 @@ def _capa_lineas_luminosas() -> rx.Component:
 # CAPA 0: Overlay de gradiente
 # ======================================================================
 
+
 def _capa_overlay_gradiente() -> rx.Component:
     """
     Overlay de gradiente para garantizar legibilidad del contenido
@@ -224,11 +256,7 @@ def _capa_overlay_gradiente() -> rx.Component:
                 "rgba(248, 250, 252, 0.75) 0%, "
                 "rgba(248, 250, 252, 0.9) 100%)"
             ),
-            dark=(
-                "linear-gradient(180deg, "
-                "rgba(5, 4, 10, 0.5) 0%, "
-                "rgba(5, 4, 10, 0.9) 100%)"
-            ),
+            dark=("linear-gradient(180deg, rgba(5, 4, 10, 0.5) 0%, rgba(5, 4, 10, 0.9) 100%)"),
         ),
         pointer_events="none",
         z_index="0",
@@ -238,6 +266,7 @@ def _capa_overlay_gradiente() -> rx.Component:
 # ======================================================================
 # CAPA -1: Imagen de fondo
 # ======================================================================
+
 
 def _capa_imagen_fondo() -> rx.Component:
     """
@@ -264,6 +293,7 @@ def _capa_imagen_fondo() -> rx.Component:
 # ======================================================================
 # Contenido principal: Trust badges
 # ======================================================================
+
 
 def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
     """
@@ -299,6 +329,7 @@ def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
 # ======================================================================
 # Contenido principal: Título + CTA
 # ======================================================================
+
 
 def _hero_titulo_y_cta() -> rx.Component:
     """
@@ -339,7 +370,6 @@ def _hero_titulo_y_cta() -> rx.Component:
             box_shadow=SOMBRA_CAJA,
             margin_bottom="1.5rem",
         ),
-
         # --- Título principal ---
         rx.heading(
             "Forja tu futuro como ",
@@ -353,7 +383,6 @@ def _hero_titulo_y_cta() -> rx.Component:
             color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
             max_width="48rem",
         ),
-
         # --- Subtítulo ---
         rx.text(
             "Formación técnica de excelencia con títulos de Provisión Nacional. "
@@ -365,7 +394,6 @@ def _hero_titulo_y_cta() -> rx.Component:
             line_height="1.6",
             margin_top="1rem",
         ),
-
         # --- CTA dual ---
         rx.flex(
             # CTA primario: Ver Carreras
@@ -418,7 +446,6 @@ def _hero_titulo_y_cta() -> rx.Component:
             align="center",
             justify="center",
         ),
-
         # --- Trust badges ---
         rx.flex(
             _trust_badge("award", "R.M. 0871/2016"),
@@ -431,7 +458,6 @@ def _hero_titulo_y_cta() -> rx.Component:
             justify="center",
             max_width="48rem",
         ),
-
         align="center",
         text_align="center",
         padding="4rem 1.5rem 2rem 1.5rem",
@@ -443,6 +469,7 @@ def _hero_titulo_y_cta() -> rx.Component:
 # ======================================================================
 # Hero principal completo
 # ======================================================================
+
 
 def hero_principal() -> rx.Component:
     """
@@ -460,22 +487,18 @@ def hero_principal() -> rx.Component:
         # CAPA -1: Imagen de fondo
         # ==============================================================
         _capa_imagen_fondo(),
-
         # ==============================================================
         # CAPA 0: Overlay de gradiente
         # ==============================================================
         _capa_overlay_gradiente(),
-
         # ==============================================================
         # CAPA 1: Líneas luminosas diagonales
         # ==============================================================
         _capa_lineas_luminosas(),
-
         # ==============================================================
         # CAPA 2: Iconos flotantes (partículas)
         # ==============================================================
         _capa_iconos_particulas(),
-
         # ==============================================================
         # CAPA 3: Contenido principal
         # ==============================================================
@@ -488,7 +511,6 @@ def hero_principal() -> rx.Component:
             position="relative",
             z_index="2",
         ),
-
         # ==============================================================
         # Contenedor principal
         # ==============================================================

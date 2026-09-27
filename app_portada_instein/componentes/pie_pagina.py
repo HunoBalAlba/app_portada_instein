@@ -7,13 +7,9 @@ Pie de página institucional con:
 
 import reflex as rx
 
-from app_portada_instein.componentes.primitivos import enlace_navegacion
 from app_portada_instein.infraestructura.constantes_visuales import (
     ANIO_COPYRIGHT,
     EMAIL_CONTACTO,
-    ENTIDAD_COPYRIGHT,
-    GITHUB_URL,
-    NOMBRE_COMPLETO_INSTITUTO,
     NOMBRE_INSTITUTO,
     TELEFONO_PRINCIPAL,
     WHATSAPP_URL,
@@ -23,6 +19,7 @@ from app_portada_instein.infraestructura.constantes_visuales import (
 # ======================================================================
 # Estructura de los enlaces del footer
 # ======================================================================
+
 
 def _enlaces_footer() -> list[dict]:
     """
@@ -83,6 +80,7 @@ def _enlaces_footer() -> list[dict]:
 # Sección de feedback ("¿Te resultó útil?")
 # ======================================================================
 
+
 def _seccion_feedback() -> rx.Component:
     """
     Sección con pregunta de feedback y botones Sí/No.
@@ -138,15 +136,14 @@ def _seccion_feedback() -> rx.Component:
         direction="column",
         gap="0.75rem",
         padding="1.5rem 0",
-        border_bottom=(
-            "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border_bottom=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
     )
 
 
 # ======================================================================
 # Columna individual de enlaces
 # ======================================================================
+
 
 def _columna_enlaces(columna: dict) -> rx.Component:
     """Renderiza una columna del footer con su título y sus enlaces."""
@@ -229,9 +226,11 @@ def _barra_inferior() -> rx.Component:
         gap="1rem",
     )
 
+
 # ======================================================================
 # Footer completo
 # ======================================================================
+
 
 def pie_pagina_institucional() -> rx.Component:
     """
@@ -246,7 +245,6 @@ def pie_pagina_institucional() -> rx.Component:
         rx.vstack(
             # --- Sección de feedback ---
             _seccion_feedback(),
-
             # --- Grid de columnas de enlaces ---
             rx.grid(
                 *[_columna_enlaces(col) for col in columnas],
@@ -260,10 +258,8 @@ def pie_pagina_institucional() -> rx.Component:
                 width="100%",
                 padding="2.5rem 0",
             ),
-
             # --- Barra inferior ---
             _barra_inferior(),
-
             spacing="0",
             width="100%",
         ),
@@ -272,9 +268,7 @@ def pie_pagina_institucional() -> rx.Component:
         padding="0 1.5rem",
         max_width="72rem",
         margin="0 auto",
-        border_top=(
-            "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border_top=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         background=rx.color_mode_cond(
             light="linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
             dark="linear-gradient(180deg, #0f1117 0%, #0b0914 100%)",

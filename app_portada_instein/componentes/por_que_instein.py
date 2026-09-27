@@ -38,8 +38,7 @@ RAZONES: list[dict] = [
         "icono": "building-2",
         "titulo": "Convenios Empresariales",
         "descripcion": (
-            "Prácticas profesionales garantizadas en empresas líderes "
-            "de la región y del país."
+            "Prácticas profesionales garantizadas en empresas líderes de la región y del país."
         ),
         "color": "#ea580c",
     },
@@ -114,10 +113,7 @@ def _tarjeta_razon(razon: dict) -> rx.Component:
         ),
         padding="1.5rem",
         border_radius="1.25rem",
-        border=(
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
         transition="all 0.3s",
         width="100%",

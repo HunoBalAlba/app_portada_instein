@@ -15,6 +15,7 @@ import pytest
 # Fixtures numéricas
 # ======================================================================
 
+
 @pytest.fixture
 def excentricidades_tipicas() -> list[float]:
     """Excentricidades usadas en el catálogo real de carreras."""
@@ -36,6 +37,7 @@ def angulos_todos() -> list[float]:
 # ======================================================================
 # Fixtures de órbitas (parámetros con nombres exactos a la API)
 # ======================================================================
+
 
 @pytest.fixture
 def orbitas_estandar() -> list[dict]:

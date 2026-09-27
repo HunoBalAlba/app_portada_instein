@@ -67,6 +67,7 @@ PREGUNTAS_FRECUENTES: list[dict] = [
 # Estado del acordeón
 # ======================================================================
 
+
 class EstadoPreguntasFrecuentes(rx.State):
     """Estado del acordeón de preguntas frecuentes."""
 
@@ -84,6 +85,7 @@ class EstadoPreguntasFrecuentes(rx.State):
 # ======================================================================
 # Elemento de pregunta individual (acordeón)
 # ======================================================================
+
 
 def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
     """
@@ -138,10 +140,7 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
         ),
         # --- Estilos base ---
         width="100%",
-        border=(
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         border_radius="0.875rem",
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
         transition="all 0.2s",
@@ -154,6 +153,7 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
 # ======================================================================
 # Sección completa de preguntas frecuentes
 # ======================================================================
+
 
 def seccion_preguntas_frecuentes() -> rx.Component:
     """Sección completa con título + lista de preguntas frecuentes."""
@@ -185,10 +185,7 @@ def seccion_preguntas_frecuentes() -> rx.Component:
             ),
             # --- Lista de preguntas ---
             rx.vstack(
-                *[
-                    _pregunta_frecuente(p, i)
-                    for i, p in enumerate(PREGUNTAS_FRECUENTES)
-                ],
+                *[_pregunta_frecuente(p, i) for i, p in enumerate(PREGUNTAS_FRECUENTES)],
                 width="100%",
                 max_width="48rem",
                 spacing="3",

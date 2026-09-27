@@ -6,7 +6,6 @@ Tipografías:
 - JetBrains Mono → bloques de código y contenido técnico.
 """
 
-import reflex as rx
 
 # ======================================================================
 # 1. DATOS INSTITUCIONALES
@@ -144,8 +143,7 @@ HOJAS_DE_ESTILO_BASE = [
 # Cadena de fallbacks estándar de Radix Themes para máxima compatibilidad
 # cross-platform (macOS, Windows, Linux, Android, iOS).
 FALLBACK_SANS = (
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", '
-    'Roboto, "Helvetica Neue", Arial, sans-serif'
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 )
 FALLBACK_MONO = (
     '"JetBrains Mono", "SF Mono", Monaco, "Cascadia Code", '
@@ -205,59 +203,59 @@ ESTILOS_GLOBALES_CSS = {
 
 
 __all__ = [
-    # Datos institucionales
-    "NOMBRE_INSTITUTO",
-    "NOMBRE_COMPLETO_INSTITUTO",
-    "TELEFONO_PRINCIPAL",
-    "TELEFONO_SECUNDARIO",
-    "WHATSAPP_URL",
-    "DIRECCION",
-    "UBICACION_FISICA",
-    "HORARIO_ATENCION",
-    "ANIO_COPYRIGHT",
-    "ENTIDAD_COPYRIGHT",
-    "GITHUB_URL",
-    "EMAIL_CONTACTO",
-    # Sombras y radios
-    "SOMBRA_SUAVE",
-    "SOMBRA_MEDIA",
-    "SOMBRA_FUERTE",
-    "SOMBRA_CAJA",
-    "RADIO_PEQUENO",
-    "RADIO_MEDIO",
-    "RADIO_GRANDE",
-    "RADIO_EXTRA_GRANDE",
-    "RADIO_PASTILLA",
-    "RADIO_BORDE",
-    # Colores
-    "BORDE_PREDETERMINADO",
-    "COLOR_TEXTO",
-    "COLOR_GRIS",
-    "COLOR_FONDO_GRIS",
-    "COLOR_TEXTO_ACENTO",
-    "COLOR_ACENTO",
-    "COLOR_FONDO_ACENTO",
-    "HOVER_COLOR_ACENTO",
-    "HOVER_FONDO_ACENTO",
+    "ANCHO_CONTENIDO_MENU",
     # Dimensiones
     "ANCHO_CONTENIDO_VW",
-    "ANCHO_MENU_LATERAL",
-    "ANCHO_CONTENIDO_MENU",
     "ANCHO_MAXIMO",
-    "TAMANOS_CAJA_COLOR",
-    # Estilos
-    "ESTILO_PAGINA_PLANTILLA",
-    "ESTILO_CONTENIDO_PLANTILLA",
-    "ESTILO_ENLACE",
-    "ESTILO_BOTON_SUPERPUESTO",
-    "ESTILO_SELECTOR_COLOR",
-    # Fuentes
-    "FUENTE_PRINCIPAL",
-    "FUENTE_MONOESPACIADA",
-    "HOJAS_DE_ESTILO_BASE",
-    "ESTILO_BASE",
-    "FALLBACK_SANS",
-    "FALLBACK_MONO",
+    "ANCHO_MENU_LATERAL",
+    "ANIO_COPYRIGHT",
+    # Colores
+    "BORDE_PREDETERMINADO",
+    "COLOR_ACENTO",
+    "COLOR_FONDO_ACENTO",
+    "COLOR_FONDO_GRIS",
+    "COLOR_GRIS",
+    "COLOR_TEXTO",
+    "COLOR_TEXTO_ACENTO",
+    "DIRECCION",
+    "EMAIL_CONTACTO",
+    "ENTIDAD_COPYRIGHT",
     # Animaciones
     "ESTILOS_GLOBALES_CSS",
+    "ESTILO_BASE",
+    "ESTILO_BOTON_SUPERPUESTO",
+    "ESTILO_CONTENIDO_PLANTILLA",
+    "ESTILO_ENLACE",
+    # Estilos
+    "ESTILO_PAGINA_PLANTILLA",
+    "ESTILO_SELECTOR_COLOR",
+    "FALLBACK_MONO",
+    "FALLBACK_SANS",
+    "FUENTE_MONOESPACIADA",
+    # Fuentes
+    "FUENTE_PRINCIPAL",
+    "GITHUB_URL",
+    "HOJAS_DE_ESTILO_BASE",
+    "HORARIO_ATENCION",
+    "HOVER_COLOR_ACENTO",
+    "HOVER_FONDO_ACENTO",
+    "NOMBRE_COMPLETO_INSTITUTO",
+    # Datos institucionales
+    "NOMBRE_INSTITUTO",
+    "RADIO_BORDE",
+    "RADIO_EXTRA_GRANDE",
+    "RADIO_GRANDE",
+    "RADIO_MEDIO",
+    "RADIO_PASTILLA",
+    "RADIO_PEQUENO",
+    "SOMBRA_CAJA",
+    "SOMBRA_FUERTE",
+    "SOMBRA_MEDIA",
+    # Sombras y radios
+    "SOMBRA_SUAVE",
+    "TAMANOS_CAJA_COLOR",
+    "TELEFONO_PRINCIPAL",
+    "TELEFONO_SECUNDARIO",
+    "UBICACION_FISICA",
+    "WHATSAPP_URL",
 ]

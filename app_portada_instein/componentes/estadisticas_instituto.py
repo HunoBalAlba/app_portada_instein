@@ -70,10 +70,7 @@ def _tarjeta_estadistica(stat: dict) -> rx.Component:
         ),
         padding="1.75rem 1rem",
         border_radius="1.25rem",
-        border=(
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
         flex="1",
         min_width="0",

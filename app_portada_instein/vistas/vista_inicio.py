@@ -4,17 +4,17 @@ Vista de la página de inicio (ruta "/") — versión refactorizada.
 
 import reflex as rx
 
-from ..componentes.barra_navegacion import barra_navegacion_superior
-from ..componentes.hero_principal import hero_principal
-from ..componentes.multimedia_institucional import (
+from app_portada_instein.componentes.banner_cta_final import banner_cta_final
+from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
+from app_portada_instein.componentes.estadisticas_instituto import seccion_estadisticas
+from app_portada_instein.componentes.hero_principal import hero_principal
+from app_portada_instein.componentes.multimedia_institucional import (
     seccion_multimedia_institucional,
 )
-from ..componentes.por_que_instein import seccion_por_que_instein
-from ..componentes.estadisticas_instituto import seccion_estadisticas
-from ..componentes.preguntas_frecuentes import seccion_preguntas_frecuentes
-from ..componentes.banner_cta_final import banner_cta_final
-from ..componentes.pie_pagina import pie_pagina_institucional
-from ..infraestructura.constantes_visuales import (
+from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+from app_portada_instein.componentes.por_que_instein import seccion_por_que_instein
+from app_portada_instein.componentes.preguntas_frecuentes import seccion_preguntas_frecuentes
+from app_portada_instein.infraestructura.constantes_visuales import (
     NOMBRE_INSTITUTO,
     TELEFONO_PRINCIPAL,
     UBICACION_FISICA,
@@ -104,45 +104,30 @@ def vista_inicio() -> rx.Component:
     return rx.vstack(
         # --- Barra de navegación ---
         barra_navegacion_superior(),
-
         # --- Contenido principal ---
         rx.box(
             # Hero unificado: título + CTA + carrera destacada + selector
             hero_principal(),
-
             # Multimedia institucional (video + info + redes sociales)
             seccion_multimedia_institucional(),
-
             # Estadísticas del instituto
             seccion_estadisticas(),
-
             # Sección "¿Por qué INSTEIN?"
             seccion_por_que_instein(),
-
-            # # CTA hacia carreras
-            # _boton_ver_carreras(),
-
-            # # Información rápida (ubicación + informes)
-            # _tarjetas_informacion_rapida(),
-
             # FAQ
             seccion_preguntas_frecuentes(),
-
             # Banner final
             rx.box(
                 banner_cta_final(),
                 padding="0 1.5rem 3rem 1.5rem",
                 width="100%",
             ),
-
             padding_bottom="3rem",
             max_width="100%",
             width="100%",
         ),
-
         # --- Pie de página ---
         pie_pagina_institucional(),
-
         align="center",
         min_height="100vh",
         width="100%",

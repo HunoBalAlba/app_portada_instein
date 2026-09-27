@@ -27,6 +27,7 @@ from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 # Buscador de carreras
 # ======================================================================
 
+
 def _buscador_carreras() -> rx.Component:
     """Buscador central estilo Leonardo AI."""
     return rx.box(
@@ -77,10 +78,7 @@ def _buscador_carreras() -> rx.Component:
             light="rgba(255,255,255,0.9)",
             dark="rgba(15,17,23,0.9)",
         ),
-        border=(
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         backdrop_filter="blur(12px)",
         box_shadow="0 10px 30px -10px rgba(0,0,0,0.15)",
         transition="all 0.2s",
@@ -90,6 +88,7 @@ def _buscador_carreras() -> rx.Component:
 # ======================================================================
 # Card de imagen de carrera (con navegación al detalle)
 # ======================================================================
+
 
 def _card_imagen_carrera(carrera: dict) -> rx.Component:
     """
@@ -142,24 +141,6 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
                 width="100%",
                 margin_top="0.75rem",
             ),
-            # --- Icono check si está activa ---
-            # rx.cond(
-            #     esta_activa,
-            #     rx.box(
-            #         rx.icon("check_circle", size=20, color="#ffffff"),
-            #         position="absolute",
-            #         top="0.5rem",
-            #         right="0.5rem",
-            #         background=color,
-            #         border_radius="9999px",
-            #         padding="0.25rem",
-            #         display="flex",
-            #         align_items="center",
-            #         justify_content="center",
-            #         box_shadow=f"0 4px 12px -2px {color}88",
-            #     ),
-            #     rx.fragment(),
-            # ),
             position="relative",
             width="100%",
         ),
@@ -170,8 +151,7 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
         border=rx.cond(
             False,
             f"2px solid {color}",
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+            "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
         ),
         box_shadow=rx.cond(
             False,
@@ -232,6 +212,7 @@ def _grid_imagenes_carreras() -> rx.Component:
 # Cabecera de la carrera seleccionada
 # ======================================================================
 
+
 def _cabecera_carrera() -> rx.Component:
     """Cabecera con badge + nombre + lema de la carrera destacada."""
     carrera = EstadoInstitucional.carrera_destacada
@@ -281,6 +262,7 @@ def _cabecera_carrera() -> rx.Component:
 # Botón de opción (tab circular)
 # ======================================================================
 
+
 def _boton_opcion_explorador(
     icono: str,
     etiqueta: str,
@@ -316,8 +298,7 @@ def _boton_opcion_explorador(
                 border=rx.cond(
                     esta_activa,
                     "none",
-                    "1px solid "
-                    + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+                    "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
                 ),
                 align="center",
                 justify="center",
@@ -343,9 +324,7 @@ def _boton_opcion_explorador(
             align="center",
             spacing="2",
         ),
-        al_hacer_clic=lambda: EstadoInstitucional.seleccionar_seccion_explorador(
-            id_seccion
-        ),
+        al_hacer_clic=lambda: EstadoInstitucional.seleccionar_seccion_explorador(id_seccion),
         transition="all 0.2s",
         _hover={"transform": "translateY(-2px)"},
     )
@@ -371,6 +350,7 @@ def _barra_opciones_explorador() -> rx.Component:
 # ======================================================================
 # Card de contenido dinámico
 # ======================================================================
+
 
 def _card_explorador(
     titulo: str,
@@ -412,8 +392,7 @@ def _card_explorador(
         padding="1.25rem",
         border_radius="1rem",
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
-        border="1px solid "
-        + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+        border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
         width="100%",
         transition="all 0.2s",
         _hover={
@@ -427,6 +406,7 @@ def _card_explorador(
 # ======================================================================
 # Sección: INFORMACIÓN
 # ======================================================================
+
 
 def _grid_info() -> rx.Component:
     """Grid con la información completa de la carrera."""
@@ -510,6 +490,7 @@ def _grid_info() -> rx.Component:
 # Sección: PLAN DE ESTUDIOS
 # ======================================================================
 
+
 def _pastilla_anio_explorador(anio: dict, indice: int) -> rx.Component:
     """Pastilla seleccionable para elegir el año del plan."""
     esta_activo = EstadoInstitucional.indice_anio_explorador == indice
@@ -565,7 +546,7 @@ def _grid_plan() -> rx.Component:
             rx.flex(
                 rx.foreach(
                     carrera["plan_estudios"],
-                    lambda anio, idx: _pastilla_anio_explorador(anio, idx),
+                    _pastilla_anio_explorador,
                 ),
                 gap="0.5rem",
                 flex_wrap="wrap",
@@ -616,6 +597,7 @@ def _grid_plan() -> rx.Component:
 # Sección: PERFIL PROFESIONAL
 # ======================================================================
 
+
 def _grid_perfil() -> rx.Component:
     """Grid con el perfil profesional."""
     return rx.grid(
@@ -639,6 +621,7 @@ def _grid_perfil() -> rx.Component:
 # Sección: CAMPO LABORAL
 # ======================================================================
 
+
 def _grid_campo() -> rx.Component:
     """Grid con el campo laboral."""
     return rx.grid(
@@ -661,6 +644,7 @@ def _grid_campo() -> rx.Component:
 # ======================================================================
 # Sección: FAQ
 # ======================================================================
+
 
 class EstadoFAQ(rx.State):
     """Estado del acordeón de FAQ del explorador."""
@@ -737,8 +721,7 @@ def _item_faq_explorador(pregunta: dict, indice: int) -> rx.Component:
         border=rx.cond(
             esta_abierta,
             f"1px solid {color_carrera}66",
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+            "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
         ),
         border_radius="0.875rem",
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
@@ -772,7 +755,7 @@ def _grid_faq() -> rx.Component:
         rx.vstack(
             rx.foreach(
                 EstadoInstitucional.preguntas_frecuentes_carrera_destacada,
-                lambda pregunta, idx: _item_faq_explorador(pregunta, idx),
+                _item_faq_explorador,
             ),
             width="100%",
             spacing="3",
@@ -787,6 +770,7 @@ def _grid_faq() -> rx.Component:
 # ======================================================================
 # Contenido dinámico
 # ======================================================================
+
 
 def _contenido_explorador() -> rx.Component:
     """Renderiza el contenido dinámico según la sección activa."""
@@ -808,6 +792,7 @@ def _contenido_explorador() -> rx.Component:
 # ======================================================================
 # Panel flotante de selección (también navega al detalle)
 # ======================================================================
+
 
 def _panel_flotante_selector() -> rx.Component:
     """
@@ -902,8 +887,7 @@ def _panel_flotante_selector() -> rx.Component:
                 padding="1.5rem",
                 border_radius="1.25rem",
                 background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
-                border="1px solid "
-                + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+                border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
                 box_shadow="0 30px 60px -15px rgba(0,0,0,0.4)",
                 z_index="999",
                 animation="deslizar_desde_abajo 0.3s ease-out",
@@ -916,6 +900,7 @@ def _panel_flotante_selector() -> rx.Component:
 # ======================================================================
 # Explorador completo
 # ======================================================================
+
 
 def explorador_carrera_destacada() -> rx.Component:
     """

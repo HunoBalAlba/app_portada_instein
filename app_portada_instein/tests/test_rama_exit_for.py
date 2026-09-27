@@ -21,6 +21,7 @@ from app_portada_instein.dominio.kepler import resolver_kepler
 # Fuerza la salida por BREAK (convergencia)
 # ======================================================================
 
+
 class TestExitPorBreak:
     """Salida del `for` por `break` (convergencia)."""
 
@@ -54,6 +55,7 @@ class TestExitPorBreak:
 # ======================================================================
 # Fuerza la salida por AGOTAMIENTO del for (sin break)
 # ======================================================================
+
 
 class TestExitPorAgotamiento:
     """
@@ -172,6 +174,7 @@ class TestExitPorAgotamiento:
 # ======================================================================
 # Verificación empírica del flujo de control
 # ======================================================================
+
 
 class TestVerificacionFlujo:
     """Verifica empíricamente que ambas ramas se ejecutan."""

@@ -1,0 +1,47 @@
+cd "/home/kat/proyectos reflex/proyecto_instein/app_portada_instein"
+
+cat > .pre-commit-config.yaml << 'EOF'
+# =====================================================================
+# Pre-commit hooks para INSTEIN
+# Instalar: uv run pre-commit install
+# =====================================================================
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        name: 🔍 Ruff lint
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        name: 🎨 Ruff format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: ✂️  Trim trailing whitespace
+      - id: end-of-file-fixer
+        name: 📄 Fix end of files
+      - id: check-yaml
+        name: 📋 Check YAML
+      - id: check-toml
+        name: 📋 Check TOML
+      - id: check-added-large-files
+        name: 🚫 Block large files (>500KB)
+        args: [--maxkb=500]
+      - id: check-merge-conflict
+        name: ⚠️  Check merge conflicts
+      - id: mixed-line-ending
+        name: 📏 Check line endings
+        args: [--fix=lf]
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.23
+    hooks:
+      - id: validate-pyproject
+        name: ✅ Validate pyproject.toml
+EOF
+
+echo "✅ .pre-commit-config.yaml creado"
+wc -l .pre-commit-config.yaml

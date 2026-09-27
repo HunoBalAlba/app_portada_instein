@@ -20,12 +20,10 @@ def banner_cta_final() -> rx.Component:
             right="0",
             bottom="0",
             background=(
-                "radial-gradient(ellipse at 50% 50%, "
-                "rgba(96, 165, 250, 0.15) 0%, transparent 70%)"
+                "radial-gradient(ellipse at 50% 50%, rgba(96, 165, 250, 0.15) 0%, transparent 70%)"
             ),
             z_index="0",
         ),
-
         # --- Contenido ---
         rx.vstack(
             rx.heading(
@@ -94,7 +92,6 @@ def banner_cta_final() -> rx.Component:
             z_index="1",
             padding="4rem 1.5rem",
         ),
-
         # --- Contenedor ---
         position="relative",
         width="100%",

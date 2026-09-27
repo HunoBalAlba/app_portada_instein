@@ -61,9 +61,7 @@ def elemento_menu(etiqueta: str, icono: str, ruta: str) -> rx.Component:
         ),
         padding="0.5rem",
         border_radius="0.75rem",
-        background=rx.cond(
-            esta_activo, rx.color("accent", 11), "transparent"
-        ),
+        background=rx.cond(esta_activo, rx.color("accent", 11), "transparent"),
         border=rx.cond(
             esta_activo,
             f"1px solid {rx.color('accent', 11)}",
@@ -87,7 +85,6 @@ def barra_navegacion_superior() -> rx.Component:
         rx.flex(
             # --- Espaciador izquierdo ---
             rx.box(),
-
             # --- Menú de navegación centrado ---
             rx.flex(
                 elemento_menu("Inicio", "home", "/"),
@@ -100,10 +97,8 @@ def barra_navegacion_superior() -> rx.Component:
                 padding="0.25rem",
                 flex_shrink="0",
             ),
-
             # --- Botón de cambio de tema ---
             rx.color_mode.button(),
-
             align="center",
             justify="between",
             width="100%",

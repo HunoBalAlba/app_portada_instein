@@ -1,10 +1,11 @@
 import reflex as rx
 
+
 config = rx.Config(
     app_name="app_portada_instein",
     plugins=[
         rx.plugins.SitemapPlugin(),
         rx.plugins.TailwindV4Plugin(),
         rx.plugins.RadixThemesPlugin(),
-    ]
+    ],
 )

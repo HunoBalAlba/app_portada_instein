@@ -47,7 +47,7 @@ class TestPeriodicidad:
     def test_periodicidad(self, M: float, e: float, k: int) -> None:
         E1 = resolver_kepler(M, e)
         E2 = resolver_kepler(M + 2 * math.pi * k, e)
-        assert E2 == pytest.approx(E1 + 2 * math.pi * k, abs=1e-9)
+        assert pytest.approx(E1 + 2 * math.pi * k, abs=1e-9) == E2
 
 
 class TestSimetria:
@@ -56,9 +56,7 @@ class TestSimetria:
     @pytest.mark.parametrize("M", [0.5, 1.5, 3.0])
     @pytest.mark.parametrize("e", [0.1, 0.3, 0.6])
     def test_impar(self, M: float, e: float) -> None:
-        assert resolver_kepler(-M, e) == pytest.approx(
-            -resolver_kepler(M, e), abs=1e-9
-        )
+        assert resolver_kepler(-M, e) == pytest.approx(-resolver_kepler(M, e), abs=1e-9)
 
 
 class TestErrores:

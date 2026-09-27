@@ -10,14 +10,15 @@ Estilo inspirado en Google Play Store:
 
 import reflex as rx
 
-from ..componentes.primitivos import contenedor_clicable, enlace_navegacion
-from ..datos.modelos_carrera import Carrera, PlanAnual
-from ..dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.componentes.primitivos import contenedor_clicable, enlace_navegacion
+from app_portada_instein.datos.modelos_carrera import Carrera, PlanAnual
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 
 
 # ======================================================================
 # Item de carrera con ranking (estilo Google Play)
 # ======================================================================
+
 
 def tarjeta_carrera(carrera: Carrera) -> rx.Component:
     """
@@ -30,7 +31,6 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
     """
     return enlace_navegacion(
         f"/carrera/{carrera['id']}",
-
         rx.flex(
             # --- Icono circular de la carrera ---
             rx.box(
@@ -48,7 +48,6 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
                 border_radius="0.875rem",
                 overflow="hidden",
             ),
-
             # --- Información ---
             rx.vstack(
                 rx.text(
@@ -80,12 +79,10 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
                 flex="1",
                 min_width="0",
             ),
-
             align="center",
             gap="1rem",
             width="100%",
         ),
-
         # --- Estilos base ---
         padding="0.75rem",
         border_radius="0.75rem",
@@ -104,6 +101,7 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
 # Item de carrera con ranking explícito (número a la izquierda)
 # ======================================================================
 
+
 def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
     """
     Item de carrera con número de ranking a la izquierda.
@@ -111,7 +109,6 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
     """
     return enlace_navegacion(
         f"/carrera/{carrera['id']}",
-
         rx.flex(
             # --- Número de ranking ---
             rx.box(
@@ -125,7 +122,6 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
                 text_align="center",
                 flex_shrink="0",
             ),
-
             # --- Icono circular ---
             rx.box(
                 rx.image(
@@ -142,7 +138,6 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
                 border_radius="0.875rem",
                 overflow="hidden",
             ),
-
             # --- Información ---
             rx.vstack(
                 rx.text(
@@ -175,12 +170,10 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
                 flex="1",
                 min_width="0",
             ),
-
             align="center",
             gap="1rem",
             width="100%",
         ),
-
         padding="0.75rem",
         border_radius="0.75rem",
         background="transparent",
@@ -198,10 +191,15 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
 # Pastilla de año del plan de estudios
 # ======================================================================
 
+
 def pastilla_anio(plan_anual: PlanAnual, indice: int) -> rx.Component:
     """Pastilla seleccionable que representa un año del plan de estudios."""
     esta_activo = EstadoInstitucional.indice_anio_seleccionado == indice
-
+    color_borde = rx.cond(
+        esta_activo,
+        "none",
+        EstadoInstitucional.carrera_seleccionada["color_principal"] + "44",
+    )
     return contenedor_clicable(
         rx.text(plan_anual["anio"], size="2"),
         al_hacer_clic=lambda: EstadoInstitucional.seleccionar_anio(indice),
@@ -213,7 +211,7 @@ def pastilla_anio(plan_anual: PlanAnual, indice: int) -> rx.Component:
             rx.color("accent", 1),
         ),
         color=rx.cond(esta_activo, "#ffffff", "gray"),
-        border=f"1px solid {rx.cond(esta_activo, 'none', EstadoInstitucional.carrera_seleccionada['color_principal'] + '44')}",
+        border=f"1px solid {color_borde}",
         box_shadow=rx.cond(
             esta_activo,
             "0 4px 12px -2px rgb(37 99 235 / 0.25)",
@@ -230,6 +228,7 @@ def pastilla_anio(plan_anual: PlanAnual, indice: int) -> rx.Component:
 # ======================================================================
 # Fila de materia
 # ======================================================================
+
 
 def fila_materia(materia: str, indice: int) -> rx.Component:
     """Fila individual de una materia dentro del plan de estudios."""
@@ -266,10 +265,7 @@ def fila_materia(materia: str, indice: int) -> rx.Component:
         padding="0.875rem 1rem",
         border_radius="0.75rem",
         background=rx.color_mode_cond(light="#f8fafc", dark="#0f1117"),
-        border=(
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")
-        ),
+        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
         transition="all 0.2s",
         _hover={
             "background": rx.color_mode_cond(light="#f1f5f9", dark="#1e293b"),

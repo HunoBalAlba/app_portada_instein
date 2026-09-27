@@ -24,9 +24,7 @@ from app_portada_instein.dominio.kepler import (
 # ======================================================================
 
 _PATRON_SCALE = re.compile(r"scale\(([\d.]+)\)")
-_PATRON_TRANSLATE = re.compile(
-    r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)"
-)
+_PATRON_TRANSLATE = re.compile(r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)")
 
 
 def _extraer_scale(transform: str) -> float:
@@ -45,6 +43,7 @@ def _extraer_opacidad(step: dict) -> float:
 # ======================================================================
 # TestCoberturaCompleta — clamps de escala y opacidad
 # ======================================================================
+
 
 class TestCoberturaCompleta:
     """
@@ -121,6 +120,7 @@ class TestCoberturaCompleta:
 # TestCoberturaPerspectiva
 # ======================================================================
 
+
 class TestCoberturaPerspectiva:
     """Tests que ejercitan ramas de `perspectiva.py`."""
 
@@ -139,6 +139,7 @@ class TestCoberturaPerspectiva:
 # ======================================================================
 # TestCoberturaPosicion
 # ======================================================================
+
 
 class TestCoberturaPosicion:
     """Tests que ejercitan ramas de `posicion.py`."""
@@ -174,6 +175,7 @@ class TestCoberturaPosicion:
 # TestCoberturaResolver
 # ======================================================================
 
+
 class TestCoberturaResolver:
     """Tests que ejercitan ramas de `resolver.py` desde keyframes."""
 
@@ -203,6 +205,7 @@ class TestCoberturaResolver:
 # ======================================================================
 # TestValidacionesKeyframes — cobertura de líneas 109 y 112
 # ======================================================================
+
 
 class TestValidacionesKeyframes:
     """

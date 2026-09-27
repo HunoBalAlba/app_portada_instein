@@ -22,6 +22,7 @@ from app_portada_instein.dominio.kepler import resolver_kepler
 # Rama A: salida por CONVERGENCIA (`break`)
 # ======================================================================
 
+
 class TestRamaConvergencia:
     """Fuerza que el bucle salga por `break`, no por agotamiento."""
 
@@ -34,8 +35,14 @@ class TestRamaConvergencia:
     def test_convergencia_con_valores_aleatorios(self) -> None:
         """Múltiples combinaciones (M, e) con max_iteraciones=100."""
         casos = [
-            (0.1, 0.05), (0.5, 0.1), (1.0, 0.2), (2.0, 0.3),
-            (3.0, 0.4), (4.0, 0.5), (-1.0, 0.2), (-2.5, 0.35),
+            (0.1, 0.05),
+            (0.5, 0.1),
+            (1.0, 0.2),
+            (2.0, 0.3),
+            (3.0, 0.4),
+            (4.0, 0.5),
+            (-1.0, 0.2),
+            (-2.5, 0.35),
         ]
         for M, e in casos:
             E = resolver_kepler(M, e, max_iteraciones=100)
@@ -45,16 +52,20 @@ class TestRamaConvergencia:
     def test_convergencia_con_tolerancia_grande(self) -> None:
         """Con tolerancia grande, la convergencia es inmediata."""
         E = resolver_kepler(
-            anomalia_media=0.5, excentricidad=0.1,
-            max_iteraciones=50, tolerancia=1e-1,
+            anomalia_media=0.5,
+            excentricidad=0.1,
+            max_iteraciones=50,
+            tolerancia=1e-1,
         )
         assert abs(E - 0.5) < 0.5
 
     def test_convergencia_con_tolerancia_estricta(self) -> None:
         """Con tolerancia muy estricta, debe converger eventualmente."""
         E = resolver_kepler(
-            anomalia_media=1.2, excentricidad=0.4,
-            max_iteraciones=100, tolerancia=1e-15,
+            anomalia_media=1.2,
+            excentricidad=0.4,
+            max_iteraciones=100,
+            tolerancia=1e-15,
         )
         residual = E - 0.4 * math.sin(E) - 1.2
         assert abs(residual) < 1e-12
@@ -71,6 +82,7 @@ class TestRamaConvergencia:
 # ======================================================================
 # Rama B: salida por AGOTAMIENTO del `for` (sin break)
 # ======================================================================
+
 
 class TestRamaAgotamiento:
     """
@@ -100,17 +112,15 @@ class TestRamaAgotamiento:
     @pytest.mark.parametrize(
         "M, e, max_iter",
         [
-            (2.0, 0.9, 1),   # delta ≈ -0.595 → no break
-            (1.0, 0.8, 1),   # delta ≈ -0.5 → no break
-            (0.5, 0.9, 1),   # delta ≈ -0.3 → no break
+            (2.0, 0.9, 1),  # delta ≈ -0.595 → no break
+            (1.0, 0.8, 1),  # delta ≈ -0.5 → no break
+            (0.5, 0.9, 1),  # delta ≈ -0.3 → no break
             (-1.5, 0.8, 1),
             (3.0, 0.95, 1),
             (5.0, 0.7, 2),
         ],
     )
-    def test_grid_agotamiento(
-        self, M: float, e: float, max_iter: int
-    ) -> None:
+    def test_grid_agotamiento(self, M: float, e: float, max_iter: int) -> None:
         """Grid de casos que agotan el for sin break."""
         E = resolver_kepler(M, e, max_iteraciones=max_iter)
         assert math.isfinite(E)
@@ -139,6 +149,7 @@ class TestRamaAgotamiento:
 # ======================================================================
 # Casos límite
 # ======================================================================
+
 
 class TestCasosLimite:
     """Casos límite y de robustez numérica."""

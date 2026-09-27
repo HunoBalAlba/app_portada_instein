@@ -27,8 +27,7 @@ def _validar_excentricidad(excentricidad: float) -> None:
     """Valida que la excentricidad esté en rango [0, 1)."""
     if not (EXCENTRICIDAD_MINIMA <= excentricidad <= EXCENTRICIDAD_MAXIMA):
         raise ErrorKepler(
-            f"Excentricidad fuera de rango [0, {EXCENTRICIDAD_MAXIMA}]: "
-            f"{excentricidad}"
+            f"Excentricidad fuera de rango [0, {EXCENTRICIDAD_MAXIMA}]: {excentricidad}"
         )
 
 
@@ -104,4 +103,4 @@ def resolver_kepler(
     return E + k * dos_pi
 
 
-__all__ = ["resolver_kepler", "ErrorKepler"]
+__all__ = ["ErrorKepler", "resolver_kepler"]

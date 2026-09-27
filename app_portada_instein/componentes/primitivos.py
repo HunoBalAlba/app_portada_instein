@@ -9,16 +9,16 @@ import reflex as rx
 
 from app_portada_instein.styles import (
     BORDE_PREDETERMINADO,
-    COLOR_ACENTO,
+    COLOR_FONDO_ACENTO,
     RADIO_BORDE,
     SOMBRA_CAJA,
-    COLOR_FONDO_ACENTO
 )
 
 
 # ======================================================================
 # Contenedor clicable (botón semántico)
 # ======================================================================
+
 
 def contenedor_clicable(*hijos, al_hacer_clic=None, **propiedades) -> rx.Component:
     """
@@ -42,6 +42,7 @@ def contenedor_clicable(*hijos, al_hacer_clic=None, **propiedades) -> rx.Compone
 # Enlace de navegación
 # ======================================================================
 
+
 def enlace_navegacion(destino: str, *hijos, **propiedades) -> rx.Component:
     """
     Enlace de navegación entre páginas (URLs reales).
@@ -62,6 +63,7 @@ def enlace_navegacion(destino: str, *hijos, **propiedades) -> rx.Component:
 # ======================================================================
 # Tarjeta estilizada
 # ======================================================================
+
 
 def tarjeta_estilizada(*hijos, **propiedades) -> rx.Component:
     """
@@ -84,6 +86,7 @@ def tarjeta_estilizada(*hijos, **propiedades) -> rx.Component:
 # ======================================================================
 # Tarjeta de información pequeña
 # ======================================================================
+
 
 def tarjeta_informacion_pequena(
     icono: str,

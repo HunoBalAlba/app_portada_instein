@@ -22,6 +22,7 @@ from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 # Estrellas de fondo
 # ======================================================================
 
+
 def _generar_estrellas(cantidad: int = 80, semilla: int = 42) -> list[dict]:
     """Genera posiciones aleatorias pero reproducibles para las estrellas."""
     rng = random.Random(semilla)
@@ -54,8 +55,7 @@ def _estrella_fondo(estrella: dict) -> rx.Component:
         border_radius="9999px",
         opacity=f"{estrella['opacidad']}",
         animation=(
-            f"flotar_estrella {2 + estrella['delay']}s ease-in-out "
-            f"{estrella['delay']}s infinite"
+            f"flotar_estrella {2 + estrella['delay']}s ease-in-out {estrella['delay']}s infinite"
         ),
         z_index="0",
         pointer_events="none",
@@ -65,6 +65,7 @@ def _estrella_fondo(estrella: dict) -> rx.Component:
 # ======================================================================
 # Líneas de fuga radiales
 # ======================================================================
+
 
 def _linea_fuga(angulo: int, color_claro: str) -> rx.Component:
     """Renderiza una línea de fuga radial desde el centro del contenedor."""
@@ -86,6 +87,7 @@ def _linea_fuga(angulo: int, color_claro: str) -> rx.Component:
 # ======================================================================
 # Icono orbital (con anillos opcionales estilo Saturno)
 # ======================================================================
+
 
 def _anillos_saturno(color: str) -> rx.Component:
     """Dibuja los anillos característicos de Saturno alrededor del icono."""
@@ -161,6 +163,7 @@ def _icono_orbital(icono_animado: dict) -> rx.Component:
 # Contenedor orbital completo
 # ======================================================================
 
+
 def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
     """
     Contenedor que ocupa TODO el espacio de la tarjeta con:
@@ -228,7 +231,6 @@ def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
             ),
             z_index="-1",
         ),
-
         # ==============================================================
         # CAPA 2: Iconos orbitales
         # ==============================================================
@@ -241,7 +243,6 @@ def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
             bottom="0",
             z_index="20",
         ),
-
         # ==============================================================
         # CAPA 3: Imagen central
         # ==============================================================
@@ -267,7 +268,6 @@ def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
             z_index="10",
             animation="pulso_central 3s ease-in-out infinite",
         ),
-
         # ==============================================================
         # CONTENEDOR PRINCIPAL
         # ==============================================================
@@ -285,6 +285,7 @@ def contenedor_animacion_orbital(carrera: dict) -> rx.Component:
 # Cuadro principal de resumen multimedia
 # ======================================================================
 
+
 def cuadro_resumen_multimedia() -> rx.Component:
     """
     Tarjeta principal con:
@@ -296,7 +297,6 @@ def cuadro_resumen_multimedia() -> rx.Component:
 
     return rx.box(
         contenedor_animacion_orbital(carrera),
-
         # --- Etiqueta superior izquierda: RESUMEN ---
         rx.flex(
             rx.box(
@@ -318,7 +318,6 @@ def cuadro_resumen_multimedia() -> rx.Component:
             left="1rem",
             z_index="30",
         ),
-
         # --- Etiqueta superior derecha: duración ---
         rx.box(
             rx.text(carrera["duracion"], size="1", color="#ffffff"),
@@ -332,7 +331,6 @@ def cuadro_resumen_multimedia() -> rx.Component:
             padding="0.25rem 0.625rem",
             border="1px solid rgba(255,255,255,0.1)",
         ),
-
         # --- Pie con nombre corto + botón de detalle ---
         rx.flex(
             rx.box(
@@ -371,7 +369,6 @@ def cuadro_resumen_multimedia() -> rx.Component:
             padding="1rem",
             background="linear-gradient(to top, rgba(0,0,0,0.6), transparent)",
         ),
-
         position="relative",
         width="100%",
         height="18rem",
@@ -385,6 +382,7 @@ def cuadro_resumen_multimedia() -> rx.Component:
 # ======================================================================
 # Pastilla selector de carrera destacada
 # ======================================================================
+
 
 def pastilla_carrera_destacada(carrera: dict) -> rx.Component:
     """Pastilla seleccionable para elegir la carrera destacada en el home."""
@@ -427,6 +425,7 @@ def pastilla_carrera_destacada(carrera: dict) -> rx.Component:
 # ======================================================================
 # Bloque de texto descriptivo de la carrera destacada
 # ======================================================================
+
 
 def bloque_texto_carrera_destacada() -> rx.Component:
     """
@@ -501,6 +500,7 @@ def bloque_texto_carrera_destacada() -> rx.Component:
 # ======================================================================
 # Selector completo de carrera destacada
 # ======================================================================
+
 
 def selector_carrera_destacada() -> rx.Component:
     """

@@ -9,17 +9,18 @@ Estilo Google Play Store:
 
 import reflex as rx
 
-from ..componentes.barra_navegacion import barra_navegacion_superior
-from ..componentes.hero_carreras import hero_carreras
-from ..componentes.tarjetas_carrera import item_carrera_con_ranking
-from ..componentes.pie_pagina import pie_pagina_institucional
-from ..dominio.estado_institucional import EstadoInstitucional
-from ..infraestructura.constantes_visuales import NOMBRE_INSTITUTO
+from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
+from app_portada_instein.componentes.hero_carreras import hero_carreras
+from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+from app_portada_instein.componentes.tarjetas_carrera import item_carrera_con_ranking
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.infraestructura.constantes_visuales import NOMBRE_INSTITUTO
 
 
 # ======================================================================
 # Filtros tipo pill (estilo Google Play)
 # ======================================================================
+
 
 def _filtro_pill(etiqueta: str, activo: bool = False) -> rx.Component:
     """Botón pill de filtro, estilo Google Play Store."""
@@ -41,8 +42,7 @@ def _filtro_pill(etiqueta: str, activo: bool = False) -> rx.Component:
             "#a7f3d0",
             rx.color_mode_cond(light="#f1f5f9", dark="#1e293b"),
         ),
-        border="1px solid "
-        + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+        border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
         cursor="pointer",
         transition="all 0.2s",
         _hover={
@@ -71,6 +71,7 @@ def _barra_filtros() -> rx.Component:
 # ======================================================================
 # Grid de listas de éxitos (3 columnas)
 # ======================================================================
+
 
 def _grid_listas_exitos() -> rx.Component:
     """
@@ -140,7 +141,12 @@ def _grid_listas_exitos() -> rx.Component:
 # Vista completa
 # ======================================================================
 
-@rx.page(route="/carreras", title=f"Carreras | {NOMBRE_INSTITUTO}",on_load=EstadoInstitucional.auto_avanzar_carrusel)
+
+@rx.page(
+    route="/carreras",
+    title=f"Carreras | {NOMBRE_INSTITUTO}",
+    on_load=EstadoInstitucional.auto_avanzar_carrusel,
+)
 def vista_carreras() -> rx.Component:
     """
     Página con la oferta académica completa estilo Google Play Store.
@@ -154,12 +160,10 @@ def vista_carreras() -> rx.Component:
     return rx.vstack(
         # --- Barra de navegación ---
         barra_navegacion_superior(),
-
         # --- Contenido principal ---
         rx.box(
             # Hero con banners destacados
             hero_carreras(),
-
             # Sección "Listas de éxitos"
             rx.box(
                 # --- Encabezado de sección ---
@@ -170,25 +174,19 @@ def vista_carreras() -> rx.Component:
                     color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
                     margin_bottom="1.5rem",
                 ),
-
                 # --- Filtros ---
                 _barra_filtros(),
-
                 # --- Grid de listas ---
                 _grid_listas_exitos(),
-
                 max_width="72rem",
                 margin="0 auto",
                 padding="2rem 1.5rem 4rem 1.5rem",
                 width="100%",
             ),
-
             width="100%",
         ),
-
         # --- Pie de página ---
         pie_pagina_institucional(),
-
         align="center",
         min_height="100vh",
         width="100%",

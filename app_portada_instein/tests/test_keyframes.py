@@ -25,9 +25,7 @@ from app_portada_instein.dominio.kepler import (
 # Helpers
 # ======================================================================
 
-_PATRON_TRANSLATE = re.compile(
-    r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)"
-)
+_PATRON_TRANSLATE = re.compile(r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)")
 _PATRON_SCALE = re.compile(r"scale\(([\d.]+)\)")
 
 
@@ -38,8 +36,7 @@ def _normalizar_transform(transform: str) -> str:
     Reemplaza `-0.000rem` por `0.000rem` y colapsa espacios múltiples.
     """
     normalizado = transform.replace("-0.000", "0.000")
-    normalizado = re.sub(r"\s+", " ", normalizado).strip()
-    return normalizado
+    return re.sub(r"\s+", " ", normalizado).strip()
 
 
 def _extraer_translate(transform: str) -> tuple[float, float]:
@@ -61,6 +58,7 @@ def _extraer_scale(transform: str) -> float:
 # ======================================================================
 # TestGenerarPasos
 # ======================================================================
+
 
 class TestGenerarPasos:
     """Verifica la estructura del dict de pasos."""
@@ -171,6 +169,7 @@ class TestGenerarPasos:
 # TestErrores
 # ======================================================================
 
+
 class TestErrores:
     def test_num_pasos_uno(self) -> None:
         with pytest.raises(ValueError):
@@ -217,6 +216,7 @@ class TestErrores:
 # TestGenerarKeyframesCSS
 # ======================================================================
 
+
 class TestGenerarKeyframesCSS:
     def test_estructura_css(self) -> None:
         defs: list[DefinicionKeyframe] = [
@@ -241,6 +241,7 @@ class TestGenerarKeyframesCSS:
 # ======================================================================
 # TestIntegracionConCatalogo
 # ======================================================================
+
 
 class TestIntegracionConCatalogo:
     """Simula el uso real con parámetros del catálogo."""

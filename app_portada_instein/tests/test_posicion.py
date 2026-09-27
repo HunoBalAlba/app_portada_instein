@@ -22,9 +22,7 @@ class TestOrbitaCircular:
             (3 * math.pi / 2, 0.0, -50.0),
         ],
     )
-    def test_posiciones_cardinales(
-        self, M: float, x_esperado: float, y_esperado: float
-    ) -> None:
+    def test_posiciones_cardinales(self, M: float, x_esperado: float, y_esperado: float) -> None:
         p = calcular_posicion_orbital(M, 50.0, 0.0)
         assert p.x == pytest.approx(x_esperado, abs=1e-9)
         assert p.y == pytest.approx(y_esperado, abs=1e-9)
@@ -48,14 +46,12 @@ class TestOrbitaElíptica:
     def test_semieje_menor(self) -> None:
         a, e = 100.0, 0.6
         p = calcular_posicion_orbital(1.0, a, e)
-        assert p.semieje_menor == pytest.approx(a * math.sqrt(1 - e ** 2))
+        assert p.semieje_menor == pytest.approx(a * math.sqrt(1 - e**2))
 
     def test_anomalia_excentrica_devuelta(self) -> None:
         p = calcular_posicion_orbital(1.0, 50.0, 0.3)
         # E debe satisfacer la ecuación de Kepler.
-        residual = p.anomalia_excentrica - 0.3 * math.sin(
-            p.anomalia_excentrica
-        ) - 1.0
+        residual = p.anomalia_excentrica - 0.3 * math.sin(p.anomalia_excentrica) - 1.0
         assert abs(residual) < 1e-9
 
 
@@ -65,7 +61,7 @@ class TestInvariantes:
     @pytest.mark.parametrize("e", [0.0, 0.3, 0.7])
     def test_dentro_de_la_elipse(self, e: float) -> None:
         a = 60.0
-        b = a * math.sqrt(1 - e ** 2)
+        b = a * math.sqrt(1 - e**2)
         # Distancia al foco (origen)
         for i in range(36):
             M = i * math.pi / 18

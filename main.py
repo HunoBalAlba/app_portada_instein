@@ -1,5 +1,5 @@
 def main():
-    print("Hello from app-portada-instein!")
+    pass
 
 
 if __name__ == "__main__":

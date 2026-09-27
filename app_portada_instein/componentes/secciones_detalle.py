@@ -7,37 +7,35 @@ Secciones que componen la vista de detalle de una carrera:
 
 import reflex as rx
 
-from ..componentes.primitivos import (
-    contenedor_clicable,
+from app_portada_instein.componentes.primitivos import (
     enlace_navegacion,
     tarjeta_informacion_pequena,
 )
-from ..componentes.tarjetas_carrera import fila_materia
-from ..componentes.vinetas import (
-    vineta_campo_laboral,
-    vineta_perfil_profesional,
-)
-from ..dominio.estado_institucional import EstadoInstitucional
-from ..infraestructura.constantes_visuales import SOMBRA_SUAVE
+from app_portada_instein.componentes.tarjetas_carrera import fila_materia
+from app_portada_instein.componentes.vinetas import vineta_campo_laboral, vineta_perfil_profesional
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.infraestructura.constantes_visuales import SOMBRA_SUAVE
 
 
 # ======================================================================
 # Estilos auxiliares
 # ======================================================================
 
+
 def _estilo_tarjeta_detalle() -> dict:
     """Devuelve el estilo común para tarjetas de detalle."""
-    return dict(
-        padding="1.5rem",
-        border_radius="1rem",
-        border="1px solid " + EstadoInstitucional.carrera_seleccionada["color_principal"],
-        box_shadow=SOMBRA_SUAVE,
-    )
+    return {
+        "padding": "1.5rem",
+        "border_radius": "1rem",
+        "border": "1px solid " + EstadoInstitucional.carrera_seleccionada["color_principal"],
+        "box_shadow": SOMBRA_SUAVE,
+    }
 
 
 # ======================================================================
 # Estado del selector segmentado del plan de estudios
 # ======================================================================
+
 
 class EstadoPlanEstudios(rx.State):
     """Estado del selector segmentado para seleccionar el año del plan."""
@@ -74,6 +72,7 @@ class EstadoPlanEstudios(rx.State):
 # ======================================================================
 # Sección: INFORMACIÓN
 # ======================================================================
+
 
 def seccion_informacion() -> rx.Component:
     """Sección de información general de la carrera."""
@@ -121,9 +120,7 @@ def seccion_informacion() -> rx.Component:
                     rx.text("¿Interesado en esta carrera?", color="#ffffff"),
                     rx.text("Contáctanos para más información", color="#ffffff"),
                 ),
-                rx.icon(
-                    "arrow-right", size=30, color="#ffffff", margin_left="auto"
-                ),
+                rx.icon("arrow-right", size=30, color="#ffffff", margin_left="auto"),
                 align="center",
                 gap="0.75rem",
             ),
@@ -142,6 +139,7 @@ def seccion_informacion() -> rx.Component:
 # ======================================================================
 # Sección: PLAN DE ESTUDIOS (con selector segmentado)
 # ======================================================================
+
 
 def _opcion_anio_segmento(opcion: dict) -> rx.Component:
     """
@@ -173,7 +171,6 @@ def seccion_plan_estudios() -> rx.Component:
                 text_transform="uppercase",
                 margin_bottom="0.75rem",
             ),
-
             # --- Selector segmentado de años ---
             rx.segmented_control.root(
                 rx.foreach(
@@ -189,7 +186,6 @@ def seccion_plan_estudios() -> rx.Component:
             ),
             margin_bottom="1rem",
         ),
-
         # --- Contenido del año seleccionado ---
         rx.card(
             rx.flex(
@@ -228,7 +224,7 @@ def seccion_plan_estudios() -> rx.Component:
                     EstadoInstitucional.carrera_seleccionada["plan_estudios"][
                         EstadoPlanEstudios.indice_anio_actual
                     ]["materias"],
-                    lambda materia, indice: fila_materia(materia, indice),
+                    fila_materia,
                 ),
                 gap="0.5rem",
                 width="100%",
@@ -240,6 +236,7 @@ def seccion_plan_estudios() -> rx.Component:
 # ======================================================================
 # Sección: PERFIL Y CAMPO LABORAL
 # ======================================================================
+
 
 def seccion_perfil_y_campo_laboral() -> rx.Component:
     """Sección con perfil profesional y campo laboral."""

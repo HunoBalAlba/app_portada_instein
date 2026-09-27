@@ -4,8 +4,9 @@ Vista de contacto con teléfonos, dirección, horario y mapa (ruta "/contacto").
 
 import reflex as rx
 
-from ..componentes.barra_navegacion import barra_navegacion_superior
-from ..infraestructura.constantes_visuales import (
+from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
+from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+from app_portada_instein.infraestructura.constantes_visuales import (
     DIRECCION,
     HORARIO_ATENCION,
     NOMBRE_INSTITUTO,
@@ -14,8 +15,6 @@ from ..infraestructura.constantes_visuales import (
     UBICACION_FISICA,
     WHATSAPP_URL,
 )
-from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
-
 
 # Nota: este componente proviene de un módulo externo que debes conservar.
 from .tutorial_crear_cuenta import cuadro_de_tutorial
@@ -193,7 +192,6 @@ def vista_contacto() -> rx.Component:
                     _tarjeta_telefono(),
                     _tarjeta_direccion(),
                     _tarjeta_horario(),
-                    
                     gap="1rem",
                     width="100%",
                 ),

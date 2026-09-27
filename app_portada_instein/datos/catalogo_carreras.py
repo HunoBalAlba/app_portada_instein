@@ -17,7 +17,7 @@ NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
 `calendar_clock`, `file_text`, `circuit_board`, `plug_zap`.
 """
 
-from ..datos.modelos_carrera import Carrera, IconoAnimado
+from app_portada_instein.datos.modelos_carrera import Carrera, IconoAnimado
 
 
 PALETA_COLORES: list[tuple[str, str]] = [
@@ -194,13 +194,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_archivo": "sistemas.png",
         "imagen_banner": "sistemas_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("code_xml", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#2563eb", True),
-            _icono_orbital_config("database", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"),
-            _icono_orbital_config("wifi", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"),
-            _icono_orbital_config("terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"),
+            _icono_orbital_config(
+                "code_xml", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#2563eb", True
+            ),
+            _icono_orbital_config(
+                "database", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"
+            ),
+            _icono_orbital_config(
+                "wifi", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"
+            ),
+            _icono_orbital_config(
+                "terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
+            ),
         ],
     },
-
     # ------------------------------------------------------------------
     # Carrera 1 — Contaduría General
     # ------------------------------------------------------------------
@@ -310,13 +317,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_archivo": "contaduria.png",
         "imagen_banner": "contaduria_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("receipt", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#0891b2", True),
-            _icono_orbital_config("coins", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#16a34a"),
-            _icono_orbital_config("chart_line", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"),
-            _icono_orbital_config("wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"),
+            _icono_orbital_config(
+                "receipt", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#0891b2", True
+            ),
+            _icono_orbital_config(
+                "coins", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#16a34a"
+            ),
+            _icono_orbital_config(
+                "chart_line", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"
+            ),
+            _icono_orbital_config(
+                "wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
+            ),
         ],
     },
-
     # ------------------------------------------------------------------
     # Carrera 2 — Secretariado Ejecutivo
     # ------------------------------------------------------------------
@@ -427,13 +441,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_archivo": "secretariado.png",
         "imagen_banner": "secretariado_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("calendar_clock", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#7c3aed", True),
-            _icono_orbital_config("mail", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#db2777"),
-            _icono_orbital_config("users", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#0891b2"),
-            _icono_orbital_config("file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"),
+            _icono_orbital_config(
+                "calendar_clock", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#7c3aed", True
+            ),
+            _icono_orbital_config(
+                "mail", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#db2777"
+            ),
+            _icono_orbital_config(
+                "users", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#0891b2"
+            ),
+            _icono_orbital_config(
+                "file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
+            ),
         ],
     },
-
     # ------------------------------------------------------------------
     # Carrera 3 — Comercio Internacional
     # ------------------------------------------------------------------
@@ -543,13 +564,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_archivo": "comercio.png",
         "imagen_banner": "comercio_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("ship", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#ea580c", True),
-            _icono_orbital_config("package", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"),
-            _icono_orbital_config("file_text", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"),
-            _icono_orbital_config("truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"),
+            _icono_orbital_config(
+                "ship", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#ea580c", True
+            ),
+            _icono_orbital_config(
+                "package", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"
+            ),
+            _icono_orbital_config(
+                "file_text", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"
+            ),
+            _icono_orbital_config(
+                "truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"
+            ),
         ],
     },
-
     # ------------------------------------------------------------------
     # Carrera 4 — Electrónica
     # ------------------------------------------------------------------
@@ -658,10 +686,16 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_archivo": "electronica.png",
         "imagen_banner": "electronica_banner.avif",
         "iconos_animados": [
-            _icono_orbital_config("circuit_board", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#16a34a", True),
+            _icono_orbital_config(
+                "circuit_board", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#16a34a", True
+            ),
             _icono_orbital_config("cpu", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#2563eb"),
-            _icono_orbital_config("radio", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"),
-            _icono_orbital_config("plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"),
+            _icono_orbital_config(
+                "radio", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"
+            ),
+            _icono_orbital_config(
+                "plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
+            ),
         ],
     },
 ]

@@ -11,21 +11,22 @@ Usa `rx.tabs.root` (pestañas) para gestionar las secciones.
 
 import reflex as rx
 
-from ..componentes.barra_navegacion import barra_navegacion_superior
-from ..componentes.pie_pagina import pie_pagina_institucional
-from ..componentes.primitivos import contenedor_clicable, enlace_navegacion
-from ..componentes.secciones_detalle import (
+from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
+from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+from app_portada_instein.componentes.primitivos import enlace_navegacion
+from app_portada_instein.componentes.secciones_detalle import (
     seccion_informacion,
     seccion_perfil_y_campo_laboral,
     seccion_plan_estudios,
 )
-from ..dominio.estado_institucional import EstadoInstitucional
-from ..infraestructura.constantes_visuales import NOMBRE_INSTITUTO
+from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.infraestructura.constantes_visuales import NOMBRE_INSTITUTO
 
 
 # ======================================================================
 # Estado del acordeón de preguntas frecuentes
 # ======================================================================
+
 
 class EstadoPreguntasFrecuentesDetalle(rx.State):
     """Estado del acordeón de preguntas frecuentes en la vista de detalle."""
@@ -44,6 +45,7 @@ class EstadoPreguntasFrecuentesDetalle(rx.State):
 # ======================================================================
 # Trigger de pestaña (plantilla reutilizable)
 # ======================================================================
+
 
 def _pestana_trigger(texto: str, icono: str, value: str) -> rx.Component:
     """
@@ -66,6 +68,7 @@ def _pestana_trigger(texto: str, icono: str, value: str) -> rx.Component:
 # ======================================================================
 # Encabezado fijo
 # ======================================================================
+
 
 def _encabezado_fijo_detalle() -> rx.Component:
     """Encabezado fijo con botón de regreso y nombre corto de la carrera."""
@@ -108,6 +111,7 @@ def _encabezado_fijo_detalle() -> rx.Component:
 # ======================================================================
 # Icono orbital
 # ======================================================================
+
 
 def _icono_orbital(icono_animado: dict) -> rx.Component:
     """Renderiza un icono orbitando alrededor de la imagen de la carrera."""
@@ -184,6 +188,7 @@ def _anillos_saturno(color: str) -> rx.Component:
 # Contenedor orbital con imagen central + iconos orbitando
 # ======================================================================
 
+
 def _contenedor_orbital_imagen() -> rx.Component:
     """Contenedor cuadrado con halo, iconos orbitando e imagen central."""
     carrera = EstadoInstitucional.carrera_seleccionada
@@ -209,7 +214,6 @@ def _contenedor_orbital_imagen() -> rx.Component:
             filter="blur(20px)",
             z_index="1",
         ),
-
         # --- Iconos orbitales ---
         rx.box(
             rx.foreach(
@@ -223,7 +227,6 @@ def _contenedor_orbital_imagen() -> rx.Component:
             bottom="0",
             z_index="5",
         ),
-
         # --- Imagen central ---
         rx.box(
             rx.image(
@@ -247,7 +250,6 @@ def _contenedor_orbital_imagen() -> rx.Component:
             z_index="10",
             animation="pulso_central 3s ease-in-out infinite",
         ),
-
         position="relative",
         width="100%",
         max_width="20rem",
@@ -263,6 +265,7 @@ def _contenedor_orbital_imagen() -> rx.Component:
 # ======================================================================
 # Hero de carrera
 # ======================================================================
+
 
 def _hero_carrera() -> rx.Component:
     """Bloque de presentación principal con la imagen orbital + texto."""
@@ -342,11 +345,10 @@ def _hero_carrera() -> rx.Component:
 # Sección: PREGUNTAS FRECUENTES
 # ======================================================================
 
+
 def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
     """Item individual de preguntas frecuentes con acordeón."""
-    esta_abierta = (
-        EstadoPreguntasFrecuentesDetalle.indice_pregunta_abierta == indice
-    )
+    esta_abierta = EstadoPreguntasFrecuentesDetalle.indice_pregunta_abierta == indice
     color_carrera = EstadoInstitucional.carrera_seleccionada["color_principal"]
 
     return rx.box(
@@ -382,9 +384,7 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
                 gap="0.75rem",
                 width="100%",
             ),
-            on_click=lambda: EstadoPreguntasFrecuentesDetalle.alternar_pregunta(
-                indice
-            ),
+            on_click=lambda: EstadoPreguntasFrecuentesDetalle.alternar_pregunta(indice),
             cursor="pointer",
             padding="1.125rem 1.25rem",
             role="button",
@@ -409,8 +409,7 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
         border=rx.cond(
             esta_abierta,
             f"1px solid {color_carrera}66",
-            "1px solid "
-            + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+            "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
         ),
         border_radius="0.875rem",
         background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
@@ -446,17 +445,15 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
             gap="0.5rem",
             margin_bottom="1.5rem",
         ),
-
         # --- Lista de preguntas ---
         rx.vstack(
             rx.foreach(
                 carrera["preguntas_frecuentes"],
-                lambda pregunta, idx: _item_pregunta(pregunta, idx),
+                _item_pregunta,
             ),
             width="100%",
             spacing="3",
         ),
-
         spacing="0",
         width="100%",
         max_width="64rem",
@@ -467,6 +464,7 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
 # ======================================================================
 # Pestañas de secciones del detalle
 # ======================================================================
+
 
 def _pestanas_secciones_detalle() -> rx.Component:
     """
@@ -492,35 +490,30 @@ def _pestanas_secciones_detalle() -> rx.Component:
             ),
             width="100%",
         ),
-
         # --- Contenido: Info ---
         rx.tabs.content(
             seccion_informacion(),
             margin_top="1em",
             value="info",
         ),
-
         # --- Contenido: Plan ---
         rx.tabs.content(
             seccion_plan_estudios(),
             margin_top="1em",
             value="plan",
         ),
-
         # --- Contenido: Perfil ---
         rx.tabs.content(
             seccion_perfil_y_campo_laboral(),
             margin_top="1em",
             value="perfil",
         ),
-
         # --- Contenido: Preguntas Frecuentes ---
         rx.tabs.content(
             _seccion_preguntas_frecuentes(),
             margin_top="1em",
             value="preguntas_frecuentes",
         ),
-
         # --- Configuración del root ---
         default_value="info",
         value=EstadoInstitucional.seccion_detalle_activa,
@@ -532,6 +525,7 @@ def _pestanas_secciones_detalle() -> rx.Component:
 # ======================================================================
 # Vista completa
 # ======================================================================
+
 
 @rx.page(
     route="/carrera/[carrera_id]",
@@ -550,13 +544,11 @@ def vista_detalle_carrera() -> rx.Component:
         rx.box(
             _encabezado_fijo_detalle(),
             _hero_carrera(),
-
             # --- Pestañas de secciones ---
             rx.box(
                 _pestanas_secciones_detalle(),
                 padding="0 1rem 6rem 1rem",
             ),
-
             padding_bottom="3rem",
             max_width="72rem",
             width="100%",

@@ -116,8 +116,7 @@ class TestAgotamientoFor:
         residual = E - e * math.sin(E) - M
         # Residual grande → no hubo break por delta.
         assert abs(residual) > 1e-3, (
-            f"El residual {residual} es muy pequeño; "
-            "puede que hubo break por convergencia."
+            f"El residual {residual} es muy pequeño; puede que hubo break por convergencia."
         )
 
     def test_agotamiento_tolerancia_imposible(self) -> None:

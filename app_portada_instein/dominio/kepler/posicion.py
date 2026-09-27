@@ -69,11 +69,9 @@ def calcular_posicion_orbital(
         raise ErrorKepler(f"Semieje mayor debe ser > 0: {semieje_mayor}")
 
     if not (EXCENTRICIDAD_MINIMA <= excentricidad <= EXCENTRICIDAD_MAXIMA):
-        raise ErrorKepler(
-            f"Excentricidad fuera de rango: {excentricidad}"
-        )
+        raise ErrorKepler(f"Excentricidad fuera de rango: {excentricidad}")
 
-    semieje_menor = semieje_mayor * math.sqrt(1.0 - excentricidad ** 2)
+    semieje_menor = semieje_mayor * math.sqrt(1.0 - excentricidad**2)
     E = resolver_kepler(anomalia_media, excentricidad)
 
     x = semieje_mayor * (math.cos(E) - excentricidad)
@@ -87,4 +85,4 @@ def calcular_posicion_orbital(
     )
 
 
-__all__ = ["calcular_posicion_orbital", "PosicionOrbital"]
+__all__ = ["PosicionOrbital", "calcular_posicion_orbital"]

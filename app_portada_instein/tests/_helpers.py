@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import re
 
+
 _PATRON_SCALE = re.compile(r"scale\(([\d.]+)\)")
-_PATRON_TRANSLATE = re.compile(
-    r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)"
-)
+_PATRON_TRANSLATE = re.compile(r"translate\(([-\d.]+)rem,\s*([-\d.]+)rem\)")
 
 
 def extraer_scale(transform: str) -> float:
