@@ -34,6 +34,7 @@ dev = [
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
+    { name = "reflex-hosting-cli" },
 ]
 
 [package.metadata]
@@ -47,7 +48,10 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pre-commit", specifier = ">=4.6.2" }]
+dev = [
+    { name = "pre-commit", specifier = ">=4.6.2" },
+    { name = "reflex-hosting-cli", specifier = ">=0.1.72" },
+]
 
 [[package]]
 name = "bidict"

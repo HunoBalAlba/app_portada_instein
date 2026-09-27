@@ -79,4 +79,5 @@ ignore = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.2",
+    "reflex-hosting-cli>=0.1.72",
 ]
