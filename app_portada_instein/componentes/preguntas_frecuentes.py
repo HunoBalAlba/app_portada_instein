@@ -1,8 +1,37 @@
 """
 Sección de preguntas frecuentes con estilo acordeón (inspirado en Discord).
+
+Este componente se usa en el HOME. La vista de detalle de carrera tiene
+su propio acordeón (en `vista_detalle_carrera.py`) porque las preguntas
+son específicas por carrera.
+
+Sistema de color (UX)
+---------------------
+- Fondo de pregunta abierta: tinte suave de accent.
+- Icono del chevron: color accent cuando está abierto.
+- Textos: neutros (`gray-11`/`gray-12`) para máxima legibilidad.
+
+Diseño:
+- Acordeón vertical con una sola pregunta abierta a la vez.
+- Cabecera clicable con hover sutil.
+- Respuesta colapsable con animación de transición.
 """
 
 import reflex as rx
+
+from app_portada_instein.infraestructura.constantes_visuales import (
+    COLOR_ACENTO_BORDE,
+    COLOR_ACENTO_FONDO,
+    COLOR_ACENTO_TEXTO,
+    COLOR_BORDE_HOVER,
+    COLOR_BORDE_SUAVE,
+    COLOR_FONDO_CARTA,
+    COLOR_TEXTO_CUERPO,
+    COLOR_TEXTO_PRINCIPAL,
+    COLOR_TEXTO_SECUNDARIO,
+    RADIO_EXTRA_GRANDE,
+    RADIO_MEDIO,
+)
 
 
 # ======================================================================
@@ -69,13 +98,14 @@ PREGUNTAS_FRECUENTES: list[dict] = [
 
 
 class EstadoPreguntasFrecuentes(rx.State):
-    """Estado del acordeón de preguntas frecuentes."""
+    """Estado del acordeón de preguntas frecuentes del home."""
 
-    indice_abierto: int = -1  # -1 significa que ninguno está abierto
+    indice_abierto: int = -1
+    """-1 significa que ninguno está abierto."""
 
     @rx.event
     def alternar_pregunta(self, indice: int):
-        """Abre o cierra una pregunta."""
+        """Abre o cierra una pregunta del acordeón."""
         if self.indice_abierto == indice:
             self.indice_abierto = -1
         else:
@@ -91,7 +121,11 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
     """
     Renderiza una pregunta del acordeón con su respuesta colapsable.
 
-    Estilo inspirado en Discord: fondo oscuro con bordes sutiles.
+    UX:
+    - Icono del chevron gira 180° cuando está abierta.
+    - El color del chevron cambia a accent cuando está abierta.
+    - La tarjeta completa resalta con borde accent cuando está abierta.
+    - Hover: borde gris más marcado.
     """
     esta_abierta = EstadoPreguntasFrecuentes.indice_abierto == indice
 
@@ -99,19 +133,31 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
         # --- Cabecera clicable ---
         rx.box(
             rx.flex(
+                # --- Texto de la pregunta ---
                 rx.text(
                     pregunta["pregunta"],
                     font_size="0.9375rem",
                     font_weight="600",
-                    color=rx.color_mode_cond(light="#1e293b", dark="#f1f5f9"),
+                    color=COLOR_TEXTO_PRINCIPAL,
                     flex="1",
+                    line_height="1.4",
                 ),
+                # --- Chevron indicador (color accent cuando abierto) ---
                 rx.icon(
                     "chevron-down",
                     size=18,
-                    color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                    transform=rx.cond(esta_abierta, "rotate(180deg)", "rotate(0deg)"),
-                    transition="transform 0.3s",
+                    color=rx.cond(
+                        esta_abierta,
+                        COLOR_ACENTO_TEXTO,
+                        COLOR_TEXTO_SECUNDARIO,
+                    ),
+                    transform=rx.cond(
+                        esta_abierta,
+                        "rotate(180deg)",
+                        "rotate(0deg)",
+                    ),
+                    transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s",
+                    flex_shrink="0",
                 ),
                 align="center",
                 gap="1rem",
@@ -121,7 +167,7 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
             cursor="pointer",
             padding="1.125rem 1.25rem",
             role="button",
-            tab_index=0,  # ⚠️ CORREGIDO: int, no str
+            tab_index=0,
             width="100%",
         ),
         # --- Respuesta colapsable ---
@@ -131,8 +177,8 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
                 rx.text(
                     pregunta["respuesta"],
                     font_size="0.875rem",
-                    line_height="1.6",
-                    color=rx.color_mode_cond(light="#475569", dark="#cbd5e1"),
+                    line_height="1.7",
+                    color=COLOR_TEXTO_CUERPO,
                 ),
                 padding="0 1.25rem 1.25rem 1.25rem",
             ),
@@ -140,12 +186,25 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
         ),
         # --- Estilos base ---
         width="100%",
-        border=("1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b")),
-        border_radius="0.875rem",
-        background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
+        border=rx.cond(
+            esta_abierta,
+            f"1px solid {COLOR_ACENTO_BORDE}",
+            f"1px solid {COLOR_BORDE_SUAVE}",
+        ),
+        border_radius=RADIO_MEDIO,
+        background=rx.cond(
+            esta_abierta,
+            COLOR_ACENTO_FONDO,
+            COLOR_FONDO_CARTA,
+        ),
         transition="all 0.2s",
+        overflow="hidden",
         _hover={
-            "border_color": rx.color_mode_cond(light="#cbd5e1", dark="#334155"),
+            "border_color": rx.cond(
+                esta_abierta,
+                COLOR_ACENTO_BORDE,
+                COLOR_BORDE_HOVER,
+            ),
         },
     )
 
@@ -156,36 +215,49 @@ def _pregunta_frecuente(pregunta: dict, indice: int) -> rx.Component:
 
 
 def seccion_preguntas_frecuentes() -> rx.Component:
-    """Sección completa con título + lista de preguntas frecuentes."""
+    """
+    Sección completa con título + lista de preguntas frecuentes.
+
+    Usa tokens Radix adaptativos al color_mode. Los textos son neutros
+    y el accent solo se usa como acento en los elementos activos.
+    """
     return rx.box(
         rx.vstack(
-            # --- Encabezado ---
+            # ==========================================================
+            # Encabezado
+            # ==========================================================
             rx.vstack(
                 rx.text(
                     "PREGUNTAS FRECUENTES",
                     font_size="0.75rem",
                     font_weight="700",
                     letter_spacing="0.15em",
-                    color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                    color=COLOR_ACENTO_TEXTO,  # ← accent para la etiqueta
                 ),
                 rx.heading(
                     "¿Tienes dudas?",
                     size="6",
-                    color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                    color=COLOR_TEXTO_PRINCIPAL,
                 ),
                 rx.text(
                     "Aquí respondemos las preguntas más comunes de nuestros estudiantes.",
                     font_size="0.875rem",
-                    color=rx.color_mode_cond(light="#475569", dark="#94a3b8"),
+                    color=COLOR_TEXTO_SECUNDARIO,
                     text_align="center",
+                    max_width="42rem",
                 ),
                 align="center",
                 spacing="2",
                 margin_bottom="2rem",
             ),
-            # --- Lista de preguntas ---
+            # ==========================================================
+            # Lista de preguntas
+            # ==========================================================
             rx.vstack(
-                *[_pregunta_frecuente(p, i) for i, p in enumerate(PREGUNTAS_FRECUENTES)],
+                *[
+                    _pregunta_frecuente(p, i)
+                    for i, p in enumerate(PREGUNTAS_FRECUENTES)
+                ],
                 width="100%",
                 max_width="48rem",
                 spacing="3",
@@ -196,3 +268,10 @@ def seccion_preguntas_frecuentes() -> rx.Component:
         width="100%",
         padding="3rem 1.5rem",
     )
+
+
+__all__ = [
+    "EstadoPreguntasFrecuentes",
+    "PREGUNTAS_FRECUENTES",
+    "seccion_preguntas_frecuentes",
+]

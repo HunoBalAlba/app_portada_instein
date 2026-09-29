@@ -6,6 +6,10 @@ Estilo Google Play Store con filtros avanzados:
 - Ordenamiento por múltiples métricas.
 - Estado vacío cuando no hay resultados.
 - Tarjetas enriquecidas con estadísticas y características.
+
+Todos los colores usan tokens Radix (auto-adaptativos al color_mode).
+Los colores semánticos (azul, amarillo, violeta, verde) se expresan
+como `rx.color()` con la escala correcta según su rol.
 """
 
 import reflex as rx
@@ -14,24 +18,61 @@ from app_portada_instein.componentes.barra_navegacion import barra_navegacion_su
 from app_portada_instein.componentes.hero_carreras import hero_carreras
 from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
 from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
-from app_portada_instein.infraestructura.constantes_visuales import NOMBRE_INSTITUTO
+from app_portada_instein.infraestructura.constantes_visuales import (
+    ANCHO_CONTENIDO,
+    COLOR_ACENTO_BORDE,
+    COLOR_ACENTO_FONDO,
+    COLOR_ACENTO_SOLIDO,
+    COLOR_ACENTO_TEXTO,
+    COLOR_BORDE_SUAVE,
+    COLOR_DIVISOR,
+    COLOR_FONDO_CARTA,
+    COLOR_FONDO_SUAVE,
+    COLOR_TEXTO_APAGADO,
+    COLOR_TEXTO_CUERPO,
+    COLOR_TEXTO_PRINCIPAL,
+    COLOR_TEXTO_SECUNDARIO,
+    NOMBRE_INSTITUTO,
+    PADDING_LATERAL,
+    RADIO_EXTRA_GRANDE,
+    RADIO_GRANDE,
+    RADIO_MEDIO,
+    RADIO_PASTILLA,
+    SOMBRA_SUAVE,
+)
 
 
 # ======================================================================
 # Constantes locales
 # ======================================================================
 
-COLOR_AZUL = "#2563eb"
-COLOR_AZUL_SUAVE = "#eff6ff"
+# Tokens semánticos específicos de esta vista.
+# (No viven en constantes_visuales porque son exclusivos del catálogo.)
+
+COLOR_PUNTUACION_TEXTO = rx.color("amber", 11)      # Estrellas de puntuación
+COLOR_PUNTUACION_FONDO = rx.color("amber", 3)
+
+COLOR_EMPLEABILIDAD_TEXTO = rx.color("violet", 11)  # Empleabilidad
+COLOR_EMPLEABILIDAD_FONDO = rx.color("violet", 3)
+
+# Mapa de colores por nivel de demanda laboral.
+DEMANDA_ALTA_TEXTO = rx.color("green", 11)
+DEMANDA_ALTA_FONDO = rx.color("green", 3)
+
+DEMANDA_MEDIA_TEXTO = rx.color("amber", 11)
+DEMANDA_MEDIA_FONDO = rx.color("amber", 3)
+
+DEMANDA_BAJA_TEXTO = rx.color("gray", 11)
+DEMANDA_BAJA_FONDO = rx.color("gray", 3)
 
 
 # ======================================================================
-# Iconos para filtros
+# Helpers de filtros
 # ======================================================================
 
 
 def _icono_por_filtro(filtro: str) -> str:
-    """Devuelve el icono de Lucide correspondiente a cada filtro."""
+    """Devuelve el nombre del icono Lucide correspondiente a cada filtro."""
     iconos = {
         "demanda_alta": "trending-up",
         "puntuacion_top": "star",
@@ -62,8 +103,8 @@ def _filtro_pill(
                 size=14,
                 color=rx.cond(
                     activo,
-                    "#ffffff",
-                    rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                    "white",
+                    COLOR_TEXTO_SECUNDARIO,
                 ),
             ),
             rx.text(
@@ -72,8 +113,8 @@ def _filtro_pill(
                 font_weight="600",
                 color=rx.cond(
                     activo,
-                    "#ffffff",
-                    rx.color_mode_cond(light="#334155", dark="#cbd5e1"),
+                    "white",
+                    COLOR_TEXTO_CUERPO,
                 ),
                 white_space="nowrap",
             ),
@@ -81,32 +122,31 @@ def _filtro_pill(
             gap="0.375rem",
         ),
         padding="0.5rem 1rem",
-        border_radius="9999px",
+        border_radius=RADIO_PASTILLA,
         background=rx.cond(
             activo,
-            COLOR_AZUL,
-            rx.color_mode_cond(light="#f1f5f9", dark="#1e293b"),
+            COLOR_ACENTO_SOLIDO,
+            COLOR_FONDO_SUAVE,
         ),
-        border="1px solid "
-        + rx.cond(
+        border=rx.cond(
             activo,
-            COLOR_AZUL,
-            rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+            f"1px solid {COLOR_ACENTO_SOLIDO}",
+            f"1px solid {COLOR_BORDE_SUAVE}",
         ),
         cursor="pointer",
         transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
         on_click=EstadoInstitucional.cambiar_filtro(valor),
         box_shadow=rx.cond(
             activo,
-            f"0 4px 12px -2px {COLOR_AZUL}66",
+            f"0 4px 12px -2px {COLOR_ACENTO_SOLIDO}",
             "none",
         ),
         _hover={
             "transform": "translateY(-1px)",
             "background": rx.cond(
                 activo,
-                "#1d4ed8",
-                rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+                COLOR_ACENTO_SOLIDO,
+                COLOR_FONDO_CARTA,
             ),
         },
     )
@@ -123,23 +163,22 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
             font_weight="600",
             color=rx.cond(
                 activo,
-                "#ffffff",
-                rx.color_mode_cond(light="#475569", dark="#cbd5e1"),
+                "white",
+                COLOR_TEXTO_CUERPO,
             ),
             white_space="nowrap",
         ),
         padding="0.375rem 0.875rem",
-        border_radius="9999px",
+        border_radius=RADIO_PASTILLA,
         background=rx.cond(
             activo,
-            COLOR_AZUL,
-            rx.color_mode_cond(light="#ffffff", dark="#1e293b"),
+            COLOR_ACENTO_SOLIDO,
+            COLOR_FONDO_CARTA,
         ),
-        border="1px solid "
-        + rx.cond(
+        border=rx.cond(
             activo,
-            COLOR_AZUL,
-            rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+            f"1px solid {COLOR_ACENTO_SOLIDO}",
+            f"1px solid {COLOR_BORDE_SUAVE}",
         ),
         cursor="pointer",
         transition="all 0.2s",
@@ -147,10 +186,23 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
         _hover={
             "background": rx.cond(
                 activo,
-                "#1d4ed8",
-                rx.color_mode_cond(light="#f8fafc", dark="#334155"),
+                COLOR_ACENTO_SOLIDO,
+                COLOR_FONDO_SUAVE,
             ),
         },
+    )
+
+
+def _etiqueta_grupo(texto: str) -> rx.Component:
+    """Etiqueta en mayúsculas para encabezar un grupo de filtros."""
+    return rx.text(
+        texto,
+        font_size="0.6875rem",
+        font_weight="700",
+        color=COLOR_TEXTO_SECUNDARIO,
+        text_transform="uppercase",
+        letter_spacing="0.075em",
+        margin_bottom="0.25rem",
     )
 
 
@@ -159,15 +211,7 @@ def _barra_filtros() -> rx.Component:
     return rx.vstack(
         # --- Grupo 1: Filtros por métricas ---
         rx.vstack(
-            rx.text(
-                "Filtrar por",
-                font_size="0.6875rem",
-                font_weight="700",
-                color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                text_transform="uppercase",
-                letter_spacing="0.075em",
-                margin_bottom="0.25rem",
-            ),
+            _etiqueta_grupo("Filtrar por"),
             rx.flex(
                 _filtro_pill("Todos", "todos", EstadoInstitucional.filtro_activo),
                 _filtro_pill(
@@ -200,15 +244,7 @@ def _barra_filtros() -> rx.Component:
         ),
         # --- Grupo 2: Ordenamiento ---
         rx.vstack(
-            rx.text(
-                "Ordenar por",
-                font_size="0.6875rem",
-                font_weight="700",
-                color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                text_transform="uppercase",
-                letter_spacing="0.075em",
-                margin_bottom="0.25rem",
-            ),
+            _etiqueta_grupo("Ordenar por"),
             rx.flex(
                 _orden_pill("Puntuación", "puntuacion_desc"),
                 _orden_pill("Inscritos", "inscritos_desc"),
@@ -238,16 +274,26 @@ def _stat_item(
     icono: str,
     valor: str,
     etiqueta: str,
-    color: str,
+    color_texto: rx.Var,
+    color_fondo: rx.Var,
 ) -> rx.Component:
-    """Item individual de estadística con icono + valor + etiqueta."""
+    """
+    Item individual de estadística con icono + valor + etiqueta.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        valor: Valor numérico a mostrar (como string).
+        etiqueta: Texto descriptivo debajo del valor.
+        color_texto: Color del icono (token step 11).
+        color_fondo: Fondo del icono (token step 3).
+    """
     return rx.flex(
         # --- Icono con fondo tintado ---
         rx.box(
-            rx.icon(tag=icono, size=16, color=color),
+            rx.icon(tag=icono, size=16, color=color_texto),
             padding="0.5rem",
             border_radius="0.625rem",
-            background=color + "15",
+            background=color_fondo,
             display="flex",
             align_items="center",
             justify_content="center",
@@ -259,13 +305,13 @@ def _stat_item(
                 valor,
                 font_size="0.9375rem",
                 font_weight="700",
-                color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                color=COLOR_TEXTO_PRINCIPAL,
                 line_height="1.1",
             ),
             rx.text(
                 etiqueta,
                 font_size="0.625rem",
-                color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                color=COLOR_TEXTO_SECUNDARIO,
                 text_transform="uppercase",
                 letter_spacing="0.05em",
                 line_height="1.1",
@@ -280,34 +326,23 @@ def _stat_item(
 
 
 def _stats_carrera(carrera: dict) -> rx.Component:
-    """Muestra las 4 estadísticas de una carrera distribuidas uniformemente."""
+    """Muestra las estadísticas visibles de una carrera."""
     stats = carrera["estadisticas"]
-    color = carrera["color_principal"]
 
     return rx.flex(
         _stat_item(
             icono="star",
             valor=f"{stats['puntuacion']}",
             etiqueta="Puntuación",
-            color="#fbbf24",
-        ),
-        _stat_item(
-            icono="users",
-            valor=f"{stats['estudiantes_inscritos']}",
-            etiqueta="Inscritos",
-            color=color,
-        ),
-        _stat_item(
-            icono="graduation-cap",
-            valor=f"{stats['estudiantes_graduados']}",
-            etiqueta="Graduados",
-            color="#16a34a",
+            color_texto=COLOR_PUNTUACION_TEXTO,
+            color_fondo=COLOR_PUNTUACION_FONDO,
         ),
         _stat_item(
             icono="briefcase",
             valor=f"{stats['tasa_empleabilidad']}%",
             etiqueta="Empleabilidad",
-            color="#7c3aed",
+            color_texto=COLOR_EMPLEABILIDAD_TEXTO,
+            color_fondo=COLOR_EMPLEABILIDAD_FONDO,
         ),
         justify="between",
         align="center",
@@ -318,19 +353,26 @@ def _stats_carrera(carrera: dict) -> rx.Component:
 
 
 # ======================================================================
-# Badge de demanda
+# Badge de demanda laboral
 # ======================================================================
 
 
 def _badges_demanda(carrera: dict) -> rx.Component:
     """Badge de demanda laboral con color según nivel."""
     demanda = carrera["estadisticas"]["demanda_laboral"]
-    colores = {
-        "alta": ("#15803d", "#dcfce7"),
-        "media": ("#b45309", "#fef3c7"),
-        "baja": ("#475569", "#f1f5f9"),
-    }
-    color_texto, color_fondo = colores.get(demanda, ("#475569", "#f1f5f9"))
+
+    color_texto = rx.match(
+        demanda,
+        ("alta", DEMANDA_ALTA_TEXTO),
+        ("media", DEMANDA_MEDIA_TEXTO),
+        DEMANDA_BAJA_TEXTO,
+    )
+    color_fondo = rx.match(
+        demanda,
+        ("alta", DEMANDA_ALTA_FONDO),
+        ("media", DEMANDA_MEDIA_FONDO),
+        DEMANDA_BAJA_FONDO,
+    )
 
     return rx.box(
         rx.flex(
@@ -347,7 +389,7 @@ def _badges_demanda(carrera: dict) -> rx.Component:
             gap="0.25rem",
         ),
         padding="0.25rem 0.625rem",
-        border_radius="9999px",
+        border_radius=RADIO_PASTILLA,
         background=color_fondo,
         width="fit-content",
         flex_shrink="0",
@@ -359,35 +401,39 @@ def _badges_demanda(carrera: dict) -> rx.Component:
 # ======================================================================
 
 
+def _chip_caracteristica(caracteristica: dict, color_carrera: rx.Var) -> rx.Component:
+    """Chip individual de característica."""
+    return rx.box(
+        rx.flex(
+            rx.icon(
+                tag=caracteristica["icono"],
+                size=12,
+                color=color_carrera,
+            ),
+            rx.text(
+                caracteristica["etiqueta"],
+                font_size="0.6875rem",
+                font_weight="600",
+                color=COLOR_TEXTO_CUERPO,
+                white_space="nowrap",
+            ),
+            align="center",
+            gap="0.25rem",
+        ),
+        padding="0.375rem 0.75rem",
+        border_radius=RADIO_PASTILLA,
+        background=COLOR_FONDO_SUAVE,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        width="fit-content",
+    )
+
+
 def _caracteristicas_carrera(carrera: dict) -> rx.Component:
     """Chips con las características principales de la carrera."""
     return rx.flex(
         rx.foreach(
             carrera["caracteristicas"],
-            lambda c: rx.box(
-                rx.flex(
-                    rx.icon(
-                        tag=c["icono"],
-                        size=12,
-                        color=carrera["color_principal"],
-                    ),
-                    rx.text(
-                        c["etiqueta"],
-                        font_size="0.6875rem",
-                        font_weight="600",
-                        color=rx.color_mode_cond(light="#334155", dark="#cbd5e1"),
-                        white_space="nowrap",
-                    ),
-                    align="center",
-                    gap="0.25rem",
-                ),
-                padding="0.375rem 0.75rem",
-                border_radius="9999px",
-                background=rx.color_mode_cond(light="#f8fafc", dark="#1e293b"),
-                border="1px solid "
-                + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
-                width="fit-content",
-            ),
+            lambda c: _chip_caracteristica(c, carrera["color_principal"]),
         ),
         gap="0.5rem",
         flex_wrap="wrap",
@@ -407,9 +453,11 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
     Item de carrera con layout de 3 zonas:
 
     - **Zona 1**: ranking + icono + nombre/lema + badge demanda.
-    - **Zona 2**: 4 estadísticas distribuidas.
+    - **Zona 2**: estadísticas distribuidas.
     - **Zona 3**: chips de características.
     """
+    color_carrera = carrera["color_principal"]
+
     return rx.link(
         rx.box(
             # =========================================================
@@ -422,7 +470,7 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                         (indice + 1).to_string(),
                         font_size="1.5rem",
                         font_weight="800",
-                        color=rx.color_mode_cond(light="#cbd5e1", dark="#475569"),
+                        color=COLOR_TEXTO_APAGADO,
                         line_height="1",
                     ),
                     width="2.5rem",
@@ -440,14 +488,14 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                         width="100%",
                         height="100%",
                         object_fit="cover",
-                        border_radius="1rem",
+                        border_radius=RADIO_GRANDE,
                     ),
                     width="4.5rem",
                     height="4.5rem",
                     flex_shrink="0",
-                    border_radius="1rem",
+                    border_radius=RADIO_GRANDE,
                     overflow="hidden",
-                    box_shadow=f"0 8px 20px -8px {carrera['color_principal']}80",
+                    box_shadow=f"0 8px 20px -8px {color_carrera}80",
                     align_self="start",
                 ),
                 # --- Info ---
@@ -457,7 +505,7 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                             carrera["nombre_corto"],
                             font_size="1.125rem",
                             font_weight="700",
-                            color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                            color=COLOR_TEXTO_PRINCIPAL,
                             line_height="1.3",
                         ),
                         _badges_demanda(carrera),
@@ -470,7 +518,7 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                     rx.text(
                         carrera["lema"],
                         font_size="0.8125rem",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         line_height="1.4",
                         width="100%",
                     ),
@@ -492,8 +540,7 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                 width="100%",
                 margin_top="1rem",
                 padding_top="1rem",
-                border_top="1px solid "
-                + rx.color_mode_cond(light="#f1f5f9", dark="#1e293b"),
+                border_top=f"1px solid {COLOR_DIVISOR}",
             ),
             # =========================================================
             # ZONA 3: CARACTERÍSTICAS
@@ -508,17 +555,17 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
             # =========================================================
             padding="1.5rem",
             border_radius="1.25rem",
-            background=rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
-            border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+            background=COLOR_FONDO_CARTA,
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
             transition="all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
             height="100%",
             display="flex",
             flex_direction="column",
             _hover={
-                "background": rx.color_mode_cond(light="#f8fafc", dark="#1e293b"),
-                "border_color": carrera["color_principal"] + "66",
+                "background": COLOR_FONDO_SUAVE,
+                "border_color": color_carrera,
                 "transform": "translateY(-3px)",
-                "box_shadow": f"0 16px 40px -12px {carrera['color_principal']}44",
+                "box_shadow": f"0 16px 40px -12px {color_carrera}44",
             },
         ),
         href=f"/carrera/{carrera['id']}",
@@ -565,11 +612,11 @@ def _estado_vacio() -> rx.Component:
             rx.icon(
                 "search-x",
                 size=48,
-                color=rx.color_mode_cond(light="#cbd5e1", dark="#475569"),
+                color=COLOR_TEXTO_APAGADO,
             ),
             padding="1.5rem",
-            border_radius="1rem",
-            background=rx.color_mode_cond(light="#f8fafc", dark="#1e293b"),
+            border_radius=RADIO_GRANDE,
+            background=COLOR_FONDO_SUAVE,
             display="flex",
             align_items="center",
             justify_content="center",
@@ -579,12 +626,12 @@ def _estado_vacio() -> rx.Component:
                 "No se encontraron carreras",
                 size="5",
                 font_weight="700",
-                color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                color=COLOR_TEXTO_PRINCIPAL,
             ),
             rx.text(
                 "Prueba ajustando los filtros o limpiando la selección actual.",
                 font_size="0.875rem",
-                color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                color=COLOR_TEXTO_SECUNDARIO,
                 text_align="center",
             ),
             spacing="2",
@@ -595,6 +642,65 @@ def _estado_vacio() -> rx.Component:
         gap="1.5rem",
         padding="4rem 1.5rem",
         width="100%",
+    )
+
+
+# ======================================================================
+# Encabezado de la sección "Explora nuestras carreras"
+# ======================================================================
+
+
+def _encabezado_seccion() -> rx.Component:
+    """Encabezado con título, subtítulo y contador de resultados."""
+    return rx.flex(
+        rx.vstack(
+            rx.heading(
+                "Explora nuestras carreras",
+                size="7",
+                font_weight="800",
+                color=COLOR_TEXTO_PRINCIPAL,
+                line_height="1.1",
+            ),
+            rx.text(
+                "Filtra y ordena según tus prioridades: demanda laboral, "
+                "puntuación, estudiantes inscritos y más.",
+                font_size="0.9375rem",
+                color=COLOR_TEXTO_SECUNDARIO,
+                max_width="42rem",
+            ),
+            align="start",
+            spacing="2",
+            flex="1",
+        ),
+        # --- Contador de resultados ---
+        rx.box(
+            rx.text(
+                EstadoInstitucional.carreras_filtradas_y_ordenadas.length().to_string(),
+                font_size="2rem",
+                font_weight="800",
+                color=COLOR_ACENTO_TEXTO,
+                line_height="1",
+            ),
+            rx.text(
+                "resultados",
+                font_size="0.6875rem",
+                color=COLOR_TEXTO_SECUNDARIO,
+                text_transform="uppercase",
+                letter_spacing="0.05em",
+            ),
+            text_align="center",
+            padding="1rem 1.5rem",
+            border_radius=RADIO_GRANDE,
+            background=COLOR_ACENTO_FONDO,
+            border=f"1px solid {COLOR_ACENTO_BORDE}",
+            flex_shrink="0",
+        ),
+        justify="between",
+        align="center",
+        width="100%",
+        margin_bottom="2rem",
+        flex_wrap="wrap",
+        gap="1.5rem",
     )
 
 
@@ -617,59 +723,10 @@ def vista_carreras() -> rx.Component:
         rx.box(
             # --- Hero con banners destacados ---
             hero_carreras(),
-            # --- Sección "Listas de éxitos" ---
+            # --- Sección "Explora nuestras carreras" ---
             rx.box(
                 # --- Encabezado ---
-                rx.flex(
-                    rx.vstack(
-                        rx.heading(
-                            "Explora nuestras carreras",
-                            size="7",
-                            font_weight="800",
-                            color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
-                            line_height="1.1",
-                        ),
-                        rx.text(
-                            "Filtra y ordena según tus prioridades: demanda laboral, "
-                            "puntuación, estudiantes inscritos y más.",
-                            font_size="0.9375rem",
-                            color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                            max_width="42rem",
-                        ),
-                        align="start",
-                        spacing="2",
-                        flex="1",
-                    ),
-                    # --- Contador de resultados ---
-                    rx.box(
-                        rx.text(
-                            EstadoInstitucional.carreras_filtradas_y_ordenadas.length().to_string(),
-                            font_size="2rem",
-                            font_weight="800",
-                            color=COLOR_AZUL,
-                            line_height="1",
-                        ),
-                        rx.text(
-                            "resultados",
-                            font_size="0.6875rem",
-                            color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                            text_transform="uppercase",
-                            letter_spacing="0.05em",
-                        ),
-                        text_align="center",
-                        padding="1rem 1.5rem",
-                        border_radius="1rem",
-                        background=COLOR_AZUL_SUAVE,
-                        border="1px solid " + COLOR_AZUL + "33",
-                        flex_shrink="0",
-                    ),
-                    justify="between",
-                    align="center",
-                    width="100%",
-                    margin_bottom="2rem",
-                    flex_wrap="wrap",
-                    gap="1.5rem",
-                ),
+                _encabezado_seccion(),
                 # --- Filtros ---
                 _barra_filtros(),
                 # --- Grid de carreras o estado vacío ---
@@ -678,9 +735,9 @@ def vista_carreras() -> rx.Component:
                     _grid_carreras_enriquecido(),
                     _estado_vacio(),
                 ),
-                max_width="72rem",
+                max_width=ANCHO_CONTENIDO,
                 margin="0 auto",
-                padding="2rem 1.5rem 4rem 1.5rem",
+                padding=f"2rem {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
                 width="100%",
             ),
             width="100%",

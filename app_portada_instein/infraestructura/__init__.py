@@ -44,4 +44,6 @@ __all__ = [
     "UBICACION_FISICA",
     "WHATSAPP_URL",
     "invertir_color_hexadecimal",
+    "color_carrera_adaptativo",
+    "color_suave_carrera_adaptativo",
 ]

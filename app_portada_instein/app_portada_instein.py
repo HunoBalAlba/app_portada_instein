@@ -4,7 +4,7 @@ Punto de entrada de la aplicación web del INSTEIN.
 Este módulo:
 - Registra todas las páginas de la aplicación.
 - Configura el tema global (light/dark, accent, radius).
-- Fusiona las keyframes CSS de estilos personalizados y de styles.py.
+- Fusiona las keyframes CSS de estilos personalizados y del motor kepleriano.
 - Carga las fuentes Inter y JetBrains Mono desde Google Fonts + un
   stylesheet personalizado que aplica las fuentes a etiquetas HTML.
 
@@ -19,12 +19,13 @@ from app_portada_instein.dominio.kepler import (
     generar_keyframes_css,
     generar_pasos_orbita,
 )
-from app_portada_instein.styles import (
+from app_portada_instein.infraestructura.constantes_visuales import (
     ESTILO_BASE,
     ESTILOS_GLOBALES_CSS,
     FUENTE_PRINCIPAL,
     HOJAS_DE_ESTILO_BASE,
 )
+
 
 # ======================================================================
 # ⚠️ IMPORT CRÍTICO: REGISTRA LAS PÁGINAS
@@ -37,10 +38,15 @@ from app_portada_instein.styles import (
 # verás una pantalla en blanco en http://localhost:3000
 # ======================================================================
 from app_portada_instein.vistas import (  # noqa: F401
+    vista_admision,
+    vista_becas,
+    vista_calendario,
     vista_carreras,
     vista_contacto,
     vista_detalle_carrera,
+    vista_faq,
     vista_inicio,
+    vista_sobre_nosotros,
 )
 
 
@@ -134,8 +140,8 @@ def _generar_keyframes_orbitales() -> dict:
 ESTILOS_GLOBALES: dict = {
     **KEYFRAMES_UI,
     **_generar_keyframes_orbitales(),
-    **ESTILOS_GLOBALES_CSS,
-    **ESTILO_BASE,
+    **ESTILOS_GLOBALES_CSS,   # ← ✅ Restaurado
+    **ESTILO_BASE,            # ← ✅ Restaurado
 }
 
 
@@ -146,13 +152,13 @@ ESTILOS_GLOBALES: dict = {
 app = rx.App(
     theme=rx.theme(
         appearance="light",
-        accent_color="blue",
+        accent_color="crimson",
         radius="medium",
-        font_family=FUENTE_PRINCIPAL,
+        font_family=FUENTE_PRINCIPAL,   # ← ✅ Restaurado
     ),
     style=ESTILOS_GLOBALES,
     stylesheets=[
-        *HOJAS_DE_ESTILO_BASE,
-        "/styles/global.css",  # ahora sí, con el archivo creado
+        *HOJAS_DE_ESTILO_BASE,          # ← ✅ Restaurado
+        "/styles/global.css",
     ],
 )

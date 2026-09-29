@@ -7,12 +7,15 @@ achatadas verticalmente (perspectiva 3D tipo "disco visto de lado").
 Los semiejes mayores están calibrados para que las órbitas se alejen
 visiblemente del centro y cada icono tenga su propia trayectoria.
 
-También incluye:
-- Preguntas frecuentes específicas por cada carrera.
-- Imagen cuadrada (`imagen_archivo`) para tarjetas y listas.
-- Imagen horizontal (`imagen_banner`) para el carrusel de banners.
-- Estadísticas cuantitativas (demanda, puntuación, inscritos, graduados).
-- Características destacadas (badges informativos).
+Sistema de color
+----------------
+Cada carrera expone 4 colores adaptativos al color_mode:
+
+- `color_principal` / `color_suave`       → light mode
+- `color_principal_dark` / `color_suave_dark` → dark mode
+
+Los hex de dark mode son variantes más luminosas del color de marca
+para garantizar contraste sobre fondos oscuros (`gray-1` de Radix).
 
 NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
 (https://lucide.dev/icons) usando snake_case: `code_xml`, `chart_line`,
@@ -22,20 +25,31 @@ NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
 from app_portada_instein.datos.modelos_carrera import Carrera, IconoAnimado
 
 
-PALETA_COLORES: list[tuple[str, str]] = [
-    ("#2563eb", "#eff6ff"),
-    ("#0891b2", "#ecfeff"),
-    ("#7c3aed", "#f5f3ff"),
-    ("#ea580c", "#fff7ed"),
-    ("#16a34a", "#f0fdf4"),
-    ("#db2777", "#fdf2f8"),
-    ("#0d9488", "#f0fdfa"),
-    ("#d97706", "#fffbeb"),
-    ("#4f46e5", "#eef2ff"),
-    ("#dc2626", "#fef2f2"),
-    ("#059669", "#ecfdf5"),
-    ("#9333ea", "#faf5ff"),
+# ======================================================================
+# Paleta de colores disponibles para asignación aleatoria
+# ======================================================================
+# Tuplas (color_principal, color_suave, color_principal_dark, color_suave_dark)
+# ----------------------------------------------------------------------
+
+PALETA_COLORES: list[tuple[str, str, str, str]] = [
+    ("#2563eb", "#eff6ff", "#60a5fa", "#1e3a8a"),  # blue
+    ("#0891b2", "#ecfeff", "#22d3ee", "#164e63"),  # cyan
+    ("#7c3aed", "#f5f3ff", "#a78bfa", "#4c1d95"),  # violet
+    ("#ea580c", "#fff7ed", "#fb923c", "#7c2d12"),  # orange
+    ("#16a34a", "#f0fdf4", "#4ade80", "#14532d"),  # green
+    ("#db2777", "#fdf2f8", "#f472b6", "#831843"),  # pink
+    ("#0d9488", "#f0fdfa", "#2dd4bf", "#134e4a"),  # teal
+    ("#d97706", "#fffbeb", "#fbbf24", "#78350f"),  # amber
+    ("#4f46e5", "#eef2ff", "#818cf8", "#312e81"),  # indigo
+    ("#dc2626", "#fef2f2", "#f87171", "#7f1d1d"),  # red
+    ("#059669", "#ecfdf5", "#34d399", "#064e3b"),  # emerald
+    ("#9333ea", "#faf5ff", "#c084fc", "#581c87"),  # purple
 ]
+
+
+# ======================================================================
+# Helper de construcción de iconos orbitales
+# ======================================================================
 
 
 def _icono_orbital_config(
@@ -85,6 +99,10 @@ def _icono_orbital_config(
 # Factor de aplanamiento por defecto (equivale a INCLINACION = 0.5).
 PERSPECTIVA_DEFECTO = 0.5
 
+
+# ======================================================================
+# Catálogo de carreras
+# ======================================================================
 
 CATALOGO_CARRERAS: list[Carrera] = [
     # ------------------------------------------------------------------
@@ -191,8 +209,13 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "icono": "cpu",
+        # --- Colores light ---
         "color_principal": "#2563eb",
         "color_suave": "#eff6ff",
+        # --- Colores dark ---
+        "color_principal_dark": "#60a5fa",
+        "color_suave_dark": "#1e3a8a",
+        # --- Recursos ---
         "imagen_archivo": "sistemas.png",
         "imagen_banner": "sistemas_banner.avif",
         "iconos_animados": [
@@ -209,7 +232,6 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
             ),
         ],
-        # --- NUEVOS CAMPOS ---
         "estadisticas": {
             "demanda_laboral": "alta",
             "puntuacion": 4.8,
@@ -348,8 +370,13 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "icono": "calculator",
+        # --- Colores light ---
         "color_principal": "#0891b2",
         "color_suave": "#ecfeff",
+        # --- Colores dark ---
+        "color_principal_dark": "#22d3ee",
+        "color_suave_dark": "#164e63",
+        # --- Recursos ---
         "imagen_archivo": "contaduria.png",
         "imagen_banner": "contaduria_banner.avif",
         "iconos_animados": [
@@ -366,7 +393,6 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
             ),
         ],
-        # --- NUEVOS CAMPOS ---
         "estadisticas": {
             "demanda_laboral": "alta",
             "puntuacion": 4.7,
@@ -501,8 +527,13 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "icono": "briefcase",
+        # --- Colores light ---
         "color_principal": "#7c3aed",
         "color_suave": "#f5f3ff",
+        # --- Colores dark ---
+        "color_principal_dark": "#a78bfa",
+        "color_suave_dark": "#4c1d95",
+        # --- Recursos ---
         "imagen_archivo": "secretariado.png",
         "imagen_banner": "secretariado_banner.avif",
         "iconos_animados": [
@@ -519,7 +550,6 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
             ),
         ],
-        # --- NUEVOS CAMPOS ---
         "estadisticas": {
             "demanda_laboral": "media",
             "puntuacion": 4.6,
@@ -653,8 +683,13 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "icono": "globe",
+        # --- Colores light ---
         "color_principal": "#ea580c",
         "color_suave": "#fff7ed",
+        # --- Colores dark ---
+        "color_principal_dark": "#fb923c",
+        "color_suave_dark": "#7c2d12",
+        # --- Recursos ---
         "imagen_archivo": "comercio.png",
         "imagen_banner": "comercio_banner.avif",
         "iconos_animados": [
@@ -671,7 +706,6 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"
             ),
         ],
-        # --- NUEVOS CAMPOS ---
         "estadisticas": {
             "demanda_laboral": "alta",
             "puntuacion": 4.9,
@@ -804,8 +838,13 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "icono": "zap",
+        # --- Colores light ---
         "color_principal": "#16a34a",
         "color_suave": "#f0fdf4",
+        # --- Colores dark ---
+        "color_principal_dark": "#4ade80",
+        "color_suave_dark": "#14532d",
+        # --- Recursos ---
         "imagen_archivo": "electronica.png",
         "imagen_banner": "electronica_banner.avif",
         "iconos_animados": [
@@ -820,7 +859,6 @@ CATALOGO_CARRERAS: list[Carrera] = [
                 "plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
             ),
         ],
-        # --- NUEVOS CAMPOS ---
         "estadisticas": {
             "demanda_laboral": "alta",
             "puntuacion": 4.7,
@@ -850,4 +888,10 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "turnos": ["Mañana", "Tarde", "Noche"],
         "cupos_disponibles": 30,
     },
+]
+
+
+__all__ = [
+    "CATALOGO_CARRERAS",
+    "PALETA_COLORES",
 ]

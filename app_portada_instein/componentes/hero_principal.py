@@ -4,21 +4,37 @@ Hero principal del home con sistema completo de capas.
 Capas (de fondo a frente):
 - CAPA -1: Imagen de fondo (fondo_hero.png).
 - CAPA 0: Overlay de gradiente para legibilidad.
-- CAPA 1: Líneas luminosas diagonales + iconos flotantes.
-- CAPA 2: Contenido principal (título, CTA, explorador de carrera).
+- CAPA 1: Líneas luminosas diagonales.
+- CAPA 2: Iconos flotantes (partículas).
+- CAPA 3: Contenido principal (título, CTA, explorador).
 
-Usa constantes de `styles.py` para mantener consistencia visual.
+Sistema de color (UX)
+---------------------
+- Fondo: imagen + overlay con `rgba` intencionales para legibilidad.
+- Acentos (badge "INSCRIPCIONES", span del título, CTA primario,
+  trust badges, líneas luminosas): accent institucional (crimson).
+- Textos: neutros (`gray-11`/`gray-12`).
+- Partículas decorativas: `gray-11` con baja opacidad.
+- Punto de "inscripciones abiertas": `green-8` (semántico).
 """
 
 import random
 
 import reflex as rx
 
-from app_portada_instein.componentes.explorador_carrera import (
+from app_portada_instein.componentes.explorador.explorador import (
     explorador_carrera_destacada,
 )
 from app_portada_instein.componentes.primitivos import enlace_navegacion
-from app_portada_instein.styles import (
+from app_portada_instein.infraestructura.constantes_visuales import (
+    COLOR_ACENTO_BORDE,
+    COLOR_ACENTO_SOLIDO,
+    COLOR_ACENTO_TEXTO,
+    COLOR_BORDE_SUAVE,
+    COLOR_FONDO_CARTA,
+    COLOR_TEXTO_PRINCIPAL,
+    COLOR_TEXTO_SECUNDARIO,
+    RADIO_PASTILLA,
     SOMBRA_CAJA,
     SOMBRA_FUERTE,
 )
@@ -30,46 +46,17 @@ from app_portada_instein.styles import (
 
 ICONOS_PARTICULAS: list[str] = [
     # Sistemas Informáticos
-    "cpu",
-    "code-2",
-    "database",
-    "wifi",
-    "terminal",
-    "binary",
-    "hard-drive",
+    "cpu", "code-2", "database", "wifi", "terminal", "binary", "hard-drive",
     # Contaduría General
-    "calculator",
-    "receipt",
-    "coins",
-    "chart-line",
-    "wallet",
-    "trending-up",
+    "calculator", "receipt", "coins", "chart-line", "wallet", "trending-up",
     # Secretariado Ejecutivo
-    "briefcase",
-    "calendar-clock",
-    "mail",
-    "users",
-    "file-text",
-    "clipboard-list",
+    "briefcase", "calendar-clock", "mail", "users", "file-text", "clipboard-list",
     # Comercio Internacional
-    "globe",
-    "ship",
-    "package",
-    "truck",
-    "plane",
+    "globe", "ship", "package", "truck", "plane",
     # Electrónica
-    "zap",
-    "circuit-board",
-    "radio",
-    "plug-zap",
-    "settings",
+    "zap", "circuit-board", "radio", "plug-zap", "settings",
     # Académicos generales
-    "graduation-cap",
-    "book-open",
-    "award",
-    "lightbulb",
-    "target",
-    "rocket",
+    "graduation-cap", "book-open", "award", "lightbulb", "target", "rocket",
 ]
 
 
@@ -86,6 +73,14 @@ DURACION_MINIMA = 4.0
 DURACION_MAXIMA = 8.0
 ROTACION_MINIMA = -25
 ROTACION_MAXIMA = 25
+
+# Opacidad de las partículas decorativas.
+OPACIDAD_PARTICULAS = "0.4"
+
+# Anchos de las líneas luminosas.
+ANCHO_LINEA_1 = "50rem"
+ANCHO_LINEA_2 = "40rem"
+ANCHO_LINEA_3 = "60rem"
 
 
 def _generar_iconos_particulas(
@@ -138,12 +133,16 @@ def _icono_particula(particula: dict) -> rx.Component:
     - Opacidad baja para no competir con el contenido.
     - Animación de flotación + titileo.
     - Rotación inicial sutil.
+
+    Args:
+        particula: Dict con `icono`, `x`, `y`, `tamano`, `opacidad`,
+            `delay`, `duracion`, `rotacion`.
     """
     return rx.box(
         rx.icon(
             particula["icono"],
             size=particula["tamano"],
-            color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+            color=COLOR_TEXTO_SECUNDARIO,
         ),
         position="absolute",
         left=f"{particula['x']}%",
@@ -194,9 +193,13 @@ def _linea_luminosa(
     """
     Línea luminosa diagonal sutil.
 
+    Usa accent crimson. Los `rgba` internos del gradiente son
+    intencionales y usan el accent sólido del tema.
+
     Args:
         angulo: Ángulo de rotación en grados.
-        x, y: Posición absoluta.
+        x: Posición izquierda (ej: "-10%").
+        y: Posición superior (ej: "25%").
         ancho: Ancho de la línea (ej: "50rem").
         delay: Retraso de la animación.
         duracion: Duración de una vuelta completa.
@@ -207,22 +210,31 @@ def _linea_luminosa(
         top=y,
         width=ancho,
         height="1px",
-        background="linear-gradient(90deg, transparent, #a855f7, transparent)",
-        opacity="0.4",
+        background=rx.color_mode_cond(
+            light=(
+                f"linear-gradient(90deg, transparent, "
+                f"{COLOR_ACENTO_TEXTO}, transparent)"
+            ),
+            dark=(
+                f"linear-gradient(90deg, transparent, "
+                f"{COLOR_ACENTO_SOLIDO}, transparent)"
+            ),
+        ),
+        opacity=OPACIDAD_PARTICULAS,
         transform=f"rotate({angulo}deg)",
         filter="blur(1px)",
-        box_shadow="0 0 10px #a855f7",
+        box_shadow=f"0 0 10px {COLOR_ACENTO_TEXTO}",
         animation=f"deslizar_linea {duracion}s linear {delay}s infinite",
         pointer_events="none",
     )
 
 
 def _capa_lineas_luminosas() -> rx.Component:
-    """Capa con líneas luminosas diagonales distribuidas."""
+    """Capa con 3 líneas luminosas diagonales distribuidas."""
     return rx.box(
-        _linea_luminosa(-30, "-10%", "25%", "50rem", 0.0, 8.0),
-        _linea_luminosa(45, "60%", "10%", "40rem", 2.0, 10.0),
-        _linea_luminosa(-60, "30%", "80%", "60rem", 4.0, 12.0),
+        _linea_luminosa(-30, "-10%", "25%", ANCHO_LINEA_1, 0.0, 8.0),
+        _linea_luminosa(45, "60%", "10%", ANCHO_LINEA_2, 2.0, 10.0),
+        _linea_luminosa(-60, "30%", "80%", ANCHO_LINEA_3, 4.0, 12.0),
         position="absolute",
         top="0",
         left="0",
@@ -243,6 +255,10 @@ def _capa_overlay_gradiente() -> rx.Component:
     """
     Overlay de gradiente para garantizar legibilidad del contenido
     sobre la imagen de fondo, adaptativo al modo claro/oscuro.
+
+    Los `rgba` son intencionales: el overlay se aplica SOBRE la imagen
+    del hero, no sobre el fondo del tema. Los valores están calibrados
+    para máxima legibilidad del texto en ambos modos.
     """
     return rx.box(
         position="absolute",
@@ -256,7 +272,11 @@ def _capa_overlay_gradiente() -> rx.Component:
                 "rgba(248, 250, 252, 0.75) 0%, "
                 "rgba(248, 250, 252, 0.9) 100%)"
             ),
-            dark=("linear-gradient(180deg, rgba(5, 4, 10, 0.5) 0%, rgba(5, 4, 10, 0.9) 100%)"),
+            dark=(
+                "linear-gradient(180deg, "
+                "rgba(5, 4, 10, 0.5) 0%, "
+                "rgba(5, 4, 10, 0.9) 100%)"
+            ),
         ),
         pointer_events="none",
         z_index="0",
@@ -273,14 +293,18 @@ def _capa_imagen_fondo() -> rx.Component:
     Imagen de fondo del hero (assets/fondo_hero.png).
 
     Si la imagen no existe, se muestra el color de fondo adaptativo
-    como fallback.
+    como fallback. Los colores son hex intencionales porque el fondo
+    está pensado para combinarse con el overlay.
     """
     return rx.box(
         background_image="url('/fondo_hero.png')",
         background_size="cover",
         background_position="center",
-        background_repeat="no-repeat",
-        background_color=rx.color_mode_cond(light="#f8fafc", dark="#05040a"),
+        background_repeat="repeat",
+        background_color=rx.color_mode_cond(
+            light="#f8fafc",
+            dark="#05040a",
+        ),
         position="absolute",
         top="0",
         left="0",
@@ -304,25 +328,116 @@ def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
     - Título de Provisión Nacional.
     - Cantidad de egresados.
     - Empleabilidad.
+
+    Args:
+        icono: Nombre del icono de Lucide.
+        etiqueta: Texto visible del badge.
     """
     return rx.flex(
-        rx.icon(icono, size=14, color=rx.color("accent", 11)),
+        rx.icon(icono, size=14, color=COLOR_ACENTO_TEXTO),
         rx.text(
             etiqueta,
             font_size="0.75rem",
             font_weight="600",
-            color=rx.color_mode_cond(light="#334155", dark="#cbd5e1"),
+            color=COLOR_TEXTO_SECUNDARIO,
         ),
         align="center",
         gap="0.4rem",
         padding="0.5rem 0.875rem",
-        border_radius="9999px",
-        background=rx.color_mode_cond(
-            light="rgba(255,255,255,0.75)",
-            dark="rgba(15,17,23,0.75)",
-        ),
-        border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
+        border_radius=RADIO_PASTILLA,
+        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
         backdrop_filter="blur(12px)",
+    )
+
+
+# ======================================================================
+# Contenido principal: Badge de inscripciones
+# ======================================================================
+
+
+def _badge_inscripciones_abiertas() -> rx.Component:
+    """
+    Badge con punto verde pulsante + texto "INSCRIPCIONES ABIERTAS".
+
+    Usa `green-8` para el punto (semántico de éxito/activo) y
+    fondo neutro para el resto.
+    """
+    return rx.flex(
+        rx.box(
+            height="0.5rem",
+            width="0.5rem",
+            border_radius=RADIO_PASTILLA,
+            background=rx.color("green", 8),
+            animation="pulse 2s ease-in-out infinite",
+        ),
+        rx.text(
+            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
+            font_size="0.75rem",
+            font_weight="700",
+            color=COLOR_TEXTO_PRINCIPAL,
+            letter_spacing="0.05em",
+        ),
+        align="center",
+        gap="0.5rem",
+        padding="0.5rem 1rem",
+        border_radius=RADIO_PASTILLA,
+        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        backdrop_filter="blur(12px)",
+        box_shadow=SOMBRA_CAJA,
+    )
+
+
+# ======================================================================
+# Contenido principal: CTA dual
+# ======================================================================
+
+
+def _cta_primario() -> rx.Component:
+    """CTA primario 'Ver Carreras' con accent sólido."""
+    return enlace_navegacion(
+        "/carreras",
+        rx.icon("graduation-cap", size=18),
+        rx.text("Ver Carreras", as_="span", font_weight="700"),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
+        background=COLOR_ACENTO_SOLIDO,
+        color="white",
+        padding="0.875rem 1.75rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.9375rem",
+        box_shadow=SOMBRA_FUERTE,
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "filter": "brightness(1.1)",
+        },
+    )
+
+
+def _cta_secundario() -> rx.Component:
+    """CTA secundario 'Conocer más' con fondo neutro y borde sutil."""
+    return enlace_navegacion(
+        "/contacto",
+        rx.icon("message_circle", size=18),
+        rx.text("Conocer más", as_="span", font_weight="600"),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
+        background=COLOR_FONDO_CARTA,
+        color=COLOR_TEXTO_PRINCIPAL,
+        padding="0.875rem 1.75rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.9375rem",
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        backdrop_filter="blur(12px)",
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "border_color": COLOR_ACENTO_BORDE,
+        },
     )
 
 
@@ -342,104 +457,42 @@ def _hero_titulo_y_cta() -> rx.Component:
     """
     return rx.vstack(
         # --- Badge de inscripciones abiertas ---
-        rx.flex(
-            rx.box(
-                height="0.5rem",
-                width="0.5rem",
-                border_radius="9999px",
-                background="#22c55e",
-                animation="pulse 2s ease-in-out infinite",
-            ),
-            rx.text(
-                "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
-                font_size="0.75rem",
-                font_weight="700",
-                color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
-                letter_spacing="0.05em",
-            ),
-            align="center",
-            gap="0.5rem",
-            padding="0.5rem 1rem",
-            border_radius="9999px",
-            background=rx.color_mode_cond(
-                light="rgba(255,255,255,0.9)",
-                dark="rgba(15,17,23,0.9)",
-            ),
-            border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
-            backdrop_filter="blur(12px)",
-            box_shadow=SOMBRA_CAJA,
+        rx.box(
+            _badge_inscripciones_abiertas(),
             margin_bottom="1.5rem",
         ),
-        # --- Título principal ---
+        # --- Título principal (con span en accent) ---
         rx.heading(
             "Forja tu futuro como ",
-            rx.text.span("Técnico Superior", color=rx.color("accent", 11)),
+            rx.text.span(
+                "Técnico Superior",
+                color=COLOR_ACENTO_TEXTO,
+            ),
             "",
             size="9",
             text_align="center",
             font_weight="900",
             letter_spacing="-0.03em",
             line_height="1.1",
-            color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+            color=COLOR_TEXTO_PRINCIPAL,
             max_width="48rem",
         ),
         # --- Subtítulo ---
         rx.text(
-            "Formación técnica de excelencia con títulos de Provisión Nacional. "
-            "5 carreras, equipamiento moderno y docentes especializados.",
+            "Formación técnica de excelencia con títulos de Provisión "
+            "Nacional. 5 carreras, equipamiento moderno y docentes "
+            "especializados.",
             font_size=["1rem", "1.125rem", "1.25rem"],
             text_align="center",
-            color=rx.color_mode_cond(light="#475569", dark="#cbd5e1"),
+            color=COLOR_TEXTO_SECUNDARIO,
             max_width="42rem",
             line_height="1.6",
             margin_top="1rem",
         ),
         # --- CTA dual ---
         rx.flex(
-            # CTA primario: Ver Carreras
-            enlace_navegacion(
-                "/carreras",
-                rx.icon("graduation-cap", size=18),
-                rx.text("Ver Carreras", as_="span", font_weight="700"),
-                display="flex",
-                align_items="center",
-                gap="0.5rem",
-                background=rx.color("accent", 11),
-                color="#ffffff",
-                padding="0.875rem 1.75rem",
-                border_radius="9999px",
-                font_size="0.9375rem",
-                box_shadow=SOMBRA_FUERTE,
-                transition="all 0.2s",
-                _hover={
-                    "transform": "translateY(-2px)",
-                    "box_shadow": "0 15px 35px -5px rgba(37, 99, 235, 0.5)",
-                },
-            ),
-            # CTA secundario: Conocer más
-            enlace_navegacion(
-                "/contacto",
-                rx.icon("message_circle", size=18),
-                rx.text("Conocer más", as_="span", font_weight="600"),
-                display="flex",
-                align_items="center",
-                gap="0.5rem",
-                background=rx.color_mode_cond(
-                    light="rgba(255,255,255,0.9)",
-                    dark="rgba(15,17,23,0.9)",
-                ),
-                color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
-                padding="0.875rem 1.75rem",
-                border_radius="9999px",
-                font_size="0.9375rem",
-                border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
-                backdrop_filter="blur(12px)",
-                transition="all 0.2s",
-                _hover={
-                    "transform": "translateY(-2px)",
-                    "border_color": rx.color("accent", 8),
-                },
-            ),
+            _cta_primario(),
+            _cta_secundario(),
             gap="0.75rem",
             margin_top="2rem",
             flex_direction=["column", "row", "row"],
@@ -483,25 +536,15 @@ def hero_principal() -> rx.Component:
     5. Contenido principal (título + CTA + explorador).
     """
     return rx.box(
-        # ==============================================================
         # CAPA -1: Imagen de fondo
-        # ==============================================================
         _capa_imagen_fondo(),
-        # ==============================================================
         # CAPA 0: Overlay de gradiente
-        # ==============================================================
         _capa_overlay_gradiente(),
-        # ==============================================================
         # CAPA 1: Líneas luminosas diagonales
-        # ==============================================================
         _capa_lineas_luminosas(),
-        # ==============================================================
         # CAPA 2: Iconos flotantes (partículas)
-        # ==============================================================
         _capa_iconos_particulas(),
-        # ==============================================================
         # CAPA 3: Contenido principal
-        # ==============================================================
         rx.vstack(
             _hero_titulo_y_cta(),
             explorador_carrera_destacada(),
@@ -511,11 +554,12 @@ def hero_principal() -> rx.Component:
             position="relative",
             z_index="2",
         ),
-        # ==============================================================
         # Contenedor principal
-        # ==============================================================
         position="relative",
         width="100%",
         overflow="hidden",
         min_height="100vh",
     )
+
+
+__all__ = ["hero_principal"]

@@ -5,7 +5,12 @@ Diseño UX:
 - Hero de bienvenida con título y subtítulo.
 - Grid de 3 tarjetas de contacto (teléfono, dirección, horario).
 - Mapa de Google Maps embebido con coordenadas reales del instituto.
+- Sección de tutorial (crear cuenta institucional).
 - CTA final con WhatsApp.
+
+Todos los colores usan tokens Radix adaptativos al color_mode.
+Los colores semánticos (azul, verde, rojo) se expresan como `rx.color()`
+con la escala correcta para fondos, bordes y textos.
 """
 
 import reflex as rx
@@ -13,9 +18,22 @@ import reflex as rx
 from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
 from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
 from app_portada_instein.infraestructura.constantes_visuales import (
+    ANCHO_CONTENIDO,
+    COLOR_BORDE_SUAVE,
+    COLOR_FONDO_CARTA,
+    COLOR_FONDO_SUAVE,
+    COLOR_TEXTO_CUERPO,
+    COLOR_TEXTO_PRINCIPAL,
+    COLOR_TEXTO_SECUNDARIO,
     DIRECCION,
     HORARIO_ATENCION,
     NOMBRE_INSTITUTO,
+    PADDING_LATERAL,
+    RADIO_EXTRA_GRANDE,
+    RADIO_GRANDE,
+    RADIO_MEDIO,
+    RADIO_PASTILLA,
+    SOMBRA_SUAVE,
     TELEFONO_PRINCIPAL,
     TELEFONO_SECUNDARIO,
     UBICACION_FISICA,
@@ -34,13 +52,25 @@ from .tutorial_crear_cuenta import cuadro_de_tutorial
 LATITUD = -16.5084167
 LONGITUD = -68.1635278
 
-# Colores semánticos reutilizados.
-COLOR_AZUL = "#2563eb"
-COLOR_VERDE = "#22c55e"
-COLOR_ROJO = "#dc2626"
-COLOR_AZUL_SUAVE = "#eff6ff"
-COLOR_VERDE_SUAVE = "#f0fdf4"
-COLOR_ROJO_SUAVE = "#fef2f2"
+# Cadenas de coordenadas formateadas (evitan escapes en el JSX).
+COORDENADAS_TEXTO = '16°30\'30.3"S 68°09\'48.7"W'
+
+# Paleta semántica (tokens Radix — adaptativos al color_mode).
+# Cada "color" agrupa: fondo suave, borde, texto y sólido.
+COLOR_AZUL_TEXTO = rx.color("blue", 11)
+COLOR_AZUL_FONDO = rx.color("blue", 3)
+COLOR_AZUL_BORDE = rx.color("blue", 7)
+COLOR_AZUL_SOLIDO = rx.color("blue", 9)
+
+COLOR_VERDE_TEXTO = rx.color("green", 11)
+COLOR_VERDE_FONDO = rx.color("green", 3)
+COLOR_VERDE_BORDE = rx.color("green", 7)
+COLOR_VERDE_SOLIDO = rx.color("green", 9)
+
+COLOR_ROJO_TEXTO = rx.color("red", 11)
+COLOR_ROJO_FONDO = rx.color("red", 3)
+COLOR_ROJO_BORDE = rx.color("red", 7)
+COLOR_ROJO_SOLIDO = rx.color("red", 9)
 
 
 # ======================================================================
@@ -57,18 +87,15 @@ def _tarjeta_base(
 
     Reutilizada por todas las tarjetas de contacto para mantener
     coherencia visual (padding, border-radius, hover).
+
+    Usa tokens Radix para el fondo y el borde, por lo que se adapta
+    automáticamente al modo claro/oscuro.
     """
     props.setdefault("padding", "1.5rem")
-    props.setdefault("border_radius", "1.25rem")
-    props.setdefault(
-        "background",
-        rx.color_mode_cond(light="#ffffff", dark="#0f1117"),
-    )
-    props.setdefault(
-        "border",
-        "1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#1e293b"),
-    )
-    props.setdefault("box_shadow", "0 1px 3px 0 rgb(0 0 0 / 0.05)")
+    props.setdefault("border_radius", RADIO_EXTRA_GRANDE)
+    props.setdefault("background", COLOR_FONDO_CARTA)
+    props.setdefault("border", f"1px solid {COLOR_BORDE_SUAVE}")
+    props.setdefault("box_shadow", SOMBRA_SUAVE)
     props.setdefault("width", "100%")
     props.setdefault("height", "100%")
     props.setdefault(
@@ -79,13 +106,20 @@ def _tarjeta_base(
     return rx.box(*children, **props)
 
 
-def _icono_tarjeta(icono: str, color: str) -> rx.Component:
-    """Icono con fondo tintado, reutilizado en todas las tarjetas."""
+def _icono_tarjeta(icono: str, color_texto: rx.Var, color_fondo: rx.Var) -> rx.Component:
+    """
+    Icono con fondo tintado.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        color_texto: Color del icono (token de texto, step 11).
+        color_fondo: Fondo suave del icono (token de fondo, step 3).
+    """
     return rx.box(
-        rx.icon(tag=icono, size=22, color=color),
+        rx.icon(tag=icono, size=22, color=color_texto),
         padding="0.75rem",
         border_radius="0.875rem",
-        background=color + "15",
+        background=color_fondo,
         display="flex",
         align_items="center",
         justify_content="center",
@@ -110,13 +144,13 @@ def _tarjeta_telefono() -> rx.Component:
         rx.vstack(
             # --- Header: icono + título ---
             rx.flex(
-                _icono_tarjeta("phone", COLOR_AZUL),
+                _icono_tarjeta("phone", COLOR_AZUL_TEXTO, COLOR_AZUL_FONDO),
                 rx.vstack(
                     rx.text(
                         "Atención al Cliente",
                         font_size="0.75rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         text_transform="uppercase",
                         letter_spacing="0.05em",
                         line_height="1.1",
@@ -125,13 +159,13 @@ def _tarjeta_telefono() -> rx.Component:
                         f"{TELEFONO_PRINCIPAL}",
                         font_size="1.125rem",
                         font_weight="800",
-                        color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                        color=COLOR_TEXTO_PRINCIPAL,
                         line_height="1.2",
                     ),
                     rx.text(
                         f"Alterno: {TELEFONO_SECUNDARIO}",
                         font_size="0.75rem",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         line_height="1.2",
                     ),
                     spacing="1",
@@ -148,14 +182,14 @@ def _tarjeta_telefono() -> rx.Component:
                     icono="message_circle",
                     etiqueta="WhatsApp",
                     href=WHATSAPP_URL,
-                    color=COLOR_VERDE,
+                    color_solido=COLOR_VERDE_SOLIDO,
                     externo=True,
                 ),
                 _boton_accion(
                     icono="phone",
                     etiqueta="Llamar",
                     href=f"tel:+591{TELEFONO_PRINCIPAL}",
-                    color=COLOR_AZUL,
+                    color_solido=COLOR_AZUL_SOLIDO,
                     externo=True,
                 ),
                 gap="0.5rem",
@@ -168,9 +202,9 @@ def _tarjeta_telefono() -> rx.Component:
             height="100%",
         ),
         _hover={
-            "border_color": COLOR_AZUL + "55",
+            "border_color": COLOR_AZUL_BORDE,
             "transform": "translateY(-2px)",
-            "box_shadow": "0 12px 30px -10px rgb(37 99 235 / 0.2)",
+            "box_shadow": f"0 12px 30px -10px {COLOR_AZUL_SOLIDO}",
         },
     )
 
@@ -186,13 +220,13 @@ def _tarjeta_direccion() -> rx.Component:
         rx.vstack(
             # --- Header ---
             rx.flex(
-                _icono_tarjeta("map-pin", COLOR_ROJO),
+                _icono_tarjeta("map-pin", COLOR_ROJO_TEXTO, COLOR_ROJO_FONDO),
                 rx.vstack(
                     rx.text(
                         "Dirección Exacta",
                         font_size="0.75rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         text_transform="uppercase",
                         letter_spacing="0.05em",
                         line_height="1.1",
@@ -201,7 +235,7 @@ def _tarjeta_direccion() -> rx.Component:
                         DIRECCION,
                         font_size="0.9375rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                        color=COLOR_TEXTO_PRINCIPAL,
                         line_height="1.3",
                     ),
                     spacing="1",
@@ -215,20 +249,20 @@ def _tarjeta_direccion() -> rx.Component:
             # --- Referencia ---
             rx.box(
                 rx.flex(
-                    rx.icon("building-2", size=14, color=COLOR_ROJO),
+                    rx.icon("building-2", size=14, color=COLOR_ROJO_TEXTO),
                     rx.text(
                         UBICACION_FISICA,
                         font_size="0.8125rem",
                         font_weight="600",
-                        color=rx.color_mode_cond(light="#334155", dark="#cbd5e1"),
+                        color=COLOR_TEXTO_CUERPO,
                     ),
                     align="center",
                     gap="0.5rem",
                 ),
                 padding="0.75rem 1rem",
-                border_radius="0.75rem",
-                background=rx.color_mode_cond(light="#fef2f2", dark="#1e293b"),
-                border="1px solid " + rx.color_mode_cond(light="#fecaca", dark="#334155"),
+                border_radius=RADIO_MEDIO,
+                background=COLOR_ROJO_FONDO,
+                border=f"1px solid {COLOR_ROJO_BORDE}",
                 margin_top="1.25rem",
                 width="100%",
             ),
@@ -237,9 +271,9 @@ def _tarjeta_direccion() -> rx.Component:
             height="100%",
         ),
         _hover={
-            "border_color": COLOR_ROJO + "55",
+            "border_color": COLOR_ROJO_BORDE,
             "transform": "translateY(-2px)",
-            "box_shadow": "0 12px 30px -10px rgb(220 38 38 / 0.2)",
+            "box_shadow": f"0 12px 30px -10px {COLOR_ROJO_SOLIDO}",
         },
     )
 
@@ -250,18 +284,18 @@ def _tarjeta_direccion() -> rx.Component:
 
 
 def _tarjeta_horario() -> rx.Component:
-    """Tarjeta con el horario de atención + badge de abierto/cerrado."""
+    """Tarjeta con el horario de atención + badge de disponibilidad."""
     return _tarjeta_base(
         rx.vstack(
             # --- Header ---
             rx.flex(
-                _icono_tarjeta("clock", COLOR_AZUL),
+                _icono_tarjeta("clock", COLOR_AZUL_TEXTO, COLOR_AZUL_FONDO),
                 rx.vstack(
                     rx.text(
                         "Horario de Atención",
                         font_size="0.75rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         text_transform="uppercase",
                         letter_spacing="0.05em",
                         line_height="1.1",
@@ -270,7 +304,7 @@ def _tarjeta_horario() -> rx.Component:
                         HORARIO_ATENCION,
                         font_size="0.9375rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                        color=COLOR_TEXTO_PRINCIPAL,
                         line_height="1.3",
                     ),
                     spacing="1",
@@ -286,21 +320,21 @@ def _tarjeta_horario() -> rx.Component:
                 rx.box(
                     width="0.5rem",
                     height="0.5rem",
-                    border_radius="9999px",
-                    background=COLOR_VERDE,
+                    border_radius=RADIO_PASTILLA,
+                    background=COLOR_VERDE_SOLIDO,
                     animation="pulse 2s ease-in-out infinite",
                 ),
                 rx.text(
                     "Atención presencial y telefónica",
                     font_size="0.75rem",
                     font_weight="600",
-                    color=rx.color_mode_cond(light="#15803d", dark="#4ade80"),
+                    color=COLOR_VERDE_TEXTO,
                 ),
                 align="center",
                 gap="0.5rem",
                 padding="0.5rem 0.875rem",
-                border_radius="9999px",
-                background=COLOR_VERDE_SUAVE,
+                border_radius=RADIO_PASTILLA,
+                background=COLOR_VERDE_FONDO,
                 margin_top="1.25rem",
                 width="fit-content",
             ),
@@ -309,9 +343,9 @@ def _tarjeta_horario() -> rx.Component:
             height="100%",
         ),
         _hover={
-            "border_color": COLOR_AZUL + "55",
+            "border_color": COLOR_AZUL_BORDE,
             "transform": "translateY(-2px)",
-            "box_shadow": "0 12px 30px -10px rgb(37 99 235 / 0.2)",
+            "box_shadow": f"0 12px 30px -10px {COLOR_AZUL_SOLIDO}",
         },
     )
 
@@ -325,17 +359,26 @@ def _boton_accion(
     icono: str,
     etiqueta: str,
     href: str,
-    color: str,
+    color_solido: rx.Var,
     externo: bool = False,
 ) -> rx.Component:
-    """Botón de acción con icono + etiqueta, reutilizable."""
+    """
+    Botón de acción con icono + etiqueta.
+
+    Args:
+        icono: Nombre del icono Lucide.
+        etiqueta: Texto visible del botón.
+        href: URL destino.
+        color_solido: Color de fondo (token step 9).
+        externo: Si True, abre en nueva pestaña.
+    """
     return rx.link(
-        rx.icon(tag=icono, size=16, color="#ffffff"),
+        rx.icon(tag=icono, size=16, color="white"),
         rx.text(
             etiqueta,
             font_size="0.8125rem",
             font_weight="700",
-            color="#ffffff",
+            color="white",
         ),
         href=href,
         is_external=externo,
@@ -344,15 +387,15 @@ def _boton_accion(
         justify_content="center",
         gap="0.5rem",
         padding="0.625rem 1rem",
-        border_radius="0.75rem",
-        background=color,
+        border_radius=RADIO_MEDIO,
+        background=color_solido,
         text_decoration="none",
         flex="1",
         transition="all 0.2s",
         _hover={
             "transform": "translateY(-1px)",
             "filter": "brightness(1.1)",
-            "box_shadow": f"0 8px 16px -4px {color}80",
+            "box_shadow": f"0 8px 16px -4px {color_solido}",
         },
     )
 
@@ -360,6 +403,47 @@ def _boton_accion(
 # ======================================================================
 # Bloque de mapa con Google Maps embebido
 # ======================================================================
+
+
+def _ubicacion_item(
+    icono: str,
+    etiqueta: str,
+    valor: str,
+    color_texto: rx.Var,
+    color_fondo: rx.Var,
+) -> rx.Component:
+    """Item de ubicación (dirección, referencia, coordenadas)."""
+    return rx.flex(
+        _icono_tarjeta(icono, color_texto, color_fondo),
+        rx.vstack(
+            rx.text(
+                etiqueta,
+                font_size="0.6875rem",
+                font_weight="700",
+                color=COLOR_TEXTO_SECUNDARIO,
+                text_transform="uppercase",
+                letter_spacing="0.05em",
+                line_height="1.1",
+            ),
+            rx.text(
+                valor,
+                font_size="0.8125rem",
+                font_weight="600",
+                color=COLOR_TEXTO_PRINCIPAL,
+                line_height="1.3",
+            ),
+            spacing="1",
+            align="start",
+        ),
+        align="center",
+        gap="0.75rem",
+        flex="1",
+        min_width="220px",
+        padding="1rem",
+        border_radius=RADIO_GRANDE,
+        background=COLOR_FONDO_SUAVE,
+        border=f"1px solid {COLOR_BORDE_SUAVE}",
+    )
 
 
 def _bloque_mapa() -> rx.Component:
@@ -384,18 +468,18 @@ def _bloque_mapa() -> rx.Component:
     return rx.vstack(
         # --- Encabezado ---
         rx.flex(
-            rx.icon("map-pin", size=22, color=COLOR_ROJO),
+            rx.icon("map-pin", size=22, color=COLOR_ROJO_TEXTO),
             rx.vstack(
                 rx.heading(
                     "Ubícanos en el mapa",
                     size="5",
                     font_weight="700",
-                    color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                    color=COLOR_TEXTO_PRINCIPAL,
                 ),
                 rx.text(
                     "Estamos en una ubicación céntrica y de fácil acceso.",
                     font_size="0.875rem",
-                    color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                    color=COLOR_TEXTO_SECUNDARIO,
                 ),
                 spacing="1",
                 align="start",
@@ -418,9 +502,9 @@ def _bloque_mapa() -> rx.Component:
             ),
             width="100%",
             height=["20rem", "24rem", "28rem"],
-            border_radius="1.5rem",
+            border_radius=RADIO_EXTRA_GRANDE,
             overflow="hidden",
-            border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
             box_shadow="0 4px 12px -2px rgb(0 0 0 / 0.08)",
         ),
         # --- Grid de datos de ubicación ---
@@ -429,19 +513,22 @@ def _bloque_mapa() -> rx.Component:
                 icono="map-pin",
                 etiqueta="Dirección",
                 valor=DIRECCION,
-                color=COLOR_ROJO,
+                color_texto=COLOR_ROJO_TEXTO,
+                color_fondo=COLOR_ROJO_FONDO,
             ),
             _ubicacion_item(
                 icono="building-2",
                 etiqueta="Referencia",
                 valor=UBICACION_FISICA,
-                color=COLOR_AZUL,
+                color_texto=COLOR_AZUL_TEXTO,
+                color_fondo=COLOR_AZUL_FONDO,
             ),
             _ubicacion_item(
                 icono="compass",
                 etiqueta="Coordenadas",
-                valor='16°30\'30.3"S 68°09\'48.7"W',
-                color=COLOR_VERDE,
+                valor=COORDENADAS_TEXTO,
+                color_texto=COLOR_VERDE_TEXTO,
+                color_fondo=COLOR_VERDE_FONDO,
             ),
             gap="1rem",
             width="100%",
@@ -451,12 +538,12 @@ def _bloque_mapa() -> rx.Component:
         # --- Botón "Cómo llegar" ---
         rx.link(
             rx.flex(
-                rx.icon("navigation", size=16, color="#ffffff"),
+                rx.icon("navigation", size=16, color="white"),
                 rx.text(
                     "Cómo llegar",
                     font_size="0.875rem",
                     font_weight="700",
-                    color="#ffffff",
+                    color="white",
                 ),
                 align="center",
                 gap="0.5rem",
@@ -465,60 +552,20 @@ def _bloque_mapa() -> rx.Component:
             is_external=True,
             text_decoration="none",
             padding="0.75rem 1.5rem",
-            border_radius="9999px",
-            background=COLOR_AZUL,
-            box_shadow="0 8px 20px -4px rgb(37 99 235 / 0.4)",
+            border_radius=RADIO_PASTILLA,
+            background=COLOR_AZUL_SOLIDO,
+            box_shadow=f"0 8px 20px -4px {COLOR_AZUL_SOLIDO}",
             transition="all 0.2s",
             margin_top="1.5rem",
             width="fit-content",
             _hover={
                 "transform": "translateY(-2px)",
-                "box_shadow": "0 12px 30px -6px rgb(37 99 235 / 0.5)",
+                "box_shadow": f"0 12px 30px -6px {COLOR_AZUL_SOLIDO}",
             },
         ),
         spacing="0",
         width="100%",
         align="start",
-    )
-
-
-def _ubicacion_item(
-    icono: str,
-    etiqueta: str,
-    valor: str,
-    color: str,
-) -> rx.Component:
-    """Item de ubicación (dirección, referencia, coordenadas)."""
-    return rx.flex(
-        _icono_tarjeta(icono, color),
-        rx.vstack(
-            rx.text(
-                etiqueta,
-                font_size="0.6875rem",
-                font_weight="700",
-                color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
-                text_transform="uppercase",
-                letter_spacing="0.05em",
-                line_height="1.1",
-            ),
-            rx.text(
-                valor,
-                font_size="0.8125rem",
-                font_weight="600",
-                color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
-                line_height="1.3",
-            ),
-            spacing="1",
-            align="start",
-        ),
-        align="center",
-        gap="0.75rem",
-        flex="1",
-        min_width="220px",
-        padding="1rem",
-        border_radius="1rem",
-        background=rx.color_mode_cond(light="#f8fafc", dark="#1e293b"),
-        border="1px solid " + rx.color_mode_cond(light="#e2e8f0", dark="#334155"),
     )
 
 
@@ -551,15 +598,15 @@ def vista_contacto() -> rx.Component:
                     rx.box(
                         width="0.5rem",
                         height="0.5rem",
-                        border_radius="9999px",
-                        background=COLOR_VERDE,
+                        border_radius=RADIO_PASTILLA,
+                        background=COLOR_VERDE_SOLIDO,
                         animation="pulse 2s ease-in-out infinite",
                     ),
                     rx.text(
                         "MANTENTE EN CONTACTO",
                         font_size="0.75rem",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         letter_spacing="0.15em",
                     ),
                     align="center",
@@ -569,7 +616,7 @@ def vista_contacto() -> rx.Component:
                     "Comunícate con nosotros",
                     size="8",
                     font_weight="800",
-                    color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                    color=COLOR_TEXTO_PRINCIPAL,
                     text_align="center",
                     line_height="1.1",
                 ),
@@ -577,7 +624,7 @@ def vista_contacto() -> rx.Component:
                     "Estamos disponibles para resolver tus dudas sobre admisiones, "
                     "carreras, horarios y toda la información institucional.",
                     font_size="1rem",
-                    color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                    color=COLOR_TEXTO_SECUNDARIO,
                     text_align="center",
                     max_width="42rem",
                     line_height="1.6",
@@ -622,13 +669,13 @@ def vista_contacto() -> rx.Component:
                         "Plataforma de Seguimiento Académico",
                         size="6",
                         font_weight="700",
-                        color=rx.color_mode_cond(light="#0f172a", dark="#f1f5f9"),
+                        color=COLOR_TEXTO_PRINCIPAL,
                         text_align="center",
                     ),
                     rx.text(
                         "Crea tu cuenta institucional y accede a tu historial académico.",
                         font_size="0.9375rem",
-                        color=rx.color_mode_cond(light="#64748b", dark="#94a3b8"),
+                        color=COLOR_TEXTO_SECUNDARIO,
                         text_align="center",
                         max_width="42rem",
                     ),
@@ -646,9 +693,9 @@ def vista_contacto() -> rx.Component:
                 width="100%",
             ),
             # --- Layout del contenedor principal ---
-            max_width="72rem",
+            max_width=ANCHO_CONTENIDO,
             margin="0 auto",
-            padding="3rem 1.5rem 6rem 1.5rem",
+            padding=f"3rem {PADDING_LATERAL} 6rem {PADDING_LATERAL}",
             width="100%",
         ),
         # --- Pie de página ---

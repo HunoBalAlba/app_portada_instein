@@ -9,9 +9,17 @@ Centraliza:
 - El filtro activo en la página de carreras.
 - El carrusel de carreras destacadas.
 
-Nota técnica:
-- Los PATH PARAMS se obtienen con `self.router.page.params` (dict).
-- La RUTA ACTUAL se obtiene con `self.router.url.path` (str).
+Nota técnica
+------------
+Los PATH PARAMS se obtienen con `self.router.page.params` (dict).
+La RUTA ACTUAL se obtiene con `self.router.url.path` (str).
+
+Los colores adaptativos (light/dark) NO se exponen como `@rx.var`
+porque `rx.color_mode_cond()` devuelve un `Var` reactivo del frontend,
+no un `str` serializable. En su lugar, los componentes usan los helpers
+`color_carrera_adaptativo()` y `color_suave_carrera_adaptativo()` de
+`constantes_visuales.py`, aplicados directamente sobre el dict de la
+carrera.
 """
 
 import asyncio
@@ -19,8 +27,15 @@ import random
 
 import reflex as rx
 
-from app_portada_instein.datos.catalogo_carreras import CATALOGO_CARRERAS, PALETA_COLORES
-from app_portada_instein.datos.modelos_carrera import Carrera, CarreraConEtiqueta, PlanAnual
+from app_portada_instein.datos.catalogo_carreras import (
+    CATALOGO_CARRERAS,
+    PALETA_COLORES,
+)
+from app_portada_instein.datos.modelos_carrera import (
+    Carrera,
+    CarreraConEtiqueta,
+    PlanAnual,
+)
 
 
 # ======================================================================
@@ -30,17 +45,25 @@ from app_portada_instein.datos.modelos_carrera import Carrera, CarreraConEtiquet
 CANTIDAD_ICONOS_FONDO = 30
 SEMILLA_ICONOS_FONDO = 42
 
+# Etiquetas cíclicas para el carrusel de banners.
+ETIQUETAS_CARRUSEL: list[str] = [
+    "Inscripciones abiertas",
+    "Cupos limitados",
+    "Últimos lugares",
+    "Alta demanda",
+    "Nuevo plan 2026",
+]
+
+# Tamaños permitidos para los iconos flotantes del detalle.
+TAMANOS_ICONOS_FONDO: list[int] = [16, 20, 24, 28, 32, 40]
+
 
 class EstadoInstitucional(rx.State):
     """Estado central de la aplicación pública."""
 
     # ==================================================================
-    # Estado persistente
+    # ESTADO PERSISTENTE
     # ==================================================================
-
-    # Estado de la página de carreras
-    filtro_activo: str = "demanda_alta"
-    orden_activo: str = "puntuacion_desc"
 
     # --- Catálogo de carreras ---
     carreras: list[Carrera] = CATALOGO_CARRERAS
@@ -59,13 +82,14 @@ class EstadoInstitucional(rx.State):
     mostrar_panel_flotante: bool = False
 
     # --- Estado de la página de carreras ---
-    filtro_activo: str = "mas_exitosas"
+    filtro_activo: str = "demanda_alta"
+    orden_activo: str = "puntuacion_desc"
 
     # --- Estado del carrusel ---
     indice_carrusel: int = 0
 
     # ==================================================================
-    # Variables computadas relacionadas con la URL
+    # VARIABLES COMPUTADAS: URL
     # ==================================================================
 
     @rx.var
@@ -105,7 +129,7 @@ class EstadoInstitucional(rx.State):
         return f"/carrera/{self.id_carrera_destacada}"
 
     # ==================================================================
-    # Variables computadas de la VISTA DE DETALLE
+    # VARIABLES COMPUTADAS: CARRERA SELECCIONADA (DETALLE)
     # ==================================================================
 
     @rx.var
@@ -122,7 +146,7 @@ class EstadoInstitucional(rx.State):
         return carrera["plan_estudios"][self.indice_anio_seleccionado]
 
     # ==================================================================
-    # Variables computadas del HOME / EXPLORADOR
+    # VARIABLES COMPUTADAS: HOME / EXPLORADOR
     # ==================================================================
 
     @rx.var
@@ -202,7 +226,7 @@ class EstadoInstitucional(rx.State):
         return carrera.get("preguntas_frecuentes", [])
 
     # ==================================================================
-    # Variables computadas de la VISTA DE CARRERAS (columnas)
+    # VARIABLES COMPUTADAS: VISTA DE CARRERAS (columnas)
     # ==================================================================
 
     @rx.var
@@ -221,7 +245,77 @@ class EstadoInstitucional(rx.State):
         return self.carreras[4:]
 
     # ==================================================================
-    # Variables computadas: iconos flotantes del detalle
+    # VARIABLES COMPUTADAS: PLAN DE ESTUDIOS
+    # ==================================================================
+
+    @rx.var
+    def opciones_anio_plan(self) -> list[dict]:
+        """
+        Devuelve las opciones de año para el segmented control.
+
+        Cada opción es un dict con:
+        - "etiqueta": nombre del año (ej: "Primer Año").
+        - "valor": índice como string (ej: "0", "1", "2").
+        """
+        carrera = self._buscar_carrera_por_id(self.id_carrera_desde_url)
+        return [
+            {
+                "etiqueta": plan_anual["anio"],
+                "valor": str(i),
+            }
+            for i, plan_anual in enumerate(carrera["plan_estudios"])
+        ]
+
+    # ==================================================================
+    # VARIABLES COMPUTADAS: FILTROS Y ORDENAMIENTO
+    # ==================================================================
+
+    @rx.var
+    def carreras_filtradas_y_ordenadas(self) -> list[Carrera]:
+        """Devuelve las carreras filtradas y ordenadas según los filtros activos."""
+        carreras = list(self.carreras)
+
+        # --- Filtro por métrica ---
+        if self.filtro_activo == "demanda_alta":
+            carreras = [
+                c for c in carreras
+                if c["estadisticas"]["demanda_laboral"] == "alta"
+            ]
+        elif self.filtro_activo == "puntuacion_top":
+            carreras = [
+                c for c in carreras
+                if c["estadisticas"]["puntuacion"] >= 4.7
+            ]
+        elif self.filtro_activo == "mas_inscritos":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_inscritos"],
+                reverse=True,
+            )[:3]
+        elif self.filtro_activo == "mas_graduados":
+            carreras = sorted(
+                carreras,
+                key=lambda c: c["estadisticas"]["estudiantes_graduados"],
+                reverse=True,
+            )[:3]
+
+        # --- Ordenamiento ---
+        ordenamientos = {
+            "puntuacion_desc": lambda c: c["estadisticas"]["puntuacion"],
+            "inscritos_desc": lambda c: c["estadisticas"]["estudiantes_inscritos"],
+            "graduados_desc": lambda c: c["estadisticas"]["estudiantes_graduados"],
+            "empleabilidad_desc": lambda c: c["estadisticas"]["tasa_empleabilidad"],
+            "salario_desc": lambda c: c["estadisticas"]["salario_promedio_bs"],
+        }
+
+        clave = ordenamientos.get(self.orden_activo)
+        if clave is not None:
+            carreras = sorted(carreras, key=clave, reverse=True)
+
+        return carreras
+
+    # ==================================================================
+    # VARIABLES COMPUTADAS: ICONOS FLOTANTES DEL DETALLE
     # ==================================================================
 
     @rx.var
@@ -241,7 +335,7 @@ class EstadoInstitucional(rx.State):
             nombre = rng.choice(iconos_disponibles)
             x = rng.uniform(0, 100)
             y = rng.uniform(0, 100)
-            tamano = rng.choice([16, 20, 24, 28, 32, 40])
+            tamano = rng.choice(TAMANOS_ICONOS_FONDO)
             opacidad = rng.uniform(0.06, 0.15)
             delay = rng.uniform(0, 5)
             duracion = rng.uniform(6, 10)
@@ -253,7 +347,10 @@ class EstadoInstitucional(rx.State):
                     left=f"{x}%",
                     top=f"{y}%",
                     opacity=f"{opacidad}",
-                    animation=(f"flotar_icono_particula {duracion}s ease-in-out {delay}s infinite"),
+                    animation=(
+                        f"flotar_icono_particula {duracion}s "
+                        f"ease-in-out {delay}s infinite"
+                    ),
                     pointer_events="none",
                 )
             )
@@ -261,7 +358,7 @@ class EstadoInstitucional(rx.State):
         return componentes
 
     # ==================================================================
-    # Variables computadas: carrusel de carreras destacadas
+    # VARIABLES COMPUTADAS: CARRUSEL
     # ==================================================================
 
     @rx.var
@@ -272,19 +369,9 @@ class EstadoInstitucional(rx.State):
         Las etiquetas rotan cíclicamente para no repetirse cuando hay
         más carreras que etiquetas disponibles.
         """
-        etiquetas = [
-            "Inscripciones abiertas",
-            "Cupos limitados",
-            "Últimos lugares",
-            "Alta demanda",
-            "Nuevo plan 2026",
-        ]
-
         resultado: list[CarreraConEtiqueta] = []
         for i, carrera in enumerate(self.carreras):
-            # Rotación cíclica de etiquetas: si hay más carreras que
-            # etiquetas, se repiten desde el inicio.
-            etiqueta = etiquetas[i % len(etiquetas)]
+            etiqueta = ETIQUETAS_CARRUSEL[i % len(ETIQUETAS_CARRUSEL)]
             resultado.append(
                 {
                     "carrera": carrera,
@@ -304,7 +391,7 @@ class EstadoInstitucional(rx.State):
         return items[self.indice_carrusel]
 
     # ==================================================================
-    # Métodos internos
+    # MÉTODOS INTERNOS
     # ==================================================================
 
     def _buscar_carrera_por_id(self, id_carrera: int) -> Carrera:
@@ -315,7 +402,7 @@ class EstadoInstitucional(rx.State):
         return self.carreras[0]
 
     # ==================================================================
-    # Manejadores de eventos: detalle de carrera
+    # MANEJADORES DE EVENTOS: DETALLE DE CARRERA
     # ==================================================================
 
     @rx.event
@@ -329,7 +416,7 @@ class EstadoInstitucional(rx.State):
         self.seccion_detalle_activa = seccion
 
     # ==================================================================
-    # Manejadores de eventos: explorador del home
+    # MANEJADORES DE EVENTOS: EXPLORADOR DEL HOME
     # ==================================================================
 
     @rx.event
@@ -367,16 +454,21 @@ class EstadoInstitucional(rx.State):
         self.mostrar_panel_flotante = False
 
     # ==================================================================
-    # Manejadores de eventos: vista de carreras
+    # MANEJADORES DE EVENTOS: FILTROS Y ORDENAMIENTO
     # ==================================================================
 
     @rx.event
     def cambiar_filtro(self, filtro: str):
-        """Cambia el filtro activo en la vista de carreras."""
+        """Cambia el filtro activo de la lista de carreras."""
         self.filtro_activo = filtro
 
+    @rx.event
+    def cambiar_orden(self, orden: str):
+        """Cambia el ordenamiento activo de la lista de carreras."""
+        self.orden_activo = orden
+
     # ==================================================================
-    # Manejadores de eventos: carrusel
+    # MANEJADORES DE EVENTOS: CARRUSEL
     # ==================================================================
 
     @rx.event
@@ -407,127 +499,40 @@ class EstadoInstitucional(rx.State):
                 self.siguiente_carrusel()
 
     # ==================================================================
-    # Utilidades
+    # UTILIDADES
     # ==================================================================
 
     @rx.event
     def aleatorizar_colores_carreras(self):
-        """Reasigna aleatoriamente la paleta de colores a las carreras."""
+        """
+        Reasigna aleatoriamente la paleta de colores a las carreras.
+
+        Cada elemento de `PALETA_COLORES` es una tupla de 4 colores:
+        `(principal_light, suave_light, principal_dark, suave_dark)`.
+        """
         cantidad = len(self.carreras)
         paleta_disponible = PALETA_COLORES.copy()
 
         if len(paleta_disponible) >= cantidad:
             seleccionados = random.sample(paleta_disponible, cantidad)
         else:
-            seleccionados = [random.choice(paleta_disponible) for _ in range(cantidad)]
+            seleccionados = [
+                random.choice(paleta_disponible) for _ in range(cantidad)
+            ]
 
         random.shuffle(seleccionados)
 
         carreras_actualizadas: list[Carrera] = []
-        for carrera, (color, color_suave) in zip(self.carreras, seleccionados, strict=False):
+        for carrera, colores in zip(self.carreras, seleccionados, strict=False):
+            principal, suave, principal_dark, suave_dark = colores
             nueva_carrera = dict(carrera)
-            nueva_carrera["color_principal"] = color
-            nueva_carrera["color_suave"] = color_suave
+            nueva_carrera["color_principal"] = principal
+            nueva_carrera["color_suave"] = suave
+            nueva_carrera["color_principal_dark"] = principal_dark
+            nueva_carrera["color_suave_dark"] = suave_dark
             carreras_actualizadas.append(nueva_carrera)
 
         self.carreras = carreras_actualizadas
 
-    @rx.var
-    def opciones_anio_plan(self) -> list[dict]:
-        """
-        Devuelve las opciones de año para el segmented control.
 
-        Cada opción es un dict con:
-        - "etiqueta": nombre del año (ej: "Primer Año").
-        - "valor": índice como string (ej: "0", "1", "2").
-        """
-        carrera = self._buscar_carrera_por_id(self.id_carrera_desde_url)
-        return [
-            {
-                "etiqueta": plan_anual["anio"],
-                "valor": str(i),
-            }
-            for i, plan_anual in enumerate(carrera["plan_estudios"])
-        ]
-
-
-
-
-
-
-
-
-    @rx.var
-    def carreras_filtradas_y_ordenadas(self) -> list[Carrera]:
-        """Devuelve las carreras filtradas y ordenadas según los filtros activos."""
-        carreras = list(self.carreras)
-
-        # --- Filtro por demanda laboral ---
-        if self.filtro_activo == "demanda_alta":
-            carreras = [
-                c for c in carreras
-                if c["estadisticas"]["demanda_laboral"] == "alta"
-            ]
-        elif self.filtro_activo == "puntuacion_top":
-            carreras = [
-                c for c in carreras
-                if c["estadisticas"]["puntuacion"] >= 4.7
-            ]
-        elif self.filtro_activo == "mas_inscritos":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["estudiantes_inscritos"],
-                reverse=True,
-            )[:3]
-        elif self.filtro_activo == "mas_graduados":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["estudiantes_graduados"],
-                reverse=True,
-            )[:3]
-
-        # --- Ordenamiento ---
-        if self.orden_activo == "puntuacion_desc":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["puntuacion"],
-                reverse=True,
-            )
-        elif self.orden_activo == "inscritos_desc":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["estudiantes_inscritos"],
-                reverse=True,
-            )
-        elif self.orden_activo == "graduados_desc":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["estudiantes_graduados"],
-                reverse=True,
-            )
-        elif self.orden_activo == "empleabilidad_desc":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["tasa_empleabilidad"],
-                reverse=True,
-            )
-        elif self.orden_activo == "salario_desc":
-            carreras = sorted(
-                carreras,
-                key=lambda c: c["estadisticas"]["salario_promedio_bs"],
-                reverse=True,
-            )
-
-        return carreras
-
-
-    @rx.event
-    def cambiar_filtro(self, filtro: str):
-        """Cambia el filtro activo de la lista de carreras."""
-        self.filtro_activo = filtro
-
-
-    @rx.event
-    def cambiar_orden(self, orden: str):
-        """Cambia el ordenamiento activo de la lista de carreras."""
-        self.orden_activo = orden
+__all__ = ["EstadoInstitucional"]

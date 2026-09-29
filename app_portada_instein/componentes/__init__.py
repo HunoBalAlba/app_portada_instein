@@ -33,8 +33,9 @@ from .estadisticas_instituto import seccion_estadisticas
 # ======================================================================
 # Explorador de carrera (estilo Leonardo AI)
 # ======================================================================
-from .explorador_carrera import explorador_carrera_destacada
-
+from app_portada_instein.componentes.explorador import (
+    explorador_carrera_destacada,
+)
 # ======================================================================
 # Hero principal
 # ======================================================================

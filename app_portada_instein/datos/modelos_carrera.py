@@ -50,7 +50,23 @@ class CaracteristicaCarrera(TypedDict):
 
 
 class Carrera(TypedDict):
-    """Estructura completa de una carrera técnica ofrecida por el instituto."""
+    """
+    Estructura completa de una carrera técnica ofrecida por el instituto.
+
+    Sistema de color
+    ----------------
+    Cada carrera expone 4 colores para adaptarse al color_mode:
+
+    Light mode:
+        - `color_principal`: color de marca (hex, ej: "#2563eb").
+        - `color_suave`: tinte de fondo suave (hex, ej: "#eff6ff").
+
+    Dark mode:
+        - `color_principal_dark`: versión del color de marca ajustada
+          para fondos oscuros (más luminosa, ej: "#60a5fa").
+        - `color_suave_dark`: tinte de fondo suave para dark mode
+          (hex oscuro con matiz de marca, ej: "#1e3a8a").
+    """
     id: int
     nombre: str
     nombre_corto: str
@@ -62,13 +78,21 @@ class Carrera(TypedDict):
     preguntas_frecuentes: list[PreguntaFrecuente]
     plan_estudios: list[PlanAnual]
     icono: str
+
+    # --- Colores light mode ---
     color_principal: str
     color_suave: str
+
+    # --- Colores dark mode ---
+    color_principal_dark: str
+    color_suave_dark: str
+
+    # --- Recursos ---
     imagen_archivo: str
     imagen_banner: str
     iconos_animados: list[IconoAnimado]
 
-    # --- NUEVOS CAMPOS ---
+    # --- Nuevos campos ---
     estadisticas: EstadisticasCarrera
     caracteristicas: list[CaracteristicaCarrera]
     modalidad: str

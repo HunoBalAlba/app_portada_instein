@@ -11,8 +11,8 @@ Composición de secciones (orden de arriba a abajo):
 7. Banner CTA final con llamado a la acción.
 8. Pie de página institucional.
 
-Todas las secciones respetan el mismo ancho máximo (`72rem`) y
-mantienen un espaciado vertical consistente entre ellas.
+Todas las secciones respetan el mismo ancho máximo y mantienen un
+espaciado vertical consistente entre ellas.
 """
 
 import reflex as rx
@@ -29,18 +29,24 @@ from app_portada_instein.componentes.por_que_instein import seccion_por_que_inst
 from app_portada_instein.componentes.preguntas_frecuentes import (
     seccion_preguntas_frecuentes,
 )
-from app_portada_instein.infraestructura.constantes_visuales import NOMBRE_INSTITUTO
+from app_portada_instein.infraestructura.constantes_visuales import (
+    NOMBRE_INSTITUTO,
+    PADDING_LATERAL,
+)
 
 
 # ======================================================================
-# Constantes de layout
+# Constantes locales de layout
 # ======================================================================
 
-# Ancho máximo de las secciones (coincide con el de otras vistas).
+# Contenedor raíz: ocupa todo el ancho del viewport.
 MAX_WIDTH_CONTENIDO = "100%"
 
-# Ancho interno de las secciones que necesitan centrar su contenido.
-MAX_WIDTH_INTERNO = "72rem"
+# Padding vertical del contenedor principal antes del pie de página.
+PADDING_INFERIOR_CONTENIDO = "3rem"
+
+# Padding del bloque que envuelve el banner CTA final.
+PADDING_BANNER_CTA = f"0 {PADDING_LATERAL} 3rem {PADDING_LATERAL}"
 
 
 # ======================================================================
@@ -55,11 +61,12 @@ def vista_inicio() -> rx.Component:
 
     Estructura:
     - Barra de navegación sticky en la parte superior.
-    - Contenido principal (todas las secciones).
+    - Contenido principal (todas las secciones apiladas).
     - Pie de página al final.
 
-    El layout usa `rx.vstack` para apilar las secciones verticalmente,
-    con `width="100%"` para ocupar todo el ancho del viewport.
+    El layout usa `rx.vstack` con `spacing="0"` para controlar
+    manualmente el espaciado vertical entre secciones y evitar
+    espacios fantasmas generados por el stack.
     """
     return rx.vstack(
         # =============================================================
@@ -101,7 +108,7 @@ def vista_inicio() -> rx.Component:
             # ---------------------------------------------------------
             rx.box(
                 banner_cta_final(),
-                padding="0 1.5rem 3rem 1.5rem",
+                padding=PADDING_BANNER_CTA,
                 width="100%",
                 display="flex",
                 justify_content="center",
@@ -109,7 +116,7 @@ def vista_inicio() -> rx.Component:
             # ---------------------------------------------------------
             # Contenedor principal
             # ---------------------------------------------------------
-            padding_bottom="3rem",
+            padding_bottom=PADDING_INFERIOR_CONTENIDO,
             max_width=MAX_WIDTH_CONTENIDO,
             width="100%",
         ),
