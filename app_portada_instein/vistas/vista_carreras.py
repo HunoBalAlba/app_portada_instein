@@ -10,6 +10,13 @@ Estilo Google Play Store con filtros avanzados:
 Todos los colores usan tokens Radix (auto-adaptativos al color_mode).
 Los colores semánticos (azul, amarillo, violeta, verde) se expresan
 como `rx.color()` con la escala correcta según su rol.
+
+Nota técnica: on_load
+---------------------
+El evento `on_load` llama a `iniciar_carrusel_automatico`, que es
+idempotente (no crea tareas duplicadas si ya está corriendo).
+
+⚠️ NO usar `auto_avanzar_carrusel` (nombre antiguo, ya no existe).
 """
 
 import reflex as rx
@@ -46,16 +53,12 @@ from app_portada_instein.infraestructura.constantes_visuales import (
 # Constantes locales
 # ======================================================================
 
-# Tokens semánticos específicos de esta vista.
-# (No viven en constantes_visuales porque son exclusivos del catálogo.)
-
-COLOR_PUNTUACION_TEXTO = rx.color("amber", 11)      # Estrellas de puntuación
+COLOR_PUNTUACION_TEXTO = rx.color("amber", 11)
 COLOR_PUNTUACION_FONDO = rx.color("amber", 3)
 
-COLOR_EMPLEABILIDAD_TEXTO = rx.color("violet", 11)  # Empleabilidad
+COLOR_EMPLEABILIDAD_TEXTO = rx.color("violet", 11)
 COLOR_EMPLEABILIDAD_FONDO = rx.color("violet", 3)
 
-# Mapa de colores por nivel de demanda laboral.
 DEMANDA_ALTA_TEXTO = rx.color("green", 11)
 DEMANDA_ALTA_FONDO = rx.color("green", 3)
 
@@ -101,21 +104,13 @@ def _filtro_pill(
             rx.icon(
                 tag=_icono_por_filtro(valor),
                 size=14,
-                color=rx.cond(
-                    activo,
-                    "white",
-                    COLOR_TEXTO_SECUNDARIO,
-                ),
+                color=rx.cond(activo, "white", COLOR_TEXTO_SECUNDARIO),
             ),
             rx.text(
                 etiqueta,
                 font_size="0.8125rem",
                 font_weight="600",
-                color=rx.cond(
-                    activo,
-                    "white",
-                    COLOR_TEXTO_CUERPO,
-                ),
+                color=rx.cond(activo, "white", COLOR_TEXTO_CUERPO),
                 white_space="nowrap",
             ),
             align="center",
@@ -123,11 +118,7 @@ def _filtro_pill(
         ),
         padding="0.5rem 1rem",
         border_radius=RADIO_PASTILLA,
-        background=rx.cond(
-            activo,
-            COLOR_ACENTO_SOLIDO,
-            COLOR_FONDO_SUAVE,
-        ),
+        background=rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE),
         border=rx.cond(
             activo,
             f"1px solid {COLOR_ACENTO_SOLIDO}",
@@ -143,11 +134,7 @@ def _filtro_pill(
         ),
         _hover={
             "transform": "translateY(-1px)",
-            "background": rx.cond(
-                activo,
-                COLOR_ACENTO_SOLIDO,
-                COLOR_FONDO_CARTA,
-            ),
+            "background": rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA),
         },
     )
 
@@ -161,20 +148,12 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
             etiqueta,
             font_size="0.75rem",
             font_weight="600",
-            color=rx.cond(
-                activo,
-                "white",
-                COLOR_TEXTO_CUERPO,
-            ),
+            color=rx.cond(activo, "white", COLOR_TEXTO_CUERPO),
             white_space="nowrap",
         ),
         padding="0.375rem 0.875rem",
         border_radius=RADIO_PASTILLA,
-        background=rx.cond(
-            activo,
-            COLOR_ACENTO_SOLIDO,
-            COLOR_FONDO_CARTA,
-        ),
+        background=rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA),
         border=rx.cond(
             activo,
             f"1px solid {COLOR_ACENTO_SOLIDO}",
@@ -184,11 +163,7 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
         transition="all 0.2s",
         on_click=EstadoInstitucional.cambiar_orden(valor),
         _hover={
-            "background": rx.cond(
-                activo,
-                COLOR_ACENTO_SOLIDO,
-                COLOR_FONDO_SUAVE,
-            ),
+            "background": rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE),
         },
     )
 
@@ -209,7 +184,6 @@ def _etiqueta_grupo(texto: str) -> rx.Component:
 def _barra_filtros() -> rx.Component:
     """Barra con los filtros + ordenamientos."""
     return rx.vstack(
-        # --- Grupo 1: Filtros por métricas ---
         rx.vstack(
             _etiqueta_grupo("Filtrar por"),
             rx.flex(
@@ -242,7 +216,6 @@ def _barra_filtros() -> rx.Component:
             spacing="1",
             width="100%",
         ),
-        # --- Grupo 2: Ordenamiento ---
         rx.vstack(
             _etiqueta_grupo("Ordenar por"),
             rx.flex(
@@ -277,18 +250,8 @@ def _stat_item(
     color_texto: rx.Var,
     color_fondo: rx.Var,
 ) -> rx.Component:
-    """
-    Item individual de estadística con icono + valor + etiqueta.
-
-    Args:
-        icono: Nombre del icono Lucide.
-        valor: Valor numérico a mostrar (como string).
-        etiqueta: Texto descriptivo debajo del valor.
-        color_texto: Color del icono (token step 11).
-        color_fondo: Fondo del icono (token step 3).
-    """
+    """Item individual de estadística con icono + valor + etiqueta."""
     return rx.flex(
-        # --- Icono con fondo tintado ---
         rx.box(
             rx.icon(tag=icono, size=16, color=color_texto),
             padding="0.5rem",
@@ -299,7 +262,6 @@ def _stat_item(
             justify_content="center",
             flex_shrink="0",
         ),
-        # --- Valor + etiqueta ---
         rx.vstack(
             rx.text(
                 valor,
@@ -449,22 +411,12 @@ def _caracteristicas_carrera(carrera: dict) -> rx.Component:
 
 
 def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
-    """
-    Item de carrera con layout de 3 zonas:
-
-    - **Zona 1**: ranking + icono + nombre/lema + badge demanda.
-    - **Zona 2**: estadísticas distribuidas.
-    - **Zona 3**: chips de características.
-    """
+    """Item de carrera con layout de 3 zonas."""
     color_carrera = carrera["color_principal"]
 
     return rx.link(
         rx.box(
-            # =========================================================
-            # ZONA 1: HEADER
-            # =========================================================
             rx.flex(
-                # --- Ranking ---
                 rx.box(
                     rx.text(
                         (indice + 1).to_string(),
@@ -480,7 +432,6 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                     flex_shrink="0",
                     align_self="center",
                 ),
-                # --- Icono ---
                 rx.box(
                     rx.image(
                         src="/" + carrera["imagen_archivo"],
@@ -498,7 +449,6 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                     box_shadow=f"0 8px 20px -8px {color_carrera}80",
                     align_self="start",
                 ),
-                # --- Info ---
                 rx.vstack(
                     rx.flex(
                         rx.text(
@@ -532,9 +482,6 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                 gap="1rem",
                 width="100%",
             ),
-            # =========================================================
-            # ZONA 2: ESTADÍSTICAS
-            # =========================================================
             rx.box(
                 _stats_carrera(carrera),
                 width="100%",
@@ -542,17 +489,11 @@ def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
                 padding_top="1rem",
                 border_top=f"1px solid {COLOR_DIVISOR}",
             ),
-            # =========================================================
-            # ZONA 3: CARACTERÍSTICAS
-            # =========================================================
             rx.box(
                 _caracteristicas_carrera(carrera),
                 width="100%",
                 margin_top="0.75rem",
             ),
-            # =========================================================
-            # CONTENEDOR
-            # =========================================================
             padding="1.5rem",
             border_radius="1.25rem",
             background=COLOR_FONDO_CARTA,
@@ -646,7 +587,7 @@ def _estado_vacio() -> rx.Component:
 
 
 # ======================================================================
-# Encabezado de la sección "Explora nuestras carreras"
+# Encabezado de la sección
 # ======================================================================
 
 
@@ -672,7 +613,6 @@ def _encabezado_seccion() -> rx.Component:
             spacing="2",
             flex="1",
         ),
-        # --- Contador de resultados ---
         rx.box(
             rx.text(
                 EstadoInstitucional.carreras_filtradas_y_ordenadas.length().to_string(),
@@ -712,24 +652,17 @@ def _encabezado_seccion() -> rx.Component:
 @rx.page(
     route="/carreras",
     title=f"Carreras | {NOMBRE_INSTITUTO}",
-    on_load=EstadoInstitucional.auto_avanzar_carrusel,
+    # on_load=EstadoInstitucional.iniciar_carrusel_automatico,  # ✅ Nombre correcto
 )
 def vista_carreras() -> rx.Component:
     """Página con la oferta académica completa + filtros avanzados."""
     return rx.vstack(
-        # --- Barra de navegación ---
         barra_navegacion_superior(),
-        # --- Contenido principal ---
         rx.box(
-            # --- Hero con banners destacados ---
             hero_carreras(),
-            # --- Sección "Explora nuestras carreras" ---
             rx.box(
-                # --- Encabezado ---
                 _encabezado_seccion(),
-                # --- Filtros ---
                 _barra_filtros(),
-                # --- Grid de carreras o estado vacío ---
                 rx.cond(
                     EstadoInstitucional.carreras_filtradas_y_ordenadas.length() > 0,
                     _grid_carreras_enriquecido(),
@@ -742,7 +675,6 @@ def vista_carreras() -> rx.Component:
             ),
             width="100%",
         ),
-        # --- Pie de página ---
         pie_pagina_institucional(),
         align="center",
         min_height="100vh",

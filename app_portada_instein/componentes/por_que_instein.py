@@ -33,11 +33,31 @@ Se usa `rx.dialog.trigger` (patrón declarativo de Radix Themes) en lugar
 de `on_click` manual. Cada card envuelve su propio `rx.dialog.root` con
 su contenido específico. Esto evita un State global y permite tener N
 diálogos independientes sin colisiones.
+
+Diseño UX del diálogo (FIX móvil)
+---------------------------------
+El diálogo aplica el mismo patrón que `vista_post.py` y `dialogos.py`
+(blog): scroll interno en `flex: 1` + `min-height: 0`, marco en
+`display: flex` + `flex-direction: column`, y altura máxima con `dvh`
+para respetar la barra de URL móvil.
+
+Estructura del diálogo:
+- Header: icono grande + descripción ampliada.
+- Cuerpo: lista de puntos (con scroll interno si es necesario).
+- Pie: botones "Cerrar" (soft) y "Más información" (solid crimson),
+  responsive: columna en móvil, fila en desktop.
+
+Nota técnica: `rx.inset(side="x")` requiere padre con `display: flex`.
+----------------------------------------------------------------------
+Si el contenedor del `rx.inset` no es flex, el inset aplica el padding
+de forma inconsistente. Envuélvelo en un `rx.box(..., display="flex",
+flex_direction="column")` o usa `padding` directamente.
 """
 
 import reflex as rx
 
 from app_portada_instein.infraestructura.constantes_visuales import (
+    COLOR_ACENTO_SOLIDO,
     COLOR_ACENTO_TEXTO,
     COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
@@ -229,11 +249,10 @@ def _fondo_tintado(razon: dict) -> rx.Var:
 
 def _contenido_dialogo_razon(razon: dict) -> rx.Component:
     """
-    Contenido del diálogo: icono + título + descripción ampliada +
-    lista de puntos + CTA de contacto.
+    Contenido del diálogo: icono + descripción ampliada + lista de puntos.
 
-    Usa `rx.inset(side="x")` para la lista de puntos, siguiendo el
-    patrón de Radix Themes.
+    El cuerpo del diálogo es responsive y hace scroll interno cuando el
+    contenido excede el espacio (aunque con 4 puntos rara vez pasa).
 
     Args:
         razon: Dict con los datos de la razón.
@@ -254,21 +273,24 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
             align_items="center",
             justify_content="center",
             width="fit-content",
+            margin="0 auto",
         ),
         # ==========================================================
         # Descripción ampliada
         # ==========================================================
         rx.text(
             razon["detalle"],
-            font_size="0.9375rem",
+            font_size=["0.875rem", "0.9375rem", "0.9375rem"],
             line_height="1.7",
             color=COLOR_TEXTO_CUERPO,
             text_align="center",
         ),
         # ==========================================================
-        # Lista de puntos clave (con rx.inset side="x")
+        # Lista de puntos clave
         # ==========================================================
-        rx.inset(
+        # Usamos padding directo (más robusto que rx.inset, que requiere
+        # que el padre sea flex para aplicar bien el "current" padding).
+        rx.box(
             rx.vstack(
                 rx.foreach(
                     razon["puntos"],
@@ -282,7 +304,7 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
                         ),
                         rx.text(
                             punto,
-                            font_size="0.875rem",
+                            font_size=["0.8125rem", "0.875rem", "0.875rem"],
                             color=COLOR_TEXTO_CUERPO,
                             line_height="1.5",
                         ),
@@ -294,13 +316,11 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
                 spacing="2",
                 align="start",
                 width="100%",
-                padding="1rem",
-                background=COLOR_FONDO_SUAVE,
-                border_radius=RADIO_MEDIO,
             ),
-            side="x",
-            margin_top="0.5rem",
-            margin_bottom="0.5rem",
+            padding="1rem",
+            background=COLOR_FONDO_SUAVE,
+            border_radius=RADIO_MEDIO,
+            width="100%",
         ),
         spacing="4",
         align="center",
@@ -309,41 +329,77 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
 
 
 # ======================================================================
-# Pie del diálogo (CTA + botón cerrar)
+# Pie del diálogo (CTA + botón cerrar) — responsive
 # ======================================================================
+
+
+def _boton_cerrar_dialogo() -> rx.Component:
+    """Botón 'Cerrar' (soft) que cierra el diálogo."""
+    return rx.dialog.close(
+        rx.button(
+            rx.icon("x", size=16),
+            rx.text("Cerrar", as_="span", font_weight="600"),
+            variant="soft",
+            color_scheme="gray",
+            size="3",
+            cursor="pointer",
+            width=rx.breakpoints(initial="100%", sm="auto"),
+        ),
+    )
+
+
+def _boton_mas_informacion() -> rx.Component:
+    """Botón 'Más información' (solid crimson) que cierra + navega."""
+    return rx.dialog.close(
+        rx.button(
+            rx.icon("message-circle", size=16),
+            rx.text("Más información", as_="span", font_weight="700"),
+            on_click=rx.redirect("/contacto"),
+            variant="solid",
+            color_scheme="crimson",
+            size="3",
+            cursor="pointer",
+            width=rx.breakpoints(initial="100%", sm="auto"),
+            _hover={"filter": "brightness(1.1)"},
+        ),
+    )
 
 
 def _pie_dialogo_razon() -> rx.Component:
     """
-    Pie del diálogo con CTA "Más información" + botón "Cerrar".
+    Pie del diálogo responsive.
 
-    Sigue el patrón de Radix Themes:
-    - `rx.dialog.close` envuelve el botón de cerrar.
-    - `rx.flex(justify="end")` alinea los botones a la derecha.
+    - **Móvil**: botones apilados en columna, CTA primario arriba.
+    - **Tablet/Desktop**: botones en fila alineados a la derecha.
+
+    El pie fluye con el scroll (aparece al final del contenido).
     """
-    return rx.flex(
-        rx.dialog.close(
-            rx.button(
-                "Cerrar",
-                variant="soft",
-                color_scheme="gray",
-                cursor="pointer",
+    return rx.box(
+        # --- Móvil: columna, ancho completo ---
+        rx.mobile_only(
+            rx.vstack(
+                _boton_mas_informacion(),
+                _boton_cerrar_dialogo(),
+                spacing="2",
+                width="100%",
+                align="stretch",
             ),
         ),
-        rx.dialog.close(
-            rx.button(
-                rx.icon("message-circle", size=16),
-                rx.text("Más información", as_="span", font_weight="700"),
-                on_click=rx.redirect("/contacto"),
-                variant="solid",
-                color_scheme="crimson",
-                cursor="pointer",
+        # --- Tablet/Desktop: fila, alineado a la derecha ---
+        rx.tablet_and_desktop(
+            rx.flex(
+                _boton_cerrar_dialogo(),
+                _boton_mas_informacion(),
+                spacing="3",
+                justify="end",
+                width="100%",
+                flex_wrap="wrap",
             ),
         ),
-        spacing="3",
-        justify="end",
         width="100%",
-        margin_top="0.5rem",
+        padding=["1rem 1rem 0 1rem", "1rem 1.5rem 0 1.5rem", "1rem 2rem 0 2rem"],
+        border_top=f"1px solid {COLOR_BORDE_SUAVE}",
+        margin_top="1rem",
     )
 
 
@@ -356,10 +412,10 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
     """
     Envuelve la card + el diálogo en un `rx.dialog.root`.
 
-    Estructura:
-    - `rx.dialog.trigger`: la card clicable que abre el diálogo.
-    - `rx.dialog.content`: el contenido del diálogo (título, detalle,
-      puntos, CTA, cerrar).
+    Estructura del diálogo (con FIX móvil):
+    - Header: título + descripción corta (accesibilidad).
+    - Cuerpo con scroll interno (`flex: 1` + `min-height: 0`).
+    - Pie responsive al final del flujo.
 
     Args:
         razon: Dict con los datos de la razón.
@@ -434,31 +490,79 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
             ),
         ),
         # ==========================================================
-        # CONTENT: el diálogo modal
+        # CONTENT: el diálogo modal (con FIX móvil)
         # ==========================================================
         rx.dialog.content(
-            # --- Título del diálogo ---
-            rx.dialog.title(
-                razon["titulo"],
-                font_size="1.25rem",
-                font_weight="800",
-                color=COLOR_TEXTO_PRINCIPAL,
+            # ------------------------------------------------------
+            # Header: título + descripción (accesibilidad)
+            # ------------------------------------------------------
+            rx.vstack(
+                rx.dialog.title(
+                    razon["titulo"],
+                    font_size=["1.125rem", "1.25rem", "1.25rem"],
+                    font_weight="800",
+                    color=COLOR_TEXTO_PRINCIPAL,
+                    line_height="1.2",
+                ),
+                rx.dialog.description(
+                    "Conoce por qué esta característica hace la diferencia.",
+                    font_size="0.8125rem",
+                    color=COLOR_TEXTO_SECUNDARIO,
+                ),
+                spacing="1",
+                align="start",
+                width="100%",
+                padding=["1.25rem 1rem 0 1rem", "1.5rem 1.5rem 0 1.5rem", "1.5rem 2rem 0 2rem"],
             ),
-            # --- Descripción del diálogo ---
-            rx.dialog.description(
-                "Conoce por qué esta característica hace la diferencia.",
-                font_size="0.8125rem",
-                color=COLOR_TEXTO_SECUNDARIO,
-                margin_bottom="1rem",
+            # ------------------------------------------------------
+            # CONTENEDOR INTERNO CON SCROLL
+            # flex="1" + min_height="0" → scroll real
+            # ------------------------------------------------------
+            rx.box(
+                _contenido_dialogo_razon(razon),
+                flex="1",
+                min_height="0",
+                width="100%",
+                overflow_y="auto",
+                overflow_x="hidden",
+                padding=["1rem", "1.25rem 1.5rem", "1.25rem 2rem"],
+                # Scrollbar estilizado
+                css={
+                    "&::-webkit-scrollbar": {"width": "8px"},
+                    "&::-webkit-scrollbar-thumb": {
+                        "background": COLOR_BORDE_SUAVE,
+                        "border_radius": "4px",
+                    },
+                    "&::-webkit-scrollbar-track": {"background": "transparent"},
+                    "scrollbar-width": "thin",
+                    "scrollbar-color": f"{COLOR_BORDE_SUAVE} transparent",
+                },
             ),
-            # --- Contenido principal ---
-            _contenido_dialogo_razon(razon),
-            # --- Pie: CTA + Cerrar ---
+            # ------------------------------------------------------
+            # PIE: botones responsive al final del flujo
+            # ------------------------------------------------------
             _pie_dialogo_razon(),
-            # --- Estilos del diálogo ---
+            # ------------------------------------------------------
+            # Estilos del marco del diálogo
+            # ------------------------------------------------------
             max_width="34rem",
-            padding="2rem",
+            width=["calc(100vw - 1.5rem)", "calc(100vw - 2rem)", "100%"],
+            padding="0",
             border_radius=RADIO_EXTRA_GRANDE,
+            background=COLOR_FONDO_CARTA,
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
+            box_shadow="0 30px 60px -15px rgba(0,0,0,0.25)",
+            overflow="hidden",
+            # `display: flex` + `flex-direction: column` permite que el
+            # box interno use `flex="1"` y active el scroll.
+            display="flex",
+            flex_direction="column",
+            max_height=rx.breakpoints(
+                initial="90dvh",
+                sm="90dvh",
+                md="88dvh",
+                lg="85dvh",
+            ),
         ),
     )
 
@@ -522,7 +626,7 @@ def seccion_por_que_instein() -> rx.Component:
             width="100%",
         ),
         width="100%",
-        padding="4rem 1.5rem",
+        padding=["3rem 1rem", "3.5rem 1.5rem", "4rem 1.5rem"],
     )
 
 

@@ -2,8 +2,10 @@
 Hero para la página de carreras, estilo Google Play Store:
 - Carrusel de banners destacados con flechas de navegación.
 - Indicadores de posición (dots).
+- Barra de progreso del auto-avance (feedback UX).
 - Grid de perspectiva sutil de fondo.
-- Usa la imagen horizontal (`imagen_banner`) para el fondo del banner.
+- Auto-avance del carrusel con `rx.moment(interval=...)` (FIX de
+  la fuga de memoria).
 
 Sistema de color (UX)
 ---------------------
@@ -12,6 +14,36 @@ Sistema de color (UX)
 - Elementos institucionales (grid perspectiva, flechas, dots inactivos):
   tokens Radix.
 - Overlay sobre imagen del banner: `rgba` intencionales para legibilidad.
+- Barra de progreso: color de la carrera activa.
+
+Nota técnica: AUTO-AVANCE CON `rx.moment`
+-----------------------------------------
+El auto-avance del carrusel se implementa con el componente
+`rx.moment(interval=5000)`, que internamente es un `<Moment>` de
+Moment.js con un `setInterval` de JS.
+
+Cada 5000 ms (5 s) dispara el evento `siguiente_carrusel`. Al
+desmontar el componente (salir de `/carreras`), el navegador cancela
+el intervalo automáticamente.
+
+Ventajas sobre el `while True` en Python:
+- **Cero fugas de memoria**: 1 intervalo por página activa.
+- **Cero CPU del servidor**: el timer vive en el navegador.
+- **Cancelación automática**: al desmontar el componente.
+- **Sin `on_unmount` manual**: el navegador lo maneja.
+
+Nota técnica: BARRA DE PROGRESO
+-------------------------------
+La barra de progreso del auto-avance se implementa con CSS puro
+usando un `@keyframes` global que anima `width` de 0% a 100% durante
+5 segundos.
+
+Se reinicia automáticamente al cambiar el índice del carrusel porque
+la barra es un componente nuevo (React lo remonta al cambiar la
+`key`).
+
+El color de la barra coincide con el color de la carrera activa,
+reforzando la identidad visual del banner.
 """
 
 import reflex as rx
@@ -51,6 +83,45 @@ TAMANO_ICONO_FLECHA = 22
 
 # Padding del contenedor del hero.
 PADDING_HERO = "3rem 3rem 2rem 3rem"
+
+# Intervalo del auto-avance en milisegundos (5 segundos).
+INTERVALO_AUTO_AVANCE_MS = 5000
+
+# Segundos del auto-avance (para la animación CSS de la barra).
+INTERVALO_AUTO_AVANCE_SEG = INTERVALO_AUTO_AVANCE_MS / 1000
+
+# Nombre del keyframe CSS de la barra de progreso.
+KEYFRAME_BARRA_PROGRESO = "progreso_carrusel"
+
+# Altura de la barra de progreso.
+ALTURA_BARRA_PROGRESO = "0.25rem"
+
+
+# ======================================================================
+# Keyframe CSS de la barra de progreso
+# ======================================================================
+
+
+def keyframes_progreso_carrusel() -> dict:
+    """
+    Devuelve el `@keyframes` para la barra de progreso del carrusel.
+
+    La animación va de `width: 0%` a `width: 100%` en
+    `INTERVALO_AUTO_AVANCE_SEG` segundos con timing lineal, para que
+    la barra se llene a velocidad constante.
+
+    Se debe inyectar en los estilos globales de la app (en
+    `app_portada_instein.py`).
+
+    Returns:
+        Dict compatible con el `style=` de `rx.App(...)`.
+    """
+    return {
+        f"@keyframes {KEYFRAME_BARRA_PROGRESO}": {
+            "0%": {"width": "0%"},
+            "100%": {"width": "100%"},
+        },
+    }
 
 
 # ======================================================================
@@ -107,6 +178,54 @@ def _grid_perspectiva() -> rx.Component:
 
 
 # ======================================================================
+# Barra de progreso del auto-avance
+# ======================================================================
+
+
+def _barra_progreso_auto_avance() -> rx.Component:
+    """
+    Barra de progreso animada que se llena durante el intervalo de
+    auto-avance.
+
+    La barra se reinicia automáticamente al cambiar de banner porque
+    React remonta el componente cuando su `key` cambia. Usamos
+    `key=EstadoInstitucional.indice_carrusel` para forzar el remount.
+
+    La barra:
+    - Tiene el color de la carrera activa.
+    - Se llena de 0% a 100% en `INTERVALO_AUTO_AVANCE_SEG` segundos.
+    - Está posicionada al fondo del banner, superpuesta.
+
+    Returns:
+        Componente con la barra animada.
+    """
+    return rx.box(
+        rx.box(
+            height="100%",
+            background=_color_carrera(EstadoInstitucional.item_carrusel_actual["carrera"]),
+            border_radius=RADIO_PASTILLA,
+            # Animación CSS: la barra se llena linealmente durante 5s.
+            animation=(
+                f"{KEYFRAME_BARRA_PROGRESO} "
+                f"{INTERVALO_AUTO_AVANCE_SEG}s linear infinite"
+            ),
+            # `transform-origin: left` para que crezca desde la izquierda.
+            transform_origin="left center",
+        ),
+        position="absolute",
+        bottom="0",
+        left="0",
+        right="0",
+        height=ALTURA_BARRA_PROGRESO,
+        background="rgba(0,0,0,0.3)",
+        backdrop_filter="blur(4px)",
+        overflow="hidden",
+        z_index="3",
+        pointer_events="none",
+    )
+
+
+# ======================================================================
 # Banner individual destacado (estilo Google Play)
 # ======================================================================
 
@@ -121,14 +240,9 @@ def _banner_carrera(item: dict) -> rx.Component:
         "etiqueta": "Inscripciones abiertas",
     }
 
-    Usa:
-    - `imagen_banner` (16:9) como fondo del banner.
-    - `imagen_archivo` (1:1) para el icono circular.
-
     Nota: los `rgba(0,0,0,X)` y `rgba(255,255,255,X)` se mantienen
     porque se aplican SOBRE la imagen del banner (para garantizar
-    legibilidad del texto blanco), no sobre el fondo del tema. Estos
-    valores funcionan igual en light y dark mode.
+    legibilidad del texto blanco), no sobre el fondo del tema.
     """
     carrera = item["carrera"]
     etiqueta = item["etiqueta"]
@@ -160,6 +274,8 @@ def _banner_carrera(item: dict) -> rx.Component:
                 ),
                 z_index="1",
             ),
+            # --- Barra de progreso del auto-avance ---
+            _barra_progreso_auto_avance(),
             # --- Contenido sobre la imagen ---
             rx.vstack(
                 # --- Etiqueta superior ---
@@ -189,7 +305,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                 ),
                 # --- Footer: icono + subtítulo + CTA ---
                 rx.flex(
-                    # Icono circular
                     rx.box(
                         rx.image(
                             src="/" + carrera["imagen_archivo"],
@@ -206,7 +321,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                         border="2px solid rgba(255,255,255,0.4)",
                         flex_shrink="0",
                     ),
-                    # Subtítulo
                     rx.vstack(
                         rx.text(
                             carrera["nombre_corto"],
@@ -223,7 +337,6 @@ def _banner_carrera(item: dict) -> rx.Component:
                         spacing="0",
                         flex="1",
                     ),
-                    # Botón CTA
                     rx.box(
                         rx.text(
                             "Ver detalle",
@@ -249,6 +362,7 @@ def _banner_carrera(item: dict) -> rx.Component:
                 width="100%",
                 height="100%",
                 padding="1.25rem",
+                padding_bottom="1.5rem",  # Deja espacio para la barra
                 position="relative",
                 z_index="2",
             ),
@@ -331,10 +445,6 @@ def _dot_indicador(item: dict, idx: int) -> rx.Component:
 
     El dot activo se alarga (pill) y usa el color de la carrera;
     los inactivos usan `COLOR_BORDE_SUAVE`.
-
-    Args:
-        item: Dict con `carrera` y `etiqueta`.
-        idx: Índice del dot en el carrusel.
     """
     esta_activo = EstadoInstitucional.indice_carrusel == idx
 
@@ -378,10 +488,6 @@ def _miniatura_carrera(item: dict, idx: int) -> rx.Component:
     Miniatura individual de carrera en el carrusel.
 
     La miniatura activa usa borde y texto con el color de la carrera.
-
-    Args:
-        item: Dict con `carrera` y `etiqueta`.
-        idx: Índice de la miniatura en el carrusel.
     """
     esta_activa = EstadoInstitucional.indice_carrusel == idx
     carrera = item["carrera"]
@@ -425,9 +531,6 @@ def _miniatura_carrera(item: dict, idx: int) -> rx.Component:
 def _miniaturas_carreras() -> rx.Component:
     """
     Fila de miniaturas clicables debajo del carrusel.
-
-    Cada miniatura muestra el nombre corto de la carrera y al hacer
-    clic navega al banner correspondiente.
     """
     return rx.flex(
         rx.foreach(
@@ -444,16 +547,56 @@ def _miniaturas_carreras() -> rx.Component:
 
 
 # ======================================================================
+# Auto-avance con rx.moment (FIX FUGA DE MEMORIA)
+# ======================================================================
+
+
+def _auto_avance_moment() -> rx.Component:
+    """
+    Componente invisible que dispara `siguiente_carrusel` cada 5 s.
+
+    Usa `rx.moment(interval=INTERVALO_AUTO_AVANCE_MS)`, que inyecta un
+    `setInterval` de JS en el cliente. Al desmontar el componente
+    (salir de `/carreras`), el navegador cancela el intervalo
+    automáticamente.
+
+    Esto reemplaza al antiguo `@rx.event(background=True)` con
+    `while True`, que causaba una fuga de memoria porque la tarea
+    nunca se detenía al salir de la página.
+    """
+    return rx.moment(
+        interval=INTERVALO_AUTO_AVANCE_MS,
+        on_change=EstadoInstitucional.siguiente_carrusel,
+        display="none",
+    )
+
+
+# ======================================================================
 # Carrusel completo
 # ======================================================================
 
 
 def _carrusel_carreras() -> rx.Component:
-    """Carrusel de banners + indicadores + miniaturas."""
+    """
+    Carrusel de banners + barra de progreso + indicadores + miniaturas +
+    auto-avance.
+
+    La barra de progreso se reinicia automáticamente cuando cambia el
+    índice del carrusel porque el componente se remonta gracias a la
+    `key` ligada a `indice_carrusel`.
+    """
     return rx.box(
+        # --- Auto-avance con rx.moment (FIX) ---
+        _auto_avance_moment(),
         # --- Contenedor con flechas + banner ---
         rx.box(
-            _banner_carrera(EstadoInstitucional.item_carrusel_actual),
+            # La `key` ligada al índice fuerza el remount del banner
+            # (y con él, de la barra de progreso) al cambiar de item.
+            rx.box(
+                _banner_carrera(EstadoInstitucional.item_carrusel_actual),
+                key=EstadoInstitucional.indice_carrusel,
+                width="100%",
+            ),
             _flecha_navegacion("izquierda"),
             _flecha_navegacion("derecha"),
             position="relative",
@@ -477,6 +620,13 @@ def _carrusel_carreras() -> rx.Component:
 def hero_carreras() -> rx.Component:
     """
     Hero de la página de carreras estilo Google Play Store con carrusel.
+
+    El auto-avance vive en `_auto_avance_moment()`, que usa
+    `rx.moment(interval=...)` para disparar `siguiente_carrusel` cada
+    5 segundos sin mantener una tarea de Python corriendo.
+
+    La barra de progreso (dentro del banner) se reinicia
+    automáticamente al cambiar de banner gracias a la `key`.
     """
     return rx.box(
         # --- Grid de perspectiva de fondo ---
@@ -498,4 +648,7 @@ def hero_carreras() -> rx.Component:
     )
 
 
-__all__ = ["hero_carreras"]
+__all__ = [
+    "hero_carreras",
+    "keyframes_progreso_carrusel",
+]

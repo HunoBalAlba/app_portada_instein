@@ -1,14 +1,5 @@
 """
 Punto de entrada de la aplicación web del INSTEIN.
-
-Este módulo:
-- Registra todas las páginas de la aplicación.
-- Configura el tema global (light/dark, accent, radius).
-- Fusiona las keyframes CSS de estilos personalizados y del motor kepleriano.
-- Carga las fuentes Inter y JetBrains Mono desde Google Fonts + un
-  stylesheet personalizado que aplica las fuentes a etiquetas HTML.
-
-El motor kepleriano vive en `dominio.kepler` y es agnóstico a Reflex.
 """
 
 import reflex as rx
@@ -26,32 +17,31 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     HOJAS_DE_ESTILO_BASE,
 )
 
+# ⚠️ NUEVO: importar la función del keyframe del carrusel.
+from app_portada_instein.componentes.hero_carreras import (
+    keyframes_progreso_carrusel,
+)
 
-# ======================================================================
-# ⚠️ IMPORT CRÍTICO: REGISTRA LAS PÁGINAS
-# ======================================================================
-# Este import NO se usa directamente, pero es OBLIGATORIO porque al
-# importar los módulos de vistas se ejecutan sus decoradores
-# `@rx.page(...)`, que registran las rutas en la app de Reflex.
-#
-# Si comentas o eliminas este import, la app arranca SIN páginas y
-# verás una pantalla en blanco en http://localhost:3000
-# ======================================================================
+# ... (resto de imports)
+
 from app_portada_instein.vistas import (  # noqa: F401
+    vista_404,
     vista_admision,
     vista_becas,
+    vista_blog,
     vista_calendario,
     vista_carreras,
     vista_contacto,
     vista_detalle_carrera,
     vista_faq,
     vista_inicio,
+    vista_post,
     vista_sobre_nosotros,
 )
 
 
 # ======================================================================
-# Keyframes de UI (independientes del motor kepleriano)
+# Keyframes de UI
 # ======================================================================
 
 KEYFRAMES_UI: dict = {
@@ -102,7 +92,7 @@ KEYFRAMES_UI: dict = {
 
 
 # ======================================================================
-# Keyframes de órbitas keplerianas (delegadas al motor)
+# Keyframes de órbitas keplerianas
 # ======================================================================
 
 
@@ -139,9 +129,10 @@ def _generar_keyframes_orbitales() -> dict:
 
 ESTILOS_GLOBALES: dict = {
     **KEYFRAMES_UI,
+    **keyframes_progreso_carrusel(),  # ⚠️ NUEVO: keyframe de la barra
     **_generar_keyframes_orbitales(),
-    **ESTILOS_GLOBALES_CSS,   # ← ✅ Restaurado
-    **ESTILO_BASE,            # ← ✅ Restaurado
+    **ESTILOS_GLOBALES_CSS,
+    **ESTILO_BASE,
 }
 
 
@@ -154,11 +145,11 @@ app = rx.App(
         appearance="light",
         accent_color="crimson",
         radius="medium",
-        font_family=FUENTE_PRINCIPAL,   # ← ✅ Restaurado
+        font_family=FUENTE_PRINCIPAL,
     ),
     style=ESTILOS_GLOBALES,
     stylesheets=[
-        *HOJAS_DE_ESTILO_BASE,          # ← ✅ Restaurado
+        *HOJAS_DE_ESTILO_BASE,
         "/styles/global.css",
     ],
 )

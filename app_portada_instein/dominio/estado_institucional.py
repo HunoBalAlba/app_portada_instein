@@ -9,20 +9,74 @@ Centraliza:
 - El filtro activo en la página de carreras.
 - El carrusel de carreras destacadas.
 
-Nota técnica
-------------
-Los PATH PARAMS se obtienen con `self.router.page.params` (dict).
-La RUTA ACTUAL se obtiene con `self.router.url.path` (str).
+Nota técnica: PATH PARAMS y RUTA
+--------------------------------
+- Los PATH PARAMS se obtienen con `self.router.page.params` (dict).
+- La RUTA ACTUAL se obtiene con `self.router.url.path` (str).
+- `carrera_id` viene como string; se convierte a int con try/except.
+- Si no es convertible, se devuelve `-1` para detectar IDs inválidos.
 
+Nota técnica: TIPADO DE VARS REACTIVAS CON `rx.foreach`
+--------------------------------------------------------
+Reflex necesita que las `@rx.var` que se usan como fuente de
+`rx.foreach` tengan un **tipo de retorno preciso**. Si devuelven
+`dict` genérico, los campos internos se infieren como `Any` y
+`rx.foreach` falla con:
+
+    ForeachVarError: Could not foreach over var of type Any
+
+Por eso:
+
+- `carrera_seleccionada` **siempre devuelve un `Carrera` válido**
+  (fallback a `carreras[0]` si el id es inválido). Esto garantiza el
+  tipado que `rx.foreach` necesita.
+- La **validez real** del id se comprueba por separado con
+  `carrera_es_valida` (bool), que NO se usa en `foreach`.
+- El `on_load` de la vista usa `carrera_es_valida` para decidir si
+  redirige a `/404`. Así, si el id es inválido, la vista ni siquiera
+  se renderiza.
+
+Nota técnica: COLORES ADAPTATIVOS
+---------------------------------
 Los colores adaptativos (light/dark) NO se exponen como `@rx.var`
 porque `rx.color_mode_cond()` devuelve un `Var` reactivo del frontend,
-no un `str` serializable. En su lugar, los componentes usan los helpers
+no un `str` serializable. Los componentes usan los helpers
 `color_carrera_adaptativo()` y `color_suave_carrera_adaptativo()` de
 `constantes_visuales.py`, aplicados directamente sobre el dict de la
 carrera.
+
+Nota técnica: @rx.var SIN ARGUMENTOS
+------------------------------------
+En Reflex 0.9.x, un `@rx.var` NO puede recibir argumentos (más allá de
+`self`). Los helpers que necesitan argumentos (como `_carrera_por_id`)
+deben ser **métodos normales de Python**, no decorados.
+
+Nota técnica: CARRUSEL AUTOMÁTICO (FIX FUGA DE MEMORIA)
+-------------------------------------------------------
+El auto-avance del carrusel **NO se implementa con una tarea en
+background de Python** (`while True` + `@rx.event(background=True)`)
+porque eso causaba una fuga de memoria:
+
+- La tarea nunca se detenía al salir de `/carreras` (Reflex no expone
+  `on_unmount` de página).
+- Cada navegación a `/carreras` añadía una tarea infinita nueva.
+
+**Solución**: el auto-avance vive en el **cliente** mediante
+`rx.moment(interval=5000)`, que dispara el evento
+`siguiente_carrusel` cada 5 segundos. El navegador cancela el
+intervalo automáticamente al desmontar el componente (salir de la
+página).
+
+Ventajas:
+- 1 intervalo por página activa (no acumulativo).
+- 0% CPU del servidor (el timer vive en el navegador).
+- Cancelación automática al navegar fuera.
+
+Este State solo expone los eventos `siguiente_carrusel`,
+`anterior_carrusel` e `ir_a_banner`, que son disparados desde el
+componente `hero_carreras` (flechas, dots y el `rx.moment`).
 """
 
-import asyncio
 import random
 
 import reflex as rx
@@ -39,13 +93,15 @@ from app_portada_instein.datos.modelos_carrera import (
 
 
 # ======================================================================
-# Constantes para los iconos flotantes
+# Constantes del módulo
 # ======================================================================
 
+# --- Iconos flotantes del detalle ---
 CANTIDAD_ICONOS_FONDO = 30
 SEMILLA_ICONOS_FONDO = 42
+TAMANOS_ICONOS_FONDO: list[int] = [16, 20, 24, 28, 32, 40]
 
-# Etiquetas cíclicas para el carrusel de banners.
+# --- Etiquetas cíclicas del carrusel ---
 ETIQUETAS_CARRUSEL: list[str] = [
     "Inscripciones abiertas",
     "Cupos limitados",
@@ -54,8 +110,10 @@ ETIQUETAS_CARRUSEL: list[str] = [
     "Nuevo plan 2026",
 ]
 
-# Tamaños permitidos para los iconos flotantes del detalle.
-TAMANOS_ICONOS_FONDO: list[int] = [16, 20, 24, 28, 32, 40]
+# --- Carrusel automático ---
+SEGUNDOS_ENTRE_BANNERS = 5
+"""Segundos entre cada avance automático del carrusel (usado por el
+`rx.moment(interval=...)` del componente `hero_carreras`)."""
 
 
 class EstadoInstitucional(rx.State):
@@ -65,28 +123,74 @@ class EstadoInstitucional(rx.State):
     # ESTADO PERSISTENTE
     # ==================================================================
 
-    # --- Catálogo de carreras ---
     carreras: list[Carrera] = CATALOGO_CARRERAS
-
-    # --- Estado del home (carrera destacada) ---
     id_carrera_destacada: int = 0
-
-    # --- Estado de la vista de detalle (ruta /carrera/[id]) ---
     indice_anio_seleccionado: int = 0
     seccion_detalle_activa: str = "info"
-
-    # --- Estado del explorador del home ---
     seccion_explorador_activa: str = "info"
     indice_anio_explorador: int = 0
     texto_busqueda_carrera: str = ""
     mostrar_panel_flotante: bool = False
-
-    # --- Estado de la página de carreras ---
     filtro_activo: str = "demanda_alta"
     orden_activo: str = "puntuacion_desc"
-
-    # --- Estado del carrusel ---
     indice_carrusel: int = 0
+
+    # ⚠️ ELIMINADO: `carrusel_activo: bool = False`
+    # Ya no se necesita porque el auto-avance vive en el cliente
+    # (`rx.moment`), no en una tarea de Python.
+
+    # ==================================================================
+    # HELPERS INTERNOS (métodos normales, NO decorados con @rx.var)
+    # ==================================================================
+
+    def _carrera_por_id(self, id_carrera: int) -> Carrera:
+        """
+        Busca una carrera por su `id` en el catálogo actual.
+
+        Si no se encuentra, devuelve la primera del catálogo como
+        fallback seguro (para garantizar que `carrera_seleccionada`
+        SIEMPRE devuelva un `Carrera` con tipado correcto).
+
+        ⚠️ NO está decorado con `@rx.var` porque tiene argumentos.
+        """
+        if id_carrera < 0:
+            return self.carreras[0]
+        for carrera in self.carreras:
+            if carrera["id"] == id_carrera:
+                return carrera
+        return self.carreras[0]
+
+    def _carrera_existe(self, id_carrera: int) -> bool:
+        """
+        Devuelve True si el id corresponde a una carrera del catálogo.
+
+        ⚠️ Este método SÍ detecta inválidos (no tiene fallback). Se usa
+        para validar la URL en `redirigir_si_carrera_invalida`.
+        """
+        if id_carrera < 0:
+            return False
+        return any(c["id"] == id_carrera for c in self.carreras)
+
+    def _plan_anual_seguro(
+        self,
+        plan_estudios: list[PlanAnual],
+        indice: int,
+    ) -> PlanAnual:
+        """Devuelve el plan anual en `indice`, con fallback seguro."""
+        if not plan_estudios:
+            return {"anio": "Sin plan", "materias": []}
+        if indice < 0 or indice >= len(plan_estudios):
+            return plan_estudios[0]
+        return plan_estudios[indice]
+
+    def _materias_del_plan(
+        self,
+        plan_estudios: list[PlanAnual],
+        indice: int,
+    ) -> list[str]:
+        """Devuelve las materias del año en `indice`, con fallback seguro."""
+        plan = self._plan_anual_seguro(plan_estudios, indice)
+        return plan["materias"]
 
     # ==================================================================
     # VARIABLES COMPUTADAS: URL
@@ -97,25 +201,17 @@ class EstadoInstitucional(rx.State):
         """
         Extrae el identificador de la carrera desde la URL.
 
-        Usa `self.router.page.params` para acceder a los PATH PARAMS
-        (los definidos en la ruta como `/carrera/[carrera_id]`).
+        Si el valor no es convertible a int, devuelve `-1`.
         """
-        valor_crudo = self.router.page.params.get("carrera_id", "0")
+        valor_crudo = self.router.page.params.get("carrera_id", "")
         try:
             return int(valor_crudo)
         except (ValueError, TypeError):
-            return 0
+            return -1
 
     @rx.var
     def ruta_activa_normalizada(self) -> str:
-        """
-        Devuelve la ruta actual normalizada.
-
-        Normaliza casos especiales:
-        - "" (vacío) → "/"
-        - "/index" → "/"
-        - Cualquier ruta con trailing slash se limpia.
-        """
+        """Devuelve la ruta actual normalizada."""
         ruta = self.router.url.path or "/"
         if len(ruta) > 1 and ruta.endswith("/"):
             ruta = ruta.rstrip("/")
@@ -134,16 +230,36 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def carrera_seleccionada(self) -> Carrera:
-        """Devuelve la carrera activa según la URL actual."""
-        return self._buscar_carrera_por_id(self.id_carrera_desde_url)
+        """
+        Devuelve la carrera activa según la URL actual.
+
+        ⚠️ SIEMPRE devuelve un `Carrera` válido (con fallback a
+        `carreras[0]`), porque `rx.foreach` necesita un tipado
+        preciso para iterar sobre `carrera["iconos_animados"]`.
+
+        La validez real del id se comprueba con `carrera_es_valida`.
+        """
+        return self._carrera_por_id(self.id_carrera_desde_url)
+
+    @rx.var
+    def carrera_es_valida(self) -> bool:
+        """
+        Indica si el `carrera_id` de la URL corresponde a una carrera
+        real del catálogo.
+
+        Se usa en `redirigir_si_carrera_invalida` para decidir si
+        redirigir a `/404`.
+        """
+        return self._carrera_existe(self.id_carrera_desde_url)
 
     @rx.var
     def plan_anual_seleccionado(self) -> PlanAnual:
-        """Devuelve el año del plan de estudios actualmente visible en detalle."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_desde_url)
-        if self.indice_anio_seleccionado >= len(carrera["plan_estudios"]):
-            return carrera["plan_estudios"][0]
-        return carrera["plan_estudios"][self.indice_anio_seleccionado]
+        """Devuelve el año del plan de estudios visible en detalle."""
+        carrera = self.carrera_seleccionada
+        return self._plan_anual_seguro(
+            carrera["plan_estudios"],
+            self.indice_anio_seleccionado,
+        )
 
     # ==================================================================
     # VARIABLES COMPUTADAS: HOME / EXPLORADOR
@@ -152,7 +268,7 @@ class EstadoInstitucional(rx.State):
     @rx.var
     def carrera_destacada(self) -> Carrera:
         """Devuelve la carrera destacada en el home."""
-        return self._buscar_carrera_por_id(self.id_carrera_destacada)
+        return self._carrera_por_id(self.id_carrera_destacada)
 
     @rx.var
     def carreras_filtradas(self) -> list[Carrera]:
@@ -178,7 +294,7 @@ class EstadoInstitucional(rx.State):
     @rx.var
     def materias_carrera_destacada(self) -> list[str]:
         """Devuelve todas las materias aplanadas de la carrera destacada."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
+        carrera = self.carrera_destacada
         materias: list[str] = []
         for anio in carrera["plan_estudios"]:
             for materia in anio["materias"]:
@@ -188,42 +304,40 @@ class EstadoInstitucional(rx.State):
     @rx.var
     def perfil_carrera_destacada(self) -> list[str]:
         """Devuelve el perfil profesional de la carrera destacada."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        return carrera["perfil_profesional"]
+        return self.carrera_destacada["perfil_profesional"]
 
     @rx.var
     def campo_carrera_destacada(self) -> list[str]:
         """Devuelve el campo laboral de la carrera destacada."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        return carrera["campo_laboral"]
+        return self.carrera_destacada["campo_laboral"]
 
     @rx.var
     def plan_agrupado_por_anio(self) -> list[PlanAnual]:
-        """Devuelve el plan de estudios de la carrera destacada agrupado por año."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        return carrera["plan_estudios"]
+        """Devuelve el plan de estudios de la carrera destacada."""
+        return self.carrera_destacada["plan_estudios"]
 
     @rx.var
     def anio_explorador_seleccionado(self) -> PlanAnual:
         """Devuelve el año visible en el explorador del home."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        if self.indice_anio_explorador >= len(carrera["plan_estudios"]):
-            return carrera["plan_estudios"][0]
-        return carrera["plan_estudios"][self.indice_anio_explorador]
+        carrera = self.carrera_destacada
+        return self._plan_anual_seguro(
+            carrera["plan_estudios"],
+            self.indice_anio_explorador,
+        )
 
     @rx.var
     def materias_anio_explorador(self) -> list[str]:
         """Devuelve las materias del año seleccionado en el explorador."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        if self.indice_anio_explorador >= len(carrera["plan_estudios"]):
-            return carrera["plan_estudios"][0]["materias"]
-        return carrera["plan_estudios"][self.indice_anio_explorador]["materias"]
+        carrera = self.carrera_destacada
+        return self._materias_del_plan(
+            carrera["plan_estudios"],
+            self.indice_anio_explorador,
+        )
 
     @rx.var
     def preguntas_frecuentes_carrera_destacada(self) -> list[dict]:
         """Devuelve las preguntas frecuentes de la carrera destacada."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_destacada)
-        return carrera.get("preguntas_frecuentes", [])
+        return self.carrera_destacada.get("preguntas_frecuentes", [])
 
     # ==================================================================
     # VARIABLES COMPUTADAS: VISTA DE CARRERAS (columnas)
@@ -231,33 +345,24 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def carreras_columna_1(self) -> list[Carrera]:
-        """Carreras para la primera columna de las listas de éxitos."""
         return self.carreras[:2]
 
     @rx.var
     def carreras_columna_2(self) -> list[Carrera]:
-        """Carreras para la segunda columna de las listas de éxitos."""
         return self.carreras[2:4]
 
     @rx.var
     def carreras_columna_3(self) -> list[Carrera]:
-        """Carreras para la tercera columna de las listas de éxitos."""
         return self.carreras[4:]
 
     # ==================================================================
-    # VARIABLES COMPUTADAS: PLAN DE ESTUDIOS
+    # VARIABLES COMPUTADAS: PLAN DE ESTUDIOS (segmented control)
     # ==================================================================
 
     @rx.var
     def opciones_anio_plan(self) -> list[dict]:
-        """
-        Devuelve las opciones de año para el segmented control.
-
-        Cada opción es un dict con:
-        - "etiqueta": nombre del año (ej: "Primer Año").
-        - "valor": índice como string (ej: "0", "1", "2").
-        """
-        carrera = self._buscar_carrera_por_id(self.id_carrera_desde_url)
+        """Devuelve las opciones de año para el segmented control."""
+        carrera = self.carrera_seleccionada
         return [
             {
                 "etiqueta": plan_anual["anio"],
@@ -272,10 +377,9 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def carreras_filtradas_y_ordenadas(self) -> list[Carrera]:
-        """Devuelve las carreras filtradas y ordenadas según los filtros activos."""
+        """Devuelve las carreras filtradas y ordenadas según los filtros."""
         carreras = list(self.carreras)
 
-        # --- Filtro por métrica ---
         if self.filtro_activo == "demanda_alta":
             carreras = [
                 c for c in carreras
@@ -299,7 +403,6 @@ class EstadoInstitucional(rx.State):
                 reverse=True,
             )[:3]
 
-        # --- Ordenamiento ---
         ordenamientos = {
             "puntuacion_desc": lambda c: c["estadisticas"]["puntuacion"],
             "inscritos_desc": lambda c: c["estadisticas"]["estudiantes_inscritos"],
@@ -321,7 +424,7 @@ class EstadoInstitucional(rx.State):
     @rx.var
     def iconos_flotantes_detalle(self) -> list[rx.Component]:
         """Devuelve los componentes de iconos flotantes precalculados."""
-        carrera = self._buscar_carrera_por_id(self.id_carrera_desde_url)
+        carrera = self.carrera_seleccionada
         color_principal = carrera["color_principal"]
 
         iconos_disponibles: list[str] = [carrera["icono"]]
@@ -363,12 +466,7 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def carreras_destacadas_con_etiquetas(self) -> list[CarreraConEtiqueta]:
-        """
-        Devuelve TODAS las carreras del catálogo con su etiqueta contextual.
-
-        Las etiquetas rotan cíclicamente para no repetirse cuando hay
-        más carreras que etiquetas disponibles.
-        """
+        """Devuelve TODAS las carreras del catálogo con su etiqueta."""
         resultado: list[CarreraConEtiqueta] = []
         for i, carrera in enumerate(self.carreras):
             etiqueta = ETIQUETAS_CARRUSEL[i % len(ETIQUETAS_CARRUSEL)]
@@ -390,16 +488,16 @@ class EstadoInstitucional(rx.State):
             return items[0]
         return items[self.indice_carrusel]
 
-    # ==================================================================
-    # MÉTODOS INTERNOS
-    # ==================================================================
+    @rx.var
+    def total_carrusel(self) -> int:
+        """
+        Cantidad total de items del carrusel.
 
-    def _buscar_carrera_por_id(self, id_carrera: int) -> Carrera:
-        """Busca una carrera por su id; si no existe devuelve la primera."""
-        for carrera in self.carreras:
-            if carrera["id"] == id_carrera:
-                return carrera
-        return self.carreras[0]
+        Útil para el JS que lo necesita como contador (aunque
+        `siguiente_carrusel` ya hace módulo, esto puede servir para
+        debug).
+        """
+        return len(self.carreras_destacadas_con_etiquetas)
 
     # ==================================================================
     # MANEJADORES DE EVENTOS: DETALLE DE CARRERA
@@ -414,6 +512,22 @@ class EstadoInstitucional(rx.State):
     def seleccionar_seccion_detalle(self, seccion: str):
         """Cambia la sección activa dentro de la vista de detalle."""
         self.seccion_detalle_activa = seccion
+
+    # ==================================================================
+    # MANEJADORES DE EVENTOS: VALIDACIÓN DE RUTA
+    # ==================================================================
+
+    @rx.event
+    def redirigir_si_carrera_invalida(self):
+        """
+        Redirige a `/404` si el `carrera_id` de la URL no existe.
+
+        Añade `?origen=carrera` al query param para que la 404 muestre
+        CTAs contextuales ("Ver carreras").
+        """
+        if not self.carrera_es_valida:
+            return rx.redirect("/404?origen=carrera")
+        return None
 
     # ==================================================================
     # MANEJADORES DE EVENTOS: EXPLORADOR DEL HOME
@@ -470,10 +584,20 @@ class EstadoInstitucional(rx.State):
     # ==================================================================
     # MANEJADORES DE EVENTOS: CARRUSEL
     # ==================================================================
+    # ⚠️ Ya NO hay `bucle_carrusel`, `iniciar_carrusel_automatico` ni
+    #    `detener_carrusel_automatico`. El auto-avance vive en el
+    #    componente `hero_carreras` con `rx.moment(interval=...)`.
+    # ==================================================================
 
     @rx.event
     def siguiente_carrusel(self):
-        """Avanza al siguiente banner del carrusel."""
+        """
+        Avanza al siguiente banner del carrusel.
+
+        Este evento es disparado por:
+        - El `rx.moment(interval=...)` del componente (cada 5s).
+        - La flecha derecha del carrusel (clic manual).
+        """
         total = len(self.carreras_destacadas_con_etiquetas)
         if total > 0:
             self.indice_carrusel = (self.indice_carrusel + 1) % total
@@ -490,37 +614,26 @@ class EstadoInstitucional(rx.State):
         """Salta a un banner específico del carrusel."""
         self.indice_carrusel = indice
 
-    @rx.event(background=True)
-    async def auto_avanzar_carrusel(self):
-        """Avanza el carrusel automáticamente cada 5 segundos."""
-        while True:
-            await asyncio.sleep(5)
-            async with self:
-                self.siguiente_carrusel()
-
     # ==================================================================
     # UTILIDADES
     # ==================================================================
 
     @rx.event
-    def aleatorizar_colores_carreras(self):
-        """
-        Reasigna aleatoriamente la paleta de colores a las carreras.
+    def aleatorizar_colores_carreras(self, semilla: int | None = None):
+        """Reasigna aleatoriamente la paleta de colores a las carreras."""
+        rng = random.Random(semilla)
 
-        Cada elemento de `PALETA_COLORES` es una tupla de 4 colores:
-        `(principal_light, suave_light, principal_dark, suave_dark)`.
-        """
         cantidad = len(self.carreras)
         paleta_disponible = PALETA_COLORES.copy()
 
         if len(paleta_disponible) >= cantidad:
-            seleccionados = random.sample(paleta_disponible, cantidad)
+            seleccionados = rng.sample(paleta_disponible, cantidad)
         else:
             seleccionados = [
-                random.choice(paleta_disponible) for _ in range(cantidad)
+                rng.choice(paleta_disponible) for _ in range(cantidad)
             ]
 
-        random.shuffle(seleccionados)
+        rng.shuffle(seleccionados)
 
         carreras_actualizadas: list[Carrera] = []
         for carrera, colores in zip(self.carreras, seleccionados, strict=False):
@@ -535,4 +648,11 @@ class EstadoInstitucional(rx.State):
         self.carreras = carreras_actualizadas
 
 
-__all__ = ["EstadoInstitucional"]
+__all__ = [
+    "CANTIDAD_ICONOS_FONDO",
+    "ETIQUETAS_CARRUSEL",
+    "EstadoInstitucional",
+    "SEGUNDOS_ENTRE_BANNERS",
+    "SEMILLA_ICONOS_FONDO",
+    "TAMANOS_ICONOS_FONDO",
+]

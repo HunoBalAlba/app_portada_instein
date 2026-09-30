@@ -28,6 +28,21 @@ identifican al usuario "dónde está":
 Los TEXTOS largos son NEUTROS (`gray-11`/`gray-12`) para mantener
 legibilidad. El accent global (`crimson`) se reserva para el navbar
 y elementos institucionales.
+
+Nota técnica: CONCATENACIÓN CON VARS REACTIVAS
+----------------------------------------------
+`carrera["color_principal"]` es un `Var` reactivo (no un `str`).
+NO se puede usar `+` para concatenar:
+    "texto" + var + "más texto"   # ❌ TypeError
+Hay que usar f-strings:
+    f"texto {var} más texto"      # ✅
+Esto aplica a TODOS los lugares donde se mezclen strings con Vars.
+
+Nota técnica: VALIDACIÓN DE RUTA
+--------------------------------
+El decorador `@rx.page` incluye `on_load=EstadoInstitucional.redirigir_si_carrera_invalida`.
+Si el `carrera_id` no corresponde a ninguna carrera (o no es convertible
+a int), el evento redirige a `/404`.
 """
 
 import reflex as rx
@@ -398,10 +413,12 @@ def _contenedor_orbital_imagen() -> rx.Component:
     - Halo radial con el color de la carrera.
     - 4 iconos orbitando con elipses keplerianas.
     - Imagen central de la carrera con anillo de color.
+
+    ⚠️ Los colores `carrera[...]` son Vars reactivas. Se usan f-strings
+    para concatenar; NUNCA `+` (lanzaría TypeError).
     """
     carrera = EstadoInstitucional.carrera_seleccionada
     color_principal = _color_carrera_actual()
-    color_suave = _color_suave_carrera_actual()
 
     return rx.box(
         # --- Anillo decorativo exterior ---
@@ -418,7 +435,7 @@ def _contenedor_orbital_imagen() -> rx.Component:
             border_radius=RADIO_PASTILLA,
             z_index="0",
         ),
-        # --- Halo radial ---
+        # --- Halo radial (f-strings para concatenar Vars) ---
         rx.box(
             position="absolute",
             top="0",
@@ -427,18 +444,14 @@ def _contenedor_orbital_imagen() -> rx.Component:
             bottom="0",
             background=rx.color_mode_cond(
                 light=(
-                    "radial-gradient(circle at 50% 50%, "
-                    + carrera["color_principal"]
-                    + "33 0%, "
-                    + carrera["color_suave"]
-                    + "00 60%)"
+                    f"radial-gradient(circle at 50% 50%, "
+                    f"{carrera['color_principal']}33 0%, "
+                    f"{carrera['color_suave']}00 60%)"
                 ),
                 dark=(
-                    "radial-gradient(circle at 50% 50%, "
-                    + carrera["color_principal_dark"]
-                    + "44 0%, "
-                    + carrera["color_suave_dark"]
-                    + "00 60%)"
+                    f"radial-gradient(circle at 50% 50%, "
+                    f"{carrera['color_principal_dark']}44 0%, "
+                    f"{carrera['color_suave_dark']}00 60%)"
                 ),
             ),
             border_radius=RADIO_PASTILLA,
@@ -461,7 +474,7 @@ def _contenedor_orbital_imagen() -> rx.Component:
         # --- Imagen central ---
         rx.box(
             rx.image(
-                src="/" + carrera["imagen_archivo"],
+                src=f"/{carrera['imagen_archivo']}",
                 alt=carrera["nombre"],
                 width="100%",
                 height="100%",
@@ -510,12 +523,6 @@ def _badge_info(
 
     El texto es NEUTRO (`gray-11`) y solo el icono y el borde usan el
     color de la carrera. Fondo neutro suave.
-
-    Args:
-        icono: Nombre del icono de Lucide.
-        texto: Texto visible del badge.
-        color: Var del color adaptativo de la carrera.
-        fondo_suave: Si True, aplica un fondo neutro suave.
     """
     return rx.flex(
         rx.icon(icono, size=12, color=color),
@@ -523,7 +530,7 @@ def _badge_info(
             texto,
             font_size="0.75rem",
             font_weight="600",
-            color=COLOR_TEXTO_PRINCIPAL,  # ← texto neutro
+            color=COLOR_TEXTO_PRINCIPAL,
             white_space="nowrap",
         ),
         align="center",
@@ -558,7 +565,7 @@ def _hero_carrera() -> rx.Component:
         ),
         # --- Columna derecha: información textual ---
         rx.vstack(
-            # --- Badge de categoría (fondo con color de carrera) ---
+            # --- Badge de categoría ---
             rx.flex(
                 rx.icon("award", size=12, color="white"),
                 rx.text(
@@ -636,7 +643,6 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
         # --- Cabecera clicable ---
         rx.box(
             rx.flex(
-                # --- Ícono indicador (color de carrera cuando abierto) ---
                 rx.box(
                     rx.icon(
                         "circle_help",
@@ -660,7 +666,6 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
                     flex_shrink="0",
                     transition="all 0.2s",
                 ),
-                # --- Texto de la pregunta ---
                 rx.text(
                     pregunta["pregunta"],
                     font_size="0.9375rem",
@@ -669,7 +674,6 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
                     flex="1",
                     line_height="1.4",
                 ),
-                # --- Chevron indicador ---
                 rx.icon(
                     "chevron-down",
                     size=20,
@@ -709,7 +713,7 @@ def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
             ),
             rx.fragment(),
         ),
-        # --- Contenedor (borde con color de carrera cuando abierto) ---
+        # --- Contenedor ---
         width="100%",
         border=rx.cond(
             esta_abierta,
@@ -741,7 +745,6 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
     return rx.vstack(
         # --- Encabezado ---
         rx.flex(
-            # --- Icono en caja tintada con color de carrera ---
             rx.box(
                 rx.icon("circle_help", size=20, color=color_carrera),
                 padding="0.625rem",
@@ -753,7 +756,6 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
                 justify_content="center",
                 flex_shrink="0",
             ),
-            # --- Título + subtítulo ---
             rx.vstack(
                 rx.text(
                     "Preguntas frecuentes",
@@ -775,7 +777,6 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
                 flex="1",
                 min_width="0",
             ),
-            # --- Badge contador (borde con color de carrera) ---
             rx.box(
                 rx.text(
                     carrera["preguntas_frecuentes"].length().to_string(),
@@ -820,14 +821,8 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
 
 
 def _pestanas_secciones_detalle() -> rx.Component:
-    """
-    Sistema de pestañas con `rx.tabs.root` para las 3 secciones del detalle.
-
-    Las FAQs se sacaron de las tabs y se renderizan como sección aparte
-    debajo de ellas.
-    """
+    """Sistema de pestañas con `rx.tabs.root` para las 3 secciones."""
     return rx.tabs.root(
-        # --- Lista de triggers ---
         rx.tabs.list(
             _tabs_trigger("Info", "info", value="info"),
             _tabs_trigger("Plan", "book-open-text", value="plan"),
@@ -837,25 +832,21 @@ def _pestanas_secciones_detalle() -> rx.Component:
             padding="0.375rem",
             border_radius=RADIO_EXTRA_GRANDE,
         ),
-        # --- Contenido: Info ---
         rx.tabs.content(
             seccion_informacion(),
             margin_top="1.5rem",
             value="info",
         ),
-        # --- Contenido: Plan ---
         rx.tabs.content(
             seccion_plan_estudios(),
             margin_top="1.5rem",
             value="plan",
         ),
-        # --- Contenido: Perfil ---
         rx.tabs.content(
             seccion_perfil_y_campo_laboral(),
             margin_top="1.5rem",
             value="perfil",
         ),
-        # --- Configuración del root ---
         default_value="info",
         width="100%",
     )
@@ -867,11 +858,7 @@ def _pestanas_secciones_detalle() -> rx.Component:
 
 
 def _boton_volver_arriba() -> rx.Component:
-    """
-    Botón flotante para volver al inicio de la página.
-
-    Usa el color principal de la carrera activa como fondo.
-    """
+    """Botón flotante para volver al inicio de la página."""
     color_principal = _color_carrera_actual()
 
     return rx.box(
@@ -912,6 +899,7 @@ def _boton_volver_arriba() -> rx.Component:
 @rx.page(
     route="/carrera/[carrera_id]",
     title=f"Detalle de Carrera | {NOMBRE_INSTITUTO}",
+    on_load=EstadoInstitucional.redirigir_si_carrera_invalida,  # ← VALIDACIÓN
 )
 def vista_detalle_carrera() -> rx.Component:
     """
@@ -922,6 +910,9 @@ def vista_detalle_carrera() -> rx.Component:
     - Sección de preguntas frecuentes (fuera de las tabs).
     - Botón flotante "volver arriba".
     - Pie de página institucional.
+
+    El `on_load` (`redirigir_si_carrera_invalida`) redirige a `/404` si
+    el `carrera_id` de la URL no existe o no es válido.
     """
     return rx.vstack(
         # --- Barra de navegación principal ---
@@ -956,3 +947,6 @@ def vista_detalle_carrera() -> rx.Component:
         width="100%",
         spacing="0",
     )
+
+
+__all__ = ["vista_detalle_carrera"]
