@@ -1,31 +1,21 @@
+# app_portada_instein/componentes/por_que_instein.py
+
 """
-Sección "¿Por qué elegir INSTEIN?" con cards de features
-estilo Qdrant: icono + título + descripción + CTA que abre un diálogo
-con información ampliada.
+Sección "¿Por qué elegir INSTEIN?" — estilo Neon adaptativo.
+
+Cards de features con icono + título + descripción + CTA que abre un
+diálogo con información ampliada.
 
 Sistema de color (UX)
 ---------------------
-Cada razón tiene su propio color de marca (azul, cyan, violeta, naranja,
-verde, rosa) para dar variedad visual al grid. Los colores son los
-mismos que los del catálogo de carreras, así que hay coherencia total.
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
 
-Elementos con color de marca por razón:
-- Icono.
-- Fondo tintado del icono.
-- Texto y borde del CTA "Ver más".
-- Borde hover de la tarjeta.
-- Sombra hover.
-- Iconos de check en el diálogo.
-
-Elementos neutros:
-- Título de la tarjeta.
-- Descripción.
-- Bordes base.
-- Fondo base.
-
-Elementos con accent institucional:
-- Etiqueta "¿POR QUÉ INSTEIN?".
-- Botón "Más información" del diálogo.
+- Fondo: `FONDO_HOME_CARD_ADAPTATIVO` (light: blanco translúcido,
+  dark: azul oscuro translúcido).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE` / `TEXTO_HOME_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
+- Fondo tintado: `FONDO_AZUL_SUAVE` / `FONDO_AZUL_MUY_SUAVE`.
 
 Patrón de diálogo
 -----------------
@@ -42,32 +32,29 @@ El diálogo aplica el mismo patrón que `vista_post.py` y `dialogos.py`
 para respetar la barra de URL móvil.
 
 Estructura del diálogo:
-- Header: icono grande + descripción ampliada.
-- Cuerpo: lista de puntos (con scroll interno si es necesario).
-- Pie: botones "Cerrar" (soft) y "Más información" (solid crimson),
+- Header: título + descripción (accesibilidad).
+- Cuerpo: icono grande + descripción ampliada + lista de puntos.
+- Pie: botones "Cerrar" (soft) y "Más información" (solid azul marino),
   responsive: columna en móvil, fila en desktop.
-
-Nota técnica: `rx.inset(side="x")` requiere padre con `display: flex`.
-----------------------------------------------------------------------
-Si el contenedor del `rx.inset` no es flex, el inset aplica el padding
-de forma inconsistente. Envuélvelo en un `rx.box(..., display="flex",
-flex_direction="column")` o usa `padding` directamente.
 """
 
 import reflex as rx
 
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_ACENTO_SOLIDO,
-    COLOR_ACENTO_TEXTO,
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_MUY_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_CARD_ADAPTATIVO,
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
     RADIO_MEDIO,
+    SOMBRA_HOVER_CARD_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
 )
 
 
@@ -78,7 +65,6 @@ from app_portada_instein.infraestructura.constantes_visuales import (
 # - icono, titulo, descripcion (para la card)
 # - detalle: párrafo largo mostrado en el diálogo
 # - puntos: lista de beneficios concretos mostrados en el diálogo
-# - color_light, color_dark: color de marca adaptativo
 # ----------------------------------------------------------------------
 
 RAZONES: list[dict] = [
@@ -102,8 +88,6 @@ RAZONES: list[dict] = [
             "Reconocido por empresas públicas y privadas",
             "Válido para continuar estudios universitarios",
         ],
-        "color_light": "#2563eb",
-        "color_dark": "#60a5fa",
     },
     {
         "id": 1,
@@ -125,8 +109,6 @@ RAZONES: list[dict] = [
             "Proyectos prácticos desde el primer semestre",
             "Prácticas profesionales garantizadas",
         ],
-        "color_light": "#0891b2",
-        "color_dark": "#22d3ee",
     },
     {
         "id": 2,
@@ -148,8 +130,6 @@ RAZONES: list[dict] = [
             "Red de 500+ egresados activos",
             "Bolsa de trabajo institucional",
         ],
-        "color_light": "#7c3aed",
-        "color_dark": "#a78bfa",
     },
     {
         "id": 3,
@@ -170,8 +150,6 @@ RAZONES: list[dict] = [
             "Convenios en Santa Cruz, La Paz y Cochabamba",
             "Posibilidad de contratación al finalizar prácticas",
         ],
-        "color_light": "#ea580c",
-        "color_dark": "#fb923c",
     },
     {
         "id": 4,
@@ -193,8 +171,6 @@ RAZONES: list[dict] = [
             "Pensamiento crítico y resolución de problemas",
             "Ética profesional y responsabilidad social",
         ],
-        "color_light": "#16a34a",
-        "color_dark": "#4ade80",
     },
     {
         "id": 5,
@@ -215,31 +191,8 @@ RAZONES: list[dict] = [
             "Mentorías de egresados a estudiantes actuales",
             "Bolsa de trabajo exclusiva para egresados",
         ],
-        "color_light": "#db2777",
-        "color_dark": "#f472b6",
     },
 ]
-
-
-# ======================================================================
-# Helpers internos
-# ======================================================================
-
-
-def _color_adaptativo(razon: dict) -> rx.Var:
-    """Devuelve el color de la razón adaptado al color_mode."""
-    return rx.color_mode_cond(
-        light=razon["color_light"],
-        dark=razon["color_dark"],
-    )
-
-
-def _fondo_tintado(razon: dict) -> rx.Var:
-    """Devuelve el fondo tintado del color de la razón."""
-    return rx.color_mode_cond(
-        light=f"{razon['color_light']}15",
-        dark=f"{razon['color_dark']}20",
-    )
 
 
 # ======================================================================
@@ -251,24 +204,30 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
     """
     Contenido del diálogo: icono + descripción ampliada + lista de puntos.
 
-    El cuerpo del diálogo es responsive y hace scroll interno cuando el
-    contenido excede el espacio (aunque con 4 puntos rara vez pasa).
+    Estilo Neon adaptativo:
+    - Icono grande con fondo tintado azul marino + borde azul + glow.
+    - Descripción ampliada adaptativa.
+    - Lista de puntos con iconos `circle_check` azul marino.
+
+    ✅ ADAPTATIVO: fondo y textos cambian según el color_mode.
 
     Args:
         razon: Dict con los datos de la razón.
     """
-    color_razon = _color_adaptativo(razon)
-
     return rx.vstack(
         # ==========================================================
-        # Icono grande con fondo tintado
+        # Icono grande con fondo tintado + glow
         # ==========================================================
         rx.box(
-            rx.icon(razon["icono"], size=32, color=color_razon),
+            rx.icon(razon["icono"], size=32, color=AZUL_MARINO_NEON),
             padding="1rem",
             border_radius=RADIO_EXTRA_GRANDE,
-            background=_fondo_tintado(razon),
-            border=f"1px solid {color_razon}",
+            background=FONDO_AZUL_SUAVE,          # ✅ adaptativo
+            border=f"1px solid {BORDE_HOME_AZUL}",
+            box_shadow=rx.color_mode_cond(         # ✅ adaptativo
+                light=f"0 0 30px {AZUL_MARINO_NEON}30",
+                dark=f"0 0 30px {AZUL_MARINO_NEON}40",
+            ),
             display="flex",
             align_items="center",
             justify_content="center",
@@ -282,30 +241,28 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
             razon["detalle"],
             font_size=["0.875rem", "0.9375rem", "0.9375rem"],
             line_height="1.7",
-            color=COLOR_TEXTO_CUERPO,
+            color=TEXTO_HOME_SUAVE,                # ✅ adaptativo
             text_align="center",
         ),
         # ==========================================================
         # Lista de puntos clave
         # ==========================================================
-        # Usamos padding directo (más robusto que rx.inset, que requiere
-        # que el padre sea flex para aplicar bien el "current" padding).
         rx.box(
             rx.vstack(
                 rx.foreach(
                     razon["puntos"],
                     lambda punto: rx.flex(
                         rx.icon(
-                            "check-circle",
+                            "circle_check",
                             size=16,
-                            color=color_razon,
+                            color=AZUL_MARINO_NEON,
                             flex_shrink="0",
                             margin_top="0.125rem",
                         ),
                         rx.text(
                             punto,
                             font_size=["0.8125rem", "0.875rem", "0.875rem"],
-                            color=COLOR_TEXTO_CUERPO,
+                            color=TEXTO_HOME_SUAVE,    # ✅ adaptativo
                             line_height="1.5",
                         ),
                         align="start",
@@ -318,8 +275,10 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
                 width="100%",
             ),
             padding="1rem",
-            background=COLOR_FONDO_SUAVE,
+            background=FONDO_AZUL_MUY_SUAVE,             # ✅ adaptativo
+            border=f"1px solid {BORDE_HOME_SUAVE}",      # ✅ adaptativo
             border_radius=RADIO_MEDIO,
+            backdrop_filter="blur(12px)",
             width="100%",
         ),
         spacing="4",
@@ -334,7 +293,7 @@ def _contenido_dialogo_razon(razon: dict) -> rx.Component:
 
 
 def _boton_cerrar_dialogo() -> rx.Component:
-    """Botón 'Cerrar' (soft) que cierra el diálogo."""
+    """Botón 'Cerrar' (soft gray) que cierra el diálogo."""
     return rx.dialog.close(
         rx.button(
             rx.icon("x", size=16),
@@ -349,18 +308,29 @@ def _boton_cerrar_dialogo() -> rx.Component:
 
 
 def _boton_mas_informacion() -> rx.Component:
-    """Botón 'Más información' (solid crimson) que cierra + navega."""
+    """
+    Botón 'Más información' con azul marino neon + glow.
+
+    Al hacer clic: cierra el diálogo y navega a /contacto.
+
+    ✅ El azul marino es el mismo en ambos modos (color de marca).
+    """
     return rx.dialog.close(
         rx.button(
             rx.icon("message-circle", size=16),
             rx.text("Más información", as_="span", font_weight="700"),
             on_click=rx.redirect("/contacto"),
-            variant="solid",
-            color_scheme="crimson",
             size="3",
             cursor="pointer",
             width=rx.breakpoints(initial="100%", sm="auto"),
-            _hover={"filter": "brightness(1.1)"},
+            background=AZUL_MARINO_NEON,
+            color="white",
+            box_shadow=f"0 0 20px {AZUL_MARINO_NEON}60",
+            transition="all 0.2s",
+            _hover={
+                "transform": "translateY(-1px)",
+                "box_shadow": f"0 0 30px {AZUL_MARINO_NEON}cc",
+            },
         ),
     )
 
@@ -371,6 +341,8 @@ def _pie_dialogo_razon() -> rx.Component:
 
     - **Móvil**: botones apilados en columna, CTA primario arriba.
     - **Tablet/Desktop**: botones en fila alineados a la derecha.
+
+    ✅ ADAPTATIVO: el borde superior cambia según el modo.
 
     El pie fluye con el scroll (aparece al final del contenido).
     """
@@ -397,8 +369,12 @@ def _pie_dialogo_razon() -> rx.Component:
             ),
         ),
         width="100%",
-        padding=["1rem 1rem 0 1rem", "1rem 1.5rem 0 1.5rem", "1rem 2rem 0 2rem"],
-        border_top=f"1px solid {COLOR_BORDE_SUAVE}",
+        padding=[
+            "1rem 1rem 0 1rem",
+            "1rem 1.5rem 0 1.5rem",
+            "1rem 2rem 0 2rem",
+        ],
+        border_top=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
         margin_top="1rem",
     )
 
@@ -417,11 +393,18 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
     - Cuerpo con scroll interno (`flex: 1` + `min-height: 0`).
     - Pie responsive al final del flujo.
 
+    Estilo Neon adaptativo:
+    - Card con glassmorphism adaptativo.
+    - Icono azul marino con glow.
+    - CTA "Ver más →" azul marino.
+    - Hover: elevación + borde azul + glow adaptativo.
+    - Diálogo con fondo y textos adaptativos.
+
+    ✅ ADAPTATIVO: card, diálogo y textos respetan el color_mode.
+
     Args:
         razon: Dict con los datos de la razón.
     """
-    color_razon = _color_adaptativo(razon)
-
     return rx.dialog.root(
         # ==========================================================
         # TRIGGER: la card clicable
@@ -429,12 +412,17 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
         rx.dialog.trigger(
             rx.box(
                 rx.vstack(
-                    # --- Icono con fondo tintado ---
+                    # --- Icono con fondo tintado + glow ---
                     rx.box(
-                        rx.icon(razon["icono"], size=24, color=color_razon),
+                        rx.icon(
+                            razon["icono"],
+                            size=24,
+                            color=AZUL_MARINO_NEON,
+                        ),
                         padding="0.75rem",
                         border_radius=RADIO_GRANDE,
-                        background=_fondo_tintado(razon),
+                        background=FONDO_AZUL_SUAVE,          # ✅ adaptativo
+                        border=f"1px solid {BORDE_HOME_AZUL}",
                         display="flex",
                         align_items="center",
                         justify_content="center",
@@ -445,28 +433,33 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
                     rx.heading(
                         razon["titulo"],
                         size="3",
-                        color=COLOR_TEXTO_PRINCIPAL,
-                        font_weight="700",
+                        color=TEXTO_HOME_PRINCIPAL,           # ✅ adaptativo
+                        font_weight="800",
+                        letter_spacing="-0.02em",
                     ),
                     # --- Descripción ---
                     rx.text(
                         razon["descripcion"],
                         font_size="0.875rem",
                         line_height="1.6",
-                        color=COLOR_TEXTO_CUERPO,
+                        color=TEXTO_HOME_MAS_SUAVE,           # ✅ adaptativo
                     ),
                     # --- CTA "Ver más →" ---
                     rx.flex(
                         rx.text(
                             "Ver más",
                             font_size="0.875rem",
-                            font_weight="600",
-                            color=color_razon,
+                            font_weight="700",
+                            color=AZUL_MARINO_NEON,
                         ),
-                        rx.icon("arrow-right", size=14, color=color_razon),
+                        rx.icon(
+                            "arrow-right",
+                            size=14,
+                            color=AZUL_MARINO_NEON,
+                        ),
                         align="center",
                         gap="0.25rem",
-                        margin_top="0.5rem",
+                        margin_top="0.75rem",
                         transition="all 0.2s",
                     ),
                     align="start",
@@ -475,17 +468,18 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
                 ),
                 # --- Estilos de la card ---
                 cursor="pointer",
-                padding="1.5rem",
+                padding="1.75rem",
                 border_radius=RADIO_EXTRA_GRANDE,
-                border=f"1px solid {COLOR_BORDE_SUAVE}",
-                background=COLOR_FONDO_CARTA,
-                transition="all 0.3s",
+                border=f"1px solid {BORDE_HOME_SUAVE}",              # ✅ adaptativo
+                background=FONDO_HOME_CARD_ADAPTATIVO,                # ✅ adaptativo
+                backdrop_filter="blur(12px)",
+                transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 width="100%",
                 height="100%",
                 _hover={
                     "transform": "translateY(-4px)",
-                    "border_color": color_razon,
-                    "box_shadow": f"0 20px 40px -10px {color_razon}",
+                    "border_color": BORDE_HOME_AZUL,
+                    "box_shadow": SOMBRA_HOVER_CARD_HOME,             # ✅ adaptativo
                 },
             ),
         ),
@@ -501,18 +495,23 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
                     razon["titulo"],
                     font_size=["1.125rem", "1.25rem", "1.25rem"],
                     font_weight="800",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,           # ✅ adaptativo
                     line_height="1.2",
+                    letter_spacing="-0.02em",
                 ),
                 rx.dialog.description(
                     "Conoce por qué esta característica hace la diferencia.",
                     font_size="0.8125rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,           # ✅ adaptativo
                 ),
                 spacing="1",
                 align="start",
                 width="100%",
-                padding=["1.25rem 1rem 0 1rem", "1.5rem 1.5rem 0 1.5rem", "1.5rem 2rem 0 2rem"],
+                padding=[
+                    "1.25rem 1rem 0 1rem",
+                    "1.5rem 1.5rem 0 1.5rem",
+                    "1.5rem 2rem 0 2rem",
+                ],
             ),
             # ------------------------------------------------------
             # CONTENEDOR INTERNO CON SCROLL
@@ -526,16 +525,20 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
                 overflow_y="auto",
                 overflow_x="hidden",
                 padding=["1rem", "1.25rem 1.5rem", "1.25rem 2rem"],
-                # Scrollbar estilizado
+                # Scrollbar estilizada adaptativa
                 css={
                     "&::-webkit-scrollbar": {"width": "8px"},
                     "&::-webkit-scrollbar-thumb": {
-                        "background": COLOR_BORDE_SUAVE,
+                        "background": BORDE_HOME_MEDIO,   # ✅ adaptativo
                         "border_radius": "4px",
                     },
-                    "&::-webkit-scrollbar-track": {"background": "transparent"},
+                    "&::-webkit-scrollbar-track": {
+                        "background": "transparent",
+                    },
                     "scrollbar-width": "thin",
-                    "scrollbar-color": f"{COLOR_BORDE_SUAVE} transparent",
+                    "scrollbar-color": (
+                        f"{BORDE_HOME_MEDIO} transparent"
+                    ),
                 },
             ),
             # ------------------------------------------------------
@@ -546,12 +549,25 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
             # Estilos del marco del diálogo
             # ------------------------------------------------------
             max_width="34rem",
-            width=["calc(100vw - 1.5rem)", "calc(100vw - 2rem)", "100%"],
+            width=[
+                "calc(100vw - 1.5rem)",
+                "calc(100vw - 2rem)",
+                "100%",
+            ],
             padding="0",
             border_radius=RADIO_EXTRA_GRANDE,
-            background=COLOR_FONDO_CARTA,
-            border=f"1px solid {COLOR_BORDE_SUAVE}",
-            box_shadow="0 30px 60px -15px rgba(0,0,0,0.25)",
+            background=FONDO_HOME_CARD_ADAPTATIVO,   # ✅ adaptativo
+            border=f"1px solid {BORDE_HOME_AZUL}",   # ✅ adaptativo
+            box_shadow=rx.color_mode_cond(            # ✅ adaptativo
+                light=(
+                    f"0 30px 60px -15px rgba(0, 0, 0, 0.25), "
+                    f"0 0 40px -10px {AZUL_MARINO_NEON}20"
+                ),
+                dark=(
+                    f"0 30px 60px -15px rgba(0, 0, 0, 0.5), "
+                    f"0 0 40px -10px {AZUL_MARINO_NEON}40"
+                ),
+            ),
             overflow="hidden",
             # `display: flex` + `flex-direction: column` permite que el
             # box interno use `flex="1"` y active el scroll.
@@ -574,59 +590,46 @@ def _tarjeta_razon_con_dialogo(razon: dict) -> rx.Component:
 
 def seccion_por_que_instein() -> rx.Component:
     """
-    Sección completa "¿Por qué elegir INSTEIN?" con grid de razones.
+    Sección completa "¿Por qué elegir INSTEIN?" — estilo Neon adaptativo.
 
-    Estructura:
-    - Etiqueta "¿POR QUÉ INSTEIN?" con accent institucional.
-    - Título grande.
-    - Subtítulo.
-    - Grid responsive de 6 tarjetas, cada una con su propio diálogo.
+    El encabezado (número + título) se renderiza desde `vista_inicio.py`
+    con `separador_numerado`. Este componente SOLO renderiza el grid.
+
+    Estilo Neon:
+    - Cards con glassmorphism adaptativo.
+    - Iconos azul marino con glow.
+    - Grid responsive de 6 cards.
+    - Cada card abre su propio diálogo independiente.
+
+    ✅ ADAPTATIVO: todo el bloque respeta el color_mode del usuario.
     """
     return rx.box(
         rx.vstack(
-            # ==========================================================
-            # Encabezado
-            # ==========================================================
-            rx.vstack(
-                rx.text(
-                    "¿POR QUÉ INSTEIN?",
-                    font_size="0.75rem",
-                    font_weight="700",
-                    letter_spacing="0.15em",
-                    color=COLOR_ACENTO_TEXTO,
-                ),
-                rx.heading(
-                    "Formación que transforma",
-                    size="7",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    text_align="center",
-                ),
-                rx.text(
-                    "Todo lo que necesitas para convertirte en un profesional "
-                    "técnico de excelencia está en INSTEIN.",
-                    font_size="1rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    text_align="center",
-                    max_width="42rem",
-                ),
-                align="center",
-                spacing="2",
-                margin_bottom="3rem",
-            ),
             # ==========================================================
             # Grid de razones (cada una con su diálogo)
             # ==========================================================
             rx.grid(
                 *[_tarjeta_razon_con_dialogo(r) for r in RAZONES],
-                columns=rx.breakpoints(initial="1", sm="2", md="2", lg="3"),
+                columns=rx.breakpoints(
+                    initial="1",
+                    sm="2",
+                    md="2",
+                    lg="3",
+                ),
                 spacing="4",
                 width="100%",
             ),
             align="center",
             width="100%",
+            max_width="72rem",
+            margin="0 auto",
         ),
         width="100%",
-        padding=["3rem 1rem", "3.5rem 1.5rem", "4rem 1.5rem"],
+        padding=[
+            "0 1rem 4rem 1rem",
+            "0 1.5rem 4rem 1.5rem",
+            "0 1.5rem 4rem 1.5rem",
+        ],
     )
 
 

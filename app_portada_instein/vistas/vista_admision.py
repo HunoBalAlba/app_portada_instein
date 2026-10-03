@@ -20,14 +20,40 @@ Sistema de color (UX)
   WhatsApp, azul).
 - Textos: neutros (`gray-11`/`gray-12`).
 
-Nota técnica
-------------
-Los tokens de color son `Var` reactivos, no strings. Usar SIEMPRE
-f-strings para concatenar con texto.
+Nota técnica: ACORDEÓN FAQ UNIFICADO
+------------------------------------
+✅ REFACTORIZADO: la sección de preguntas frecuentes ya NO tiene su
+propio `EstadoFAQAdmision` ni su propio item. Ahora delega en el
+componente genérico `acordeon_faq` con variante `"light"`, que usa
+el `EstadoAcordeonFaq` global.
+
+Esto elimina ~60 líneas de código duplicado.
+
+Nota técnica: `ItemFaq` ES `TypedDict`
+--------------------------------------
+`PREGUNTAS_ADMISION` ahora es `list[ItemFaq]` (TypedDict), no
+`list[dict]`. Los items se construyen con **dicts literales**:
+
+    {"pregunta": "¿...?", "respuesta": "..."}
+
+NO con `ItemFaq(pregunta=..., respuesta=...)`.
+
+Nota técnica: LAYOUT
+--------------------
+- Los tokens de color son `Var` reactivos, no strings. Usar SIEMPRE
+  f-strings para concatenar con texto.
+- `rx.flex` y `rx.vstack` (Radix Themes) NO aceptan listas en
+  `direction`, `align`, `justify`. Usar `rx.breakpoints(...)`.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
+from app_portada_instein.componentes.acordeon_faq import (
+    ItemFaq,
+    acordeon_faq,
+)
 from app_portada_instein.componentes.barra_navegacion import (
     barra_navegacion_superior,
 )
@@ -191,7 +217,10 @@ REQUISITOS_ACADEMICOS: list[dict] = [
     },
     {
         "icono": "heart",
-        "texto": "Compromiso con la formación técnica y los valores institucionales",
+        "texto": (
+            "Compromiso con la formación técnica y los valores "
+            "institucionales"
+        ),
     },
     {
         "icono": "target",
@@ -304,8 +333,12 @@ FORMAS_INSCRIPCION: list[dict] = [
 # ======================================================================
 # Datos: preguntas frecuentes de admisión
 # ======================================================================
+# ✅ Ahora es `list[ItemFaq]` (TypedDict) en lugar de `list[dict]`.
+# Se construye con dicts literales:
+#     {"pregunta": "...", "respuesta": "..."}
+# ----------------------------------------------------------------------
 
-PREGUNTAS_ADMISION: list[dict] = [
+PREGUNTAS_ADMISION: list[ItemFaq] = [
     {
         "pregunta": "¿Realmente puedo inscribirme en cualquier momento?",
         "respuesta": (
@@ -327,7 +360,8 @@ PREGUNTAS_ADMISION: list[dict] = [
         "respuesta": (
             "Cada carrera tiene un cupo máximo por turno para garantizar "
             "la calidad educativa. Por eso recomendamos inscribirse lo "
-            "antes posible. Los cupos se asignan por orden de inscripción."
+            "antes posible. Los cupos se asignan por orden de "
+            "inscripción."
         ),
     },
     {
@@ -349,9 +383,9 @@ PREGUNTAS_ADMISION: list[dict] = [
     {
         "pregunta": "¿Puedo visitar el campus antes de inscribirme?",
         "respuesta": (
-            "Por supuesto. Te invitamos a conocer nuestras instalaciones, "
-            "laboratorios y aulas. Coordina tu visita por WhatsApp o "
-            "teléfono."
+            "Por supuesto. Te invitamos a conocer nuestras "
+            "instalaciones, laboratorios y aulas. Coordina tu visita "
+            "por WhatsApp o teléfono."
         ),
     },
     {
@@ -365,30 +399,12 @@ PREGUNTAS_ADMISION: list[dict] = [
     {
         "pregunta": "¿Puedo trabajar mientras estudio?",
         "respuesta": (
-            "Sí. Todas las carreras tienen turno nocturno (19:00 - 22:00) "
-            "especialmente diseñado para estudiantes que trabajan."
+            "Sí. Todas las carreras tienen turno nocturno (19:00 - "
+            "22:00) y turno de sábados (09:00 - 14:30) especialmente "
+            "diseñados para estudiantes que trabajan."
         ),
     },
 ]
-
-
-# ======================================================================
-# Estado del acordeón de FAQs
-# ======================================================================
-
-
-class EstadoFAQAdmision(rx.State):
-    """Estado del acordeón de preguntas frecuentes de admisión."""
-
-    indice_abierto: int = -1
-
-    @rx.event
-    def alternar(self, indice: int):
-        """Abre o cierra una pregunta."""
-        if self.indice_abierto == indice:
-            self.indice_abierto = -1
-        else:
-            self.indice_abierto = indice
 
 
 # ======================================================================
@@ -442,7 +458,8 @@ def _hero_admision() -> rx.Component:
         # --- Subtítulo ---
         rx.text(
             "Todo lo que necesitas saber para convertirte en Técnico "
-            "Superior. Sin fechas límite, sin sorteo, sin complicaciones.",
+            "Superior. Sin fechas límite, sin sorteo, sin "
+            "complicaciones.",
             font_size="1rem",
             color=COLOR_TEXTO_CUERPO,
             text_align="center",
@@ -512,7 +529,9 @@ def _tarjeta_ventaja(item: dict) -> rx.Component:
         _hover={
             "transform": "translateY(-4px)",
             "border_color": rx.color(color_scheme, 7),
-            "box_shadow": f"0 12px 32px -8px {rx.color(color_scheme, 9)}",
+            "box_shadow": (
+                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
+            ),
         },
     )
 
@@ -522,7 +541,9 @@ def _grid_ventajas() -> rx.Component:
     return rx.box(
         rx.grid(
             *[_tarjeta_ventaja(item) for item in VENTAJAS_DESTACADAS],
-            columns=rx.breakpoints(initial="1", sm="1", md="3", lg="3"),
+            columns=rx.breakpoints(
+                initial="1", sm="1", md="3", lg="3"
+            ),
             spacing="4",
             width="100%",
         ),
@@ -538,7 +559,11 @@ def _grid_ventajas() -> rx.Component:
 # ======================================================================
 
 
-def _paso_timeline(paso: dict, indice: int, total: int) -> rx.Component:
+def _paso_timeline(
+    paso: dict,
+    indice: int,
+    total: int,
+) -> rx.Component:
     """Paso individual del timeline de admisión."""
     es_ultimo = indice == total - 1
 
@@ -631,7 +656,9 @@ def _paso_timeline(paso: dict, indice: int, total: int) -> rx.Component:
             transition="all 0.2s",
             _hover={
                 "border_color": COLOR_ACENTO_TEXTO,
-                "box_shadow": f"0 8px 20px -8px {COLOR_ACENTO_SOLIDO}",
+                "box_shadow": (
+                    f"0 8px 20px -8px {COLOR_ACENTO_SOLIDO}"
+                ),
             },
         ),
         align="start",
@@ -664,8 +691,8 @@ def _seccion_proceso() -> rx.Component:
                     letter_spacing="-0.03em",
                 ),
                 rx.text(
-                    "Un proceso simple y rápido. Sin exámenes de admisión, "
-                    "sin sorteos, sin complicaciones.",
+                    "Un proceso simple y rápido. Sin exámenes de "
+                    "admisión, sin sorteos, sin complicaciones.",
                     font_size="0.9375rem",
                     color=COLOR_TEXTO_SECUNDARIO,
                     text_align="center",
@@ -750,7 +777,11 @@ def _columna_requisitos(
             # --- Encabezado de la columna ---
             rx.flex(
                 rx.flex(
-                    rx.icon(icono, size=18, color=rx.color("violet", 11)),
+                    rx.icon(
+                        icono,
+                        size=18,
+                        color=rx.color("violet", 11),
+                    ),
                     height="2.25rem",
                     width="2.25rem",
                     border_radius=RADIO_MEDIO,
@@ -811,8 +842,8 @@ def _seccion_requisitos() -> rx.Component:
                     letter_spacing="-0.03em",
                 ),
                 rx.text(
-                    "Documentos personales y académicos. Si te falta algo, "
-                    "contáctanos y te ayudamos a resolverlo.",
+                    "Documentos personales y académicos. Si te falta "
+                    "algo, contáctanos y te ayudamos a resolverlo.",
                     font_size="0.9375rem",
                     color=COLOR_TEXTO_SECUNDARIO,
                     text_align="center",
@@ -902,7 +933,9 @@ def _tarjeta_beneficio(item: dict) -> rx.Component:
         _hover={
             "transform": "translateY(-4px)",
             "border_color": rx.color(color_scheme, 7),
-            "box_shadow": f"0 12px 32px -8px {rx.color(color_scheme, 9)}",
+            "box_shadow": (
+                f"0 12px 32px -8px {rx.color(color_scheme, 9)}"
+            ),
         },
     )
 
@@ -943,7 +976,9 @@ def _seccion_beneficios() -> rx.Component:
             # --- Grid de beneficios ---
             rx.grid(
                 *[_tarjeta_beneficio(item) for item in BENEFICIOS],
-                columns=rx.breakpoints(initial="1", sm="2", md="2", lg="4"),
+                columns=rx.breakpoints(
+                    initial="1", sm="2", md="2", lg="4"
+                ),
                 spacing="4",
                 width="100%",
             ),
@@ -982,7 +1017,9 @@ def _tarjeta_forma_inscripcion(item: dict) -> rx.Component:
                 align="center",
                 justify="center",
                 margin_bottom="1rem",
-                box_shadow=f"0 8px 20px -6px {rx.color(color_scheme, 9)}",
+                box_shadow=(
+                    f"0 8px 20px -6px {rx.color(color_scheme, 9)}"
+                ),
             ),
             # --- Título + subtítulo ---
             rx.text(
@@ -1087,7 +1124,10 @@ def _seccion_formas_inscripcion() -> rx.Component:
             ),
             # --- Grid de 3 tarjetas ---
             rx.grid(
-                *[_tarjeta_forma_inscripcion(item) for item in FORMAS_INSCRIPCION],
+                *[
+                    _tarjeta_forma_inscripcion(item)
+                    for item in FORMAS_INSCRIPCION
+                ],
                 columns=rx.breakpoints(initial="1", md="3"),
                 spacing="4",
                 width="100%",
@@ -1104,85 +1144,22 @@ def _seccion_formas_inscripcion() -> rx.Component:
 
 
 # ======================================================================
-# Preguntas frecuentes
+# Preguntas frecuentes (delegadas al acordeón unificado)
 # ======================================================================
 
 
-def _item_faq(pregunta: dict, indice: int) -> rx.Component:
-    """Item individual del acordeón de FAQs."""
-    esta_abierta = EstadoFAQAdmision.indice_abierto == indice
-
-    return rx.box(
-        # --- Cabecera clicable ---
-        rx.box(
-            rx.flex(
-                rx.icon(
-                    "help-circle",
-                    size=18,
-                    color=COLOR_ACENTO_TEXTO,
-                    flex_shrink="0",
-                ),
-                rx.text(
-                    pregunta["pregunta"],
-                    font_size="0.9375rem",
-                    font_weight="600",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    flex="1",
-                    line_height="1.4",
-                ),
-                rx.icon(
-                    "chevron-down",
-                    size=18,
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    transform=rx.cond(
-                        esta_abierta,
-                        "rotate(180deg)",
-                        "rotate(0deg)",
-                    ),
-                    transition="transform 0.3s",
-                    flex_shrink="0",
-                ),
-                align="center",
-                gap="0.75rem",
-                width="100%",
-            ),
-            on_click=lambda: EstadoFAQAdmision.alternar(indice),
-            cursor="pointer",
-            padding="1.125rem 1.25rem",
-            role="button",
-            tab_index=0,
-            width="100%",
-        ),
-        # --- Respuesta colapsable ---
-        rx.cond(
-            esta_abierta,
-            rx.box(
-                rx.text(
-                    pregunta["respuesta"],
-                    font_size="0.875rem",
-                    line_height="1.6",
-                    color=COLOR_TEXTO_CUERPO,
-                ),
-                padding="0 1.25rem 1.25rem 3.25rem",
-            ),
-            rx.fragment(),
-        ),
-        # --- Contenedor ---
-        width="100%",
-        border=rx.cond(
-            esta_abierta,
-            f"1px solid {COLOR_ACENTO_TEXTO}",
-            f"1px solid {COLOR_BORDE_SUAVE}",
-        ),
-        border_radius=RADIO_MEDIO,
-        background=COLOR_FONDO_CARTA,
-        transition="all 0.2s",
-        _hover={"border_color": COLOR_ACENTO_TEXTO},
-    )
-
-
 def _seccion_faq() -> rx.Component:
-    """Sección de preguntas frecuentes de admisión."""
+    """
+    Sección de preguntas frecuentes de admisión.
+
+    ✅ REFACTORIZADO: usa el componente genérico `acordeon_faq` con
+    variante `"light"`. El estado del acordeón vive en
+    `EstadoAcordeonFaq` (compartido por toda la app).
+
+    Estructura:
+    1. Encabezado con etiqueta + título + subtítulo.
+    2. Acordeón con las preguntas de admisión.
+    """
     return rx.box(
         rx.vstack(
             # --- Encabezado ---
@@ -1214,14 +1191,12 @@ def _seccion_faq() -> rx.Component:
                 spacing="2",
                 margin_bottom="2rem",
             ),
-            # --- Acordeón ---
-            rx.vstack(
-                *[
-                    _item_faq(p, i)
-                    for i, p in enumerate(PREGUNTAS_ADMISION)
-                ],
-                spacing="3",
-                width="100%",
+            # --- Acordeón unificado ---
+            acordeon_faq(
+                items=PREGUNTAS_ADMISION,
+                variante="light",
+                icono="help-circle",
+                color_acento=COLOR_ACENTO_TEXTO,
             ),
             width="100%",
             align="center",
@@ -1283,7 +1258,11 @@ def _cta_admision() -> rx.Component:
                 # --- CTA primario ---
                 rx.link(
                     rx.icon("message-circle", size=18),
-                    rx.text("Contactar ahora", as_="span", font_weight="700"),
+                    rx.text(
+                        "Contactar ahora",
+                        as_="span",
+                        font_weight="700",
+                    ),
                     href="/contacto",
                     text_decoration="none",
                     display="inline-flex",
@@ -1294,7 +1273,9 @@ def _cta_admision() -> rx.Component:
                     padding="1rem 2rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="1rem",
-                    box_shadow=f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}",
+                    box_shadow=(
+                        f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}"
+                    ),
                     transition="all 0.2s",
                     _hover={
                         "transform": "translateY(-2px)",
@@ -1327,7 +1308,9 @@ def _cta_admision() -> rx.Component:
                     },
                 ),
                 gap="0.75rem",
-                flex_direction=rx.breakpoints(initial="column", sm="row"),
+                flex_direction=rx.breakpoints(
+                    initial="column", sm="row"
+                ),
                 align="center",
                 justify="center",
                 margin_top="1.5rem",
@@ -1347,7 +1330,10 @@ def _cta_admision() -> rx.Component:
 # ======================================================================
 
 
-@rx.page(route="/admision", title=f"Guía de Admisión | {NOMBRE_INSTITUTO}")
+@rx.page(
+    route="/admision",
+    title=f"Guía de Admisión | {NOMBRE_INSTITUTO}",
+)
 def vista_admision() -> rx.Component:
     """Página de la guía de admisión del instituto."""
     return rx.vstack(
@@ -1366,3 +1352,6 @@ def vista_admision() -> rx.Component:
         width="100%",
         spacing="0",
     )
+
+
+__all__ = ["vista_admision"]

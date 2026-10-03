@@ -13,7 +13,8 @@ Estructura:
 
 Sistema de color (UX)
 ---------------------
-El COLOR DE MARCA de la carrera se aplica a TODOS los elementos que
+El ACENTO VISUAL es ÚNICO para todas las carreras: azul marino neon
+(`AZUL_MARINO_NEON` = `#3b5bdb`). Se aplica a TODOS los elementos que
 identifican al usuario "dónde está":
 
 - Tabs activos (subrayado y texto).
@@ -26,37 +27,70 @@ identifican al usuario "dónde está":
 - Badges informativos del hero.
 
 Los TEXTOS largos son NEUTROS (`gray-11`/`gray-12`) para mantener
-legibilidad. El accent global (`crimson`) se reserva para el navbar
-y elementos institucionales.
+legibilidad.
 
-Nota técnica: CONCATENACIÓN CON VARS REACTIVAS
-----------------------------------------------
-`carrera["color_principal"]` es un `Var` reactivo (no un `str`).
-NO se puede usar `+` para concatenar:
-    "texto" + var + "más texto"   # ❌ TypeError
-Hay que usar f-strings:
-    f"texto {var} más texto"      # ✅
-Esto aplica a TODOS los lugares donde se mezclen strings con Vars.
+Nota técnica: ACORDEÓN FAQ UNIFICADO
+------------------------------------
+✅ REFACTORIZADO: la sección de preguntas frecuentes delega en
+`acordeon_faq` con variante `"light"`.
+
+⚠️ IMPORTANTE: los items del acordeón vienen como `Var` reactiva
+(`carrera_seleccionada["preguntas_frecuentes"]`), NO como lista
+estática de Python. Por eso:
+
+- NO se puede iterar en Python (lanzaría `VarTypeError`).
+- Se pasa el `Var` DIRECTO a `acordeon_faq`, que internamente usa
+  `rx.foreach` para iterar en el frontend.
+- Se accede a los campos con `item["pregunta"]` / `item["respuesta"]`
+  (compatible con `Var`).
+
+Nota técnica: COLORES ADAPTATIVOS
+---------------------------------
+Los colores adaptativos (light/dark) NO se exponen como `@rx.var`
+porque `rx.color_mode_cond()` devuelve un `Var` reactivo del frontend,
+no un `str` serializable.
+
+Los helpers `color_carrera_adaptativo` y `color_suave_carrera_adaptativo`
+fueron ELIMINADOS de `constantes_visuales.py`. Este archivo usa
+directamente `AZUL_MARINO_NEON` (str) y `FONDO_AZUL_SUAVE` (Var
+adaptativo).
 
 Nota técnica: VALIDACIÓN DE RUTA
 --------------------------------
-El decorador `@rx.page` incluye `on_load=EstadoInstitucional.redirigir_si_carrera_invalida`.
-Si el `carrera_id` no corresponde a ninguna carrera (o no es convertible
-a int), el evento redirige a `/404`.
+El decorador `@rx.page` incluye
+`on_load=EstadoInstitucional.redirigir_si_carrera_invalida`. Si el
+`carrera_id` no corresponde a ninguna carrera (o no es convertible a
+int), el evento redirige a `/404?origen=carrera`.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
-from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
-from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
+from app_portada_instein.componentes.acordeon_faq import acordeon_faq
+from app_portada_instein.componentes.barra_navegacion import (
+    barra_navegacion_superior,
+)
+from app_portada_instein.componentes.pie_pagina import (
+    pie_pagina_institucional,
+)
 from app_portada_instein.componentes.primitivos import enlace_navegacion
 from app_portada_instein.componentes.secciones_detalle import (
     seccion_informacion,
     seccion_perfil_y_campo_laboral,
     seccion_plan_estudios,
 )
-from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.datos.modelos_carrera import IconoAnimado
+from app_portada_instein.dominio.estado_institucional import (
+    EstadoInstitucional,
+)
 from app_portada_instein.infraestructura.constantes_visuales import (
+    # Layout
+    ANCHO_CONTENIDO,
+    ANCHO_SECCION,
+    # Acento único del proyecto
+    AZUL_MARINO_NEON,
+    FONDO_AZUL_SUAVE,
     # Colores neutros
     COLOR_ACENTO_BORDE,
     COLOR_ACENTO_FONDO,
@@ -70,18 +104,12 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     COLOR_TEXTO_CUERPO,
     COLOR_TEXTO_PRINCIPAL,
     COLOR_TEXTO_SECUNDARIO,
-    # Layout
-    ANCHO_CONTENIDO,
-    ANCHO_SECCION,
+    # Datos
+    NOMBRE_INSTITUTO,
     PADDING_LATERAL,
     RADIO_EXTRA_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
-    # Datos
-    NOMBRE_INSTITUTO,
-    # Helpers de color adaptativo
-    color_carrera_adaptativo,
-    color_suave_carrera_adaptativo,
 )
 
 
@@ -100,51 +128,50 @@ ANCHO_ESPACIADOR_HEADER = "6rem"
 
 
 # ======================================================================
-# Helpers de color (adaptativos al color_mode)
+# Helpers de color (delegan en el acento único)
 # ======================================================================
 
 
-def _color_carrera_actual() -> rx.Var:
-    """Color principal de la carrera seleccionada, adaptado al modo."""
-    return color_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
+def _color_carrera_actual() -> str:
+    """
+    Color principal del acento global (azul marino neon).
+
+    ✅ REFACTORIZADO: ya no depende de la carrera seleccionada.
+    Mantiene el nombre por compatibilidad con los usos internos
+    (tabs, header sticky, botón flotante, badges, FAQs).
+
+    Returns:
+        Hex del azul marino neon (`#3b5bdb`).
+    """
+    return AZUL_MARINO_NEON
 
 
 def _color_suave_carrera_actual() -> rx.Var:
-    """Color suave de la carrera seleccionada, adaptado al modo."""
-    return color_suave_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
+    """
+    Color suave de fondo del acento global.
+
+    ✅ REFACTORIZADO: usa `FONDO_AZUL_SUAVE` (adaptativo light/dark)
+    en lugar del color suave de la carrera.
+
+    Returns:
+        Var reactiva con el fondo azul marino translúcido, adaptado
+        al color_mode actual.
+    """
+    return FONDO_AZUL_SUAVE
 
 
 # ======================================================================
-# Estado del acordeón de preguntas frecuentes
-# ======================================================================
-
-
-class EstadoPreguntasFrecuentesDetalle(rx.State):
-    """Estado del acordeón de preguntas frecuentes en la vista de detalle."""
-
-    indice_pregunta_abierta: int = -1
-
-    @rx.event
-    def alternar_pregunta(self, indice: int):
-        """Abre o cierra una pregunta frecuente."""
-        if self.indice_pregunta_abierta == indice:
-            self.indice_pregunta_abierta = -1
-        else:
-            self.indice_pregunta_abierta = indice
-
-
-# ======================================================================
-# Triggers de pestañas (con color de carrera cuando activos)
+# Triggers de pestañas (con acento cuando activos)
 # ======================================================================
 
 
 def _tabs_trigger(texto: str, icono: str, value: str) -> rx.Component:
     """
-    Trigger de pestaña responsive con color de carrera cuando activo.
+    Trigger de pestaña responsive con el acento cuando activo.
 
     - Móvil: solo texto (heading size 4).
     - Tablet/desktop: icono + texto (heading size 5).
-    - Estado activo: texto y subrayado con el color de la carrera.
+    - Estado activo: texto y subrayado con el acento.
     """
     color_carrera = _color_carrera_actual()
 
@@ -250,17 +277,17 @@ def _pestana_trigger_con_contador(
 def _encabezado_fijo_detalle() -> rx.Component:
     """
     Encabezado sticky con:
-    - Botón de regreso a /carreras (con hover de color de carrera).
+    - Botón de regreso a /carreras (con hover del acento).
     - Breadcrumb: Carreras > [Nombre corto].
     - Espaciador a la derecha para balance visual.
-    - Borde inferior con el color de la carrera.
+    - Borde inferior con el acento.
     """
     nombre_corto = EstadoInstitucional.carrera_seleccionada["nombre_corto"]
     color_carrera = _color_carrera_actual()
 
     return rx.box(
         rx.flex(
-            # --- Botón de regreso (hover con color de carrera) ---
+            # --- Botón de regreso (hover con el acento) ---
             enlace_navegacion(
                 "/carreras",
                 rx.icon("arrow-left", size=18),
@@ -328,8 +355,13 @@ def _encabezado_fijo_detalle() -> rx.Component:
 # ======================================================================
 
 
-def _anillos_saturno(color: rx.Var) -> rx.Component:
-    """Dibuja los anillos característicos de Saturno alrededor del icono."""
+def _anillos_saturno(color: str | rx.Var) -> rx.Component:
+    """
+    Dibuja los anillos característicos de Saturno alrededor del icono.
+
+    Args:
+        color: Color del anillo (hex estático o Var adaptativa).
+    """
     return rx.box(
         rx.box(
             position="absolute",
@@ -363,8 +395,13 @@ def _anillos_saturno(color: rx.Var) -> rx.Component:
     )
 
 
-def _icono_orbital(icono_animado: dict) -> rx.Component:
-    """Renderiza un icono orbitando alrededor de la imagen de la carrera."""
+def _icono_orbital(icono_animado: IconoAnimado) -> rx.Component:
+    """
+    Renderiza un icono orbitando alrededor de la imagen de la carrera.
+
+    Args:
+        icono_animado: Dict `IconoAnimado` con la configuración orbital.
+    """
     periodo = icono_animado["periodo"]
     keyframe_orbita = icono_animado["keyframe_orbita"]
     desfase = icono_animado["desfase_temporal"]
@@ -410,12 +447,13 @@ def _contenedor_orbital_imagen() -> rx.Component:
     """
     Contenedor cuadrado con:
     - Anillo decorativo exterior (órbita visible).
-    - Halo radial con el color de la carrera.
+    - Halo radial con el acento.
     - 4 iconos orbitando con elipses keplerianas.
-    - Imagen central de la carrera con anillo de color.
+    - Imagen central de la carrera con anillo del acento.
 
-    ⚠️ Los colores `carrera[...]` son Vars reactivas. Se usan f-strings
-    para concatenar; NUNCA `+` (lanzaría TypeError).
+    ✅ REFACTORIZADO: todos los colores usan el acento único
+    (`AZUL_MARINO_NEON`) y `FONDO_AZUL_SUAVE` (adaptativo), en lugar
+    de los colores por carrera.
     """
     carrera = EstadoInstitucional.carrera_seleccionada
     color_principal = _color_carrera_actual()
@@ -429,8 +467,8 @@ def _contenedor_orbital_imagen() -> rx.Component:
             right="5%",
             bottom="5%",
             border=rx.color_mode_cond(
-                light=f"1px dashed {carrera['color_principal']}33",
-                dark=f"1px dashed {carrera['color_principal_dark']}55",
+                light=f"1px dashed {AZUL_MARINO_NEON}33",
+                dark=f"1px dashed {AZUL_MARINO_NEON}55",
             ),
             border_radius=RADIO_PASTILLA,
             z_index="0",
@@ -445,13 +483,13 @@ def _contenedor_orbital_imagen() -> rx.Component:
             background=rx.color_mode_cond(
                 light=(
                     f"radial-gradient(circle at 50% 50%, "
-                    f"{carrera['color_principal']}33 0%, "
-                    f"{carrera['color_suave']}00 60%)"
+                    f"{AZUL_MARINO_NEON}33 0%, "
+                    f"transparent 60%)"
                 ),
                 dark=(
                     f"radial-gradient(circle at 50% 50%, "
-                    f"{carrera['color_principal_dark']}44 0%, "
-                    f"{carrera['color_suave_dark']}00 60%)"
+                    f"{AZUL_MARINO_NEON}44 0%, "
+                    f"transparent 60%)"
                 ),
             ),
             border_radius=RADIO_PASTILLA,
@@ -515,14 +553,14 @@ def _contenedor_orbital_imagen() -> rx.Component:
 def _badge_info(
     icono: str,
     texto: str,
-    color: rx.Var,
+    color: str | rx.Var,
     fondo_suave: bool = True,
 ) -> rx.Component:
     """
-    Badge informativo con icono + texto y borde con color de carrera.
+    Badge informativo con icono + texto y borde con el acento.
 
     El texto es NEUTRO (`gray-11`) y solo el icono y el borde usan el
-    color de la carrera. Fondo neutro suave.
+    acento. Fondo neutro suave.
     """
     return rx.flex(
         rx.icon(icono, size=12, color=color),
@@ -604,7 +642,9 @@ def _hero_carrera() -> rx.Component:
             # --- Badges informativos ---
             rx.flex(
                 _badge_info("clock", carrera["duracion"], color_principal),
-                _badge_info("building-2", carrera["modalidad"], color_principal),
+                _badge_info(
+                    "building-2", carrera["modalidad"], color_principal
+                ),
                 wrap="wrap",
                 gap="0.5rem",
                 margin_top="0.5rem",
@@ -617,127 +657,37 @@ def _hero_carrera() -> rx.Component:
         justify="center",
         align="center",
         gap=["2rem", "2.5rem", "3rem", "3rem"],
-        padding=["2rem 1.5rem", "2.5rem 1.5rem", "3rem 1.5rem", "3rem 1.5rem"],
+        padding=[
+            "2rem 1.5rem",
+            "2.5rem 1.5rem",
+            "3rem 1.5rem",
+            "3rem 1.5rem",
+        ],
         flex_direction=["column", "column", "column", "row"],
     )
 
 
 # ======================================================================
-# Item del acordeón de FAQs
-# ======================================================================
-
-
-def _item_pregunta(pregunta: dict, indice: int) -> rx.Component:
-    """
-    Item individual de preguntas frecuentes con acordeón.
-
-    El icono indicador usa el color de la carrera cuando está abierto.
-    """
-    esta_abierta = (
-        EstadoPreguntasFrecuentesDetalle.indice_pregunta_abierta == indice
-    )
-    color_carrera = _color_carrera_actual()
-    color_suave_carrera = _color_suave_carrera_actual()
-
-    return rx.box(
-        # --- Cabecera clicable ---
-        rx.box(
-            rx.flex(
-                rx.box(
-                    rx.icon(
-                        "circle_help",
-                        size=16,
-                        color=rx.cond(
-                            esta_abierta,
-                            color_carrera,
-                            COLOR_TEXTO_SECUNDARIO,
-                        ),
-                    ),
-                    padding="0.5rem",
-                    border_radius="0.5rem",
-                    background=rx.cond(
-                        esta_abierta,
-                        color_suave_carrera,
-                        COLOR_FONDO_SUAVE,
-                    ),
-                    display="flex",
-                    align_items="center",
-                    justify_content="center",
-                    flex_shrink="0",
-                    transition="all 0.2s",
-                ),
-                rx.text(
-                    pregunta["pregunta"],
-                    font_size="0.9375rem",
-                    font_weight="600",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    flex="1",
-                    line_height="1.4",
-                ),
-                rx.icon(
-                    "chevron-down",
-                    size=20,
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    transform=rx.cond(
-                        esta_abierta,
-                        "rotate(180deg)",
-                        "rotate(0deg)",
-                    ),
-                    transition="transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                    flex_shrink="0",
-                ),
-                align="center",
-                gap="0.75rem",
-                width="100%",
-            ),
-            on_click=lambda: EstadoPreguntasFrecuentesDetalle.alternar_pregunta(
-                indice
-            ),
-            cursor="pointer",
-            padding="1.125rem 1.25rem",
-            role="button",
-            tab_index=0,
-            width="100%",
-        ),
-        # --- Respuesta colapsable ---
-        rx.cond(
-            esta_abierta,
-            rx.box(
-                rx.text(
-                    pregunta["respuesta"],
-                    font_size="0.875rem",
-                    line_height="1.7",
-                    color=COLOR_TEXTO_CUERPO,
-                ),
-                padding="0 1.25rem 1.25rem 3.5rem",
-            ),
-            rx.fragment(),
-        ),
-        # --- Contenedor ---
-        width="100%",
-        border=rx.cond(
-            esta_abierta,
-            f"1px solid {color_carrera}",
-            f"1px solid {COLOR_BORDE_SUAVE}",
-        ),
-        border_radius="0.875rem",
-        background=COLOR_FONDO_CARTA,
-        transition="all 0.2s",
-        overflow="hidden",
-        _hover={
-            "border_color": color_carrera,
-            "box_shadow": f"0 4px 12px -2px {color_carrera}",
-        },
-    )
-
-
-# ======================================================================
-# Sección: PREGUNTAS FRECUENTES
+# Sección: PREGUNTAS FRECUENTES (delegada al acordeón unificado)
 # ======================================================================
 
 
 def _seccion_preguntas_frecuentes() -> rx.Component:
-    """Sección completa con las preguntas frecuentes de la carrera."""
+    """
+    Sección completa con las preguntas frecuentes de la carrera.
+
+    ✅ REFACTORIZADO: usa el componente genérico `acordeon_faq` con
+    variante `"light"`.
+
+    ⚠️ IMPORTANTE: pasamos el `Var` reactivo DIRECTO a `acordeon_faq`.
+    NO se puede iterar en Python puro (lanzaría `VarTypeError`).
+    El `rx.foreach` interno del acordeón se encarga de iterar en el
+    frontend.
+
+    Estructura:
+    1. Encabezado con icono + título + contador reactivo.
+    2. Acordeón con las preguntas (pasadas como Var).
+    """
     carrera = EstadoInstitucional.carrera_seleccionada
     color_carrera = _color_carrera_actual()
     color_suave_carrera = _color_suave_carrera_actual()
@@ -746,7 +696,7 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
         # --- Encabezado ---
         rx.flex(
             rx.box(
-                rx.icon("circle_help", size=20, color=color_carrera),
+                rx.icon("circle-help", size=20, color=color_carrera),
                 padding="0.625rem",
                 border_radius=RADIO_MEDIO,
                 background=color_suave_carrera,
@@ -777,9 +727,12 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
                 flex="1",
                 min_width="0",
             ),
+            # Contador reactivo (usa .length().to_string() en vez de len())
             rx.box(
                 rx.text(
-                    carrera["preguntas_frecuentes"].length().to_string(),
+                    carrera["preguntas_frecuentes"]
+                    .length()
+                    .to_string(),
                     font_size="0.6875rem",
                     font_weight="700",
                     color=COLOR_TEXTO_SECUNDARIO,
@@ -798,14 +751,17 @@ def _seccion_preguntas_frecuentes() -> rx.Component:
             margin_bottom="1.5rem",
             flex_wrap="wrap",
         ),
-        # --- Lista de preguntas ---
-        rx.vstack(
-            rx.foreach(
-                carrera["preguntas_frecuentes"],
-                _item_pregunta,
-            ),
-            width="100%",
-            spacing="3",
+        # --- Acordeón unificado ---
+        # Se pasa el Var directamente (NO iterar en Python).
+        acordeon_faq(
+            items=carrera["preguntas_frecuentes"],
+            variante="light",
+            icono="circle-help",
+            color_acento=AZUL_MARINO_NEON,
+            tamano_texto_pregunta="0.9375rem",
+            tamano_texto_respuesta="0.875rem",
+            padding_cabecera="1.125rem 1.25rem",
+            padding_respuesta="0 1.25rem 1.25rem 3.5rem",
         ),
         spacing="0",
         width="100%",
@@ -899,7 +855,7 @@ def _boton_volver_arriba() -> rx.Component:
 @rx.page(
     route="/carrera/[carrera_id]",
     title=f"Detalle de Carrera | {NOMBRE_INSTITUTO}",
-    on_load=EstadoInstitucional.redirigir_si_carrera_invalida,  # ← VALIDACIÓN
+    on_load=EstadoInstitucional.redirigir_si_carrera_invalida,
 )
 def vista_detalle_carrera() -> rx.Component:
     """
@@ -911,8 +867,9 @@ def vista_detalle_carrera() -> rx.Component:
     - Botón flotante "volver arriba".
     - Pie de página institucional.
 
-    El `on_load` (`redirigir_si_carrera_invalida`) redirige a `/404` si
-    el `carrera_id` de la URL no existe o no es válido.
+    El `on_load` (`redirigir_si_carrera_invalida`) redirige a
+    `/404?origen=carrera` si el `carrera_id` de la URL no existe o no
+    es válido.
     """
     return rx.vstack(
         # --- Barra de navegación principal ---

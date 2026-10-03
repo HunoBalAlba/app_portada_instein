@@ -25,23 +25,32 @@ El State `EstadoBlog` lo resuelve con la var `post_seleccionado`.
 
 Nota técnica: VALIDACIÓN DE RUTA
 --------------------------------
-El decorador `@rx.page` incluye `on_load=EstadoBlog.redirigir_si_post_invalido`.
-Este evento se ejecuta al cargar la página y redirige a `/404` si el
+El decorador `@rx.page` incluye
+`on_load=EstadoBlog.redirigir_si_post_invalido`. Este evento se
+ejecuta al cargar la página y redirige a `/404?origen=blog` si el
 `post_id` no corresponde a ningún post real.
 
 Gracias a esta validación:
-- `/blog/0`   → muestra el post 0.
-- `/blog/12`  → muestra el post 12.
-- `/blog/1555` → **redirige a `/404`**.
-- `/blog/abc`  → **redirige a `/404`**.
+- `/blog/0`    → muestra el post 0.
+- `/blog/12`   → muestra el post 12.
+- `/blog/1555` → **redirige a `/404?origen=blog`**.
+- `/blog/abc`  → **redirige a `/404?origen=blog`**.
 
-Nota técnica: `rx.cond` con dicts
+Nota técnica: FLAGS DE NAVEGACIÓN
 ---------------------------------
-`EstadoBlog.post_anterior` y `post_siguiente` devuelven `dict` (no
-`dict | None`, porque Reflex no serializa `None` en Vars). Cuando no
-hay post, devuelven `{}`. `rx.cond({}, ...)` evalúa `{}` como falsy,
-así que los `rx.cond(var, ...)` funcionan igual que con `None`.
+`EstadoBlog.post_anterior` y `EstadoBlog.post_siguiente` SIEMPRE
+devuelven un `Post` válido (con fallback al destacado), así que
+**no se pueden usar directamente en `rx.cond(...)`** porque siempre
+evaluarían a True.
+
+Para decidir si mostrar u ocultar las tarjetas de navegación, se usan
+los flags booleanos `hay_post_anterior` y `hay_post_siguiente`:
+
+    ❌ rx.cond(EstadoBlog.post_anterior, ...)    # siempre True
+    ✅ rx.cond(EstadoBlog.hay_post_anterior, ...) # correcto
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
@@ -71,6 +80,7 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     RADIO_PASTILLA,
 )
 
+from .datos_blog import Post
 from .estado_blog import EstadoBlog
 from .helpers_categoria import badge_categoria, fondo_categoria
 from .meta_info import meta_info_post
@@ -97,7 +107,8 @@ def _hero_post() -> rx.Component:
     Hero del artículo: imagen de fondo con overlay + badge + título
     + meta info. Altura responsive (no ocupa toda la pantalla).
 
-    Usa `EstadoBlog.post_seleccionado` como fuente de datos.
+    Usa `EstadoBlog.post_seleccionado` como fuente de datos (tipo `Post`,
+    con fallback al destacado si el id es inválido).
     """
     post = EstadoBlog.post_seleccionado
 
@@ -176,7 +187,9 @@ def _hero_post() -> rx.Component:
                 rx.box(
                     meta_info_post(post),
                     css={
-                        "& *": {"color": "rgba(255,255,255,0.85) !important"},
+                        "& *": {
+                            "color": "rgba(255,255,255,0.85) !important"
+                        },
                     },
                 ),
                 spacing="4",
@@ -294,14 +307,14 @@ def _cuerpo_post() -> rx.Component:
 
 
 def _tarjeta_navegacion_post(
-    post: rx.Var,
+    post: Post | rx.Var,
     direccion: str,
 ) -> rx.Component:
     """
     Tarjeta de navegación a un post adyacente.
 
     Args:
-        post: Var con el dict del post (post_anterior o post_siguiente).
+        post: Var con el `Post` (post_anterior o post_siguiente).
         direccion: "anterior" o "siguiente" (determina el layout).
     """
     es_anterior = direccion == "anterior"
@@ -336,7 +349,9 @@ def _tarjeta_navegacion_post(
     )
 
     # --- Icono (izquierda si es "anterior", derecha si es "siguiente") ---
-    icono_componente = rx.icon(icono, size=16, color=COLOR_TEXTO_SECUNDARIO)
+    icono_componente = rx.icon(
+        icono, size=16, color=COLOR_TEXTO_SECUNDARIO
+    )
 
     # --- Orden de los hijos según la dirección ---
     if es_anterior:
@@ -376,12 +391,12 @@ def _navegacion_posts() -> rx.Component:
     Solo renderiza las tarjetas que existan. Si no hay ni anterior
     ni siguiente, el bloque completo desaparece.
 
-    ⚠️ Usamos `rx.cond(var, ...)` con la Var directa, NO `.is_not(None)`,
-    porque `post_anterior` y `post_siguiente` devuelven `{}` (dict vacío)
-    cuando no hay post, y `{}.is_not(None)` sería siempre True.
+    ⚠️ Usamos los flags `hay_post_anterior` y `hay_post_siguiente`
+    (bool), NO `post_anterior` y `post_siguiente` (que siempre son
+    truthy por el fallback al destacado).
     """
-    hay_anterior = EstadoBlog.post_anterior
-    hay_siguiente = EstadoBlog.post_siguiente
+    hay_anterior = EstadoBlog.hay_post_anterior
+    hay_siguiente = EstadoBlog.hay_post_siguiente
 
     return rx.cond(
         hay_anterior | hay_siguiente,
@@ -433,7 +448,8 @@ def _cta_final_post() -> rx.Component:
     """
     Bloque CTA al final del artículo:
     - Título invitando a contactar.
-    - Dos botones: "Consultar" (solid crimson) y "Ver más artículos" (outline).
+    - Dos botones: "Consultar" (solid crimson) y "Ver más artículos"
+      (outline).
     """
     return rx.box(
         rx.vstack(
@@ -489,7 +505,11 @@ def _cta_final_post() -> rx.Component:
                 enlace_navegacion(
                     "/blog",
                     rx.icon("arrow-left", size=18),
-                    rx.text("Ver más artículos", as_="span", font_weight="600"),
+                    rx.text(
+                        "Ver más artículos",
+                        as_="span",
+                        font_weight="600",
+                    ),
                     display="inline-flex",
                     align_items="center",
                     gap="0.5rem",
@@ -534,7 +554,7 @@ def _cta_final_post() -> rx.Component:
 @rx.page(
     route="/blog/[post_id]",
     title=f"Artículo | {NOMBRE_INSTITUTO}",
-    on_load=EstadoBlog.redirigir_si_post_invalido,  # ← VALIDACIÓN DE POST_ID
+    on_load=EstadoBlog.redirigir_si_post_invalido,
 )
 def vista_post() -> rx.Component:
     """
@@ -552,7 +572,7 @@ def vista_post() -> rx.Component:
 
     El `on_load` (`redirigir_si_post_invalido`) se ejecuta al cargar
     la página. Si el `post_id` de la URL no corresponde a ningún post
-    real, redirige automáticamente a `/404`.
+    real, redirige automáticamente a `/404?origen=blog`.
 
     El scroll es natural de la página (no hay flexbox que pelear).
     """

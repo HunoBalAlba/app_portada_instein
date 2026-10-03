@@ -1,21 +1,37 @@
+# app_portada_instein/componentes/hero_principal.py
+
 """
-Hero principal del home con sistema completo de capas.
+Hero principal del home — estilo Neon adaptativo (dark/light).
 
 Capas (de fondo a frente):
-- CAPA -1: Imagen de fondo (fondo_hero.png).
-- CAPA 0: Overlay de gradiente para legibilidad.
-- CAPA 1: Líneas luminosas diagonales.
-- CAPA 2: Iconos flotantes (partículas).
-- CAPA 3: Contenido principal (título, CTA, explorador).
+- CAPA 0: Gradiente adaptativo (light: claro, dark: oscuro).
+- CAPA 1: Orbes de glow azul marino en esquinas.
+- CAPA 2: Partículas (iconos flotantes) en azul marino.
+- CAPA 3: Contenido principal (título, CTA, trust badges, explorador).
 
 Sistema de color (UX)
 ---------------------
-- Fondo: imagen + overlay con `rgba` intencionales para legibilidad.
-- Acentos (badge "INSCRIPCIONES", span del título, CTA primario,
-  trust badges, líneas luminosas): accent institucional (crimson).
-- Textos: neutros (`gray-11`/`gray-12`).
-- Partículas decorativas: `gray-11` con baja opacidad.
-- Punto de "inscripciones abiertas": `green-8` (semántico).
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+
+- Fondo: `FONDO_HOME_HERO` (light: claro, dark: oscuro).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
+- Badges: glassmorphism con borde azul marino translúcido.
+- Punto de "inscripciones abiertas": verde semántico (`#22c55e`).
+- Título: gradiente adaptativo (`GRADIENTE_TEXTO_HOME`).
+
+Estilo Neon:
+- Tipografía masiva (`size="9"`, `font_weight="900"`).
+- Espaciado generoso (`padding="6rem 1.5rem 4rem 1.5rem"`).
+- Glassmorphism (blur + bordes translúcidos).
+- Orbes de glow en las esquinas para dar profundidad.
+- Partículas decorativas de baja opacidad.
+
+Notas técnicas:
+- `rx.icon(size=...)` NO acepta `rx.breakpoints(...)` — solo int fijo.
+- Las opacidades de partículas y orbes son mayores en dark (más
+  contraste) y menores en light (evitar saturación).
 """
 
 import random
@@ -27,16 +43,18 @@ from app_portada_instein.componentes.explorador.explorador import (
 )
 from app_portada_instein.componentes.primitivos import enlace_navegacion
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_ACENTO_BORDE,
-    COLOR_ACENTO_SOLIDO,
-    COLOR_ACENTO_TEXTO,
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_MUY_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_HERO,
+    GRADIENTE_TEXTO_HOME,
     RADIO_PASTILLA,
-    SOMBRA_CAJA,
-    SOMBRA_FUERTE,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
 )
 
 
@@ -50,7 +68,8 @@ ICONOS_PARTICULAS: list[str] = [
     # Contaduría General
     "calculator", "receipt", "coins", "chart-line", "wallet", "trending-up",
     # Secretariado Ejecutivo
-    "briefcase", "calendar-clock", "mail", "users", "file-text", "clipboard-list",
+    "briefcase", "calendar-clock", "mail", "users", "file-text",
+    "clipboard-list",
     # Comercio Internacional
     "globe", "ship", "package", "truck", "plane",
     # Electrónica
@@ -64,23 +83,18 @@ ICONOS_PARTICULAS: list[str] = [
 # Configuración de las partículas
 # ======================================================================
 
-CANTIDAD_PARTICULAS = 45
+CANTIDAD_PARTICULAS = 50
 SEMILLA_PARTICULAS = 42
 TAMANOS_PARTICULAS = [14, 18, 20, 24, 28, 32]
-OPACIDAD_MINIMA = 0.15
-OPACIDAD_MAXIMA = 0.35
+
+# Opacidades (más sutiles que antes para no saturar sobre fondo claro)
+OPACIDAD_MINIMA = 0.08
+OPACIDAD_MAXIMA = 0.20
+
 DURACION_MINIMA = 4.0
 DURACION_MAXIMA = 8.0
 ROTACION_MINIMA = -25
 ROTACION_MAXIMA = 25
-
-# Opacidad de las partículas decorativas.
-OPACIDAD_PARTICULAS = "0.4"
-
-# Anchos de las líneas luminosas.
-ANCHO_LINEA_1 = "50rem"
-ANCHO_LINEA_2 = "40rem"
-ANCHO_LINEA_3 = "60rem"
 
 
 def _generar_iconos_particulas(
@@ -126,13 +140,16 @@ ICONOS_PARTICULAS_FONDO = _generar_iconos_particulas()
 
 def _icono_particula(particula: dict) -> rx.Component:
     """
-    Renderiza un icono de carrera como partícula flotante en gris.
+    Renderiza un icono de carrera como partícula flotante en azul marino.
 
     El icono tiene:
-    - Color gris adaptativo al modo claro/oscuro.
+    - Color azul marino neon (`AZUL_MARINO_NEON`).
     - Opacidad baja para no competir con el contenido.
     - Animación de flotación + titileo.
     - Rotación inicial sutil.
+
+    ✅ ADAPTATIVO: en light mode la opacidad es menor (0.5x) para
+    evitar saturación sobre fondo claro.
 
     Args:
         particula: Dict con `icono`, `x`, `y`, `tamano`, `opacidad`,
@@ -142,12 +159,15 @@ def _icono_particula(particula: dict) -> rx.Component:
         rx.icon(
             particula["icono"],
             size=particula["tamano"],
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=AZUL_MARINO_NEON,
         ),
         position="absolute",
         left=f"{particula['x']}%",
         top=f"{particula['y']}%",
-        opacity=f"{particula['opacidad']}",
+        opacity=rx.color_mode_cond(
+            light=f"{particula['opacidad'] * 0.5}",   # 50% en light
+            dark=f"{particula['opacidad']}",
+        ),
         style={"--rotacion": f"{particula['rotacion']}deg"},
         animation=(
             f"flotar_icono_particula {particula['duracion']}s ease-in-out "
@@ -178,139 +198,187 @@ def _capa_iconos_particulas() -> rx.Component:
 
 
 # ======================================================================
-# CAPA 1: Líneas luminosas diagonales
+# CAPA 1: Orbes de glow azul marino
 # ======================================================================
 
 
-def _linea_luminosa(
-    angulo: int,
-    x: str,
-    y: str,
-    ancho: str,
-    delay: float = 0.0,
-    duracion: float = 6.0,
-) -> rx.Component:
+def _orbes_glow() -> rx.Component:
     """
-    Línea luminosa diagonal sutil.
+    Orbes de glow azul marino en las esquinas del hero.
 
-    Usa accent crimson. Los `rgba` internos del gradiente son
-    intencionales y usan el accent sólido del tema.
+    Estilo Neon: dos orbes radiales grandes con blur profundo en las
+    esquinas opuestas (superior derecha e inferior izquierda) para
+    dar profundidad visual y sensación de "luz ambiental".
 
-    Args:
-        angulo: Ángulo de rotación en grados.
-        x: Posición izquierda (ej: "-10%").
-        y: Posición superior (ej: "25%").
-        ancho: Ancho de la línea (ej: "50rem").
-        delay: Retraso de la animación.
-        duracion: Duración de una vuelta completa.
+    ✅ ADAPTATIVO: en light mode la opacidad es menor (evita que el
+    fondo claro se sature de azul).
+
+    Los orbes no son interactivos (`pointer_events="none"`) y están
+    por debajo del contenido principal (`z_index="0"`).
     """
-    return rx.box(
-        position="absolute",
-        left=x,
-        top=y,
-        width=ancho,
-        height="1px",
+    return rx.fragment(
+        # Orbe superior derecha (azul marino neon)
+        rx.box(
+            position="absolute",
+            top="-30%",
+            right="-15%",
+            width="60%",
+            height="100%",
+            background=(
+                f"radial-gradient(circle, {AZUL_MARINO_NEON} 0%, "
+                f"transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(
+                light="0.12",   # sutil en light
+                dark="0.25",
+            ),
+            filter="blur(80px)",
+            z_index="0",
+            pointer_events="none",
+        ),
+        # Orbe inferior izquierda (azul marino profundo)
+        rx.box(
+            position="absolute",
+            bottom="-30%",
+            left="-15%",
+            width="60%",
+            height="100%",
+            background=(
+                "radial-gradient(circle, #1a237e 0%, transparent 60%)"
+            ),
+            opacity=rx.color_mode_cond(
+                light="0.15",
+                dark="0.30",
+            ),
+            filter="blur(80px)",
+            z_index="0",
+            pointer_events="none",
+        ),
+    )
+
+
+# ======================================================================
+# Contenido principal: Badge de inscripciones
+# ======================================================================
+
+
+def _badge_inscripciones_abiertas() -> rx.Component:
+    """
+    Badge con punto verde pulsante + texto "INSCRIPCIONES ABIERTAS".
+
+    Usa `#22c55e` (verde semántico) para el punto y glassmorphism
+    con borde azul marino translúcido para el contenedor.
+
+    ✅ ADAPTATIVO: fondo azul más suave en light mode.
+    """
+    return rx.flex(
+        rx.box(
+            height="0.5rem",
+            width="0.5rem",
+            border_radius=RADIO_PASTILLA,
+            background="#22c55e",
+            animation="pulse 2s ease-in-out infinite",
+            box_shadow="0 0 12px #22c55e",
+            flex_shrink="0",
+        ),
+        rx.text(
+            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
+            font_size="0.75rem",
+            font_weight="700",
+            color=TEXTO_HOME_PRINCIPAL,
+            letter_spacing="0.1em",
+        ),
+        align="center",
+        gap="0.5rem",
+        padding="0.5rem 1rem",
+        border_radius=RADIO_PASTILLA,
+        background=FONDO_AZUL_SUAVE,
+        border=f"1px solid {BORDE_HOME_AZUL}",
+        backdrop_filter="blur(12px)",
+        width="fit-content",
+    )
+
+
+# ======================================================================
+# Contenido principal: CTA dual
+# ======================================================================
+
+
+def _cta_primario() -> rx.Component:
+    """
+    CTA primario "Explorar Carreras" con azul marino neon + glow.
+
+    Estilo Neon:
+    - Fondo azul marino neon sólido.
+    - Glow intenso (`box_shadow`).
+    - Flecha que se desplaza en hover.
+
+    ✅ El azul marino es el mismo en ambos modos (color de marca).
+    """
+    return enlace_navegacion(
+        "/carreras",
+        rx.text("Explorar Carreras", as_="span", font_weight="700"),
+        rx.icon(
+            "arrow-right",
+            size=18,
+            class_name="arrow-icon",
+            transition="transform 0.2s",
+        ),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
+        background=AZUL_MARINO_NEON,
+        color="white",
+        padding="1rem 2rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="1rem",
+        font_weight="700",
+        box_shadow=f"0 0 40px {AZUL_MARINO_NEON}80",
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
+            "& .arrow-icon": {"transform": "translateX(4px)"},
+        },
+    )
+
+
+def _cta_secundario() -> rx.Component:
+    """
+    CTA secundario "Conocer más" con glassmorphism.
+
+    Estilo Neon:
+    - Fondo translúcido con blur.
+    - Borde adaptativo.
+    - Hover: borde azul marino + fondo más opaco.
+
+    ✅ ADAPTATIVO: fondo y borde cambian según el modo.
+    """
+    return enlace_navegacion(
+        "/contacto",
+        rx.icon("message-circle", size=18),
+        rx.text("Conocer más", as_="span", font_weight="600"),
+        display="flex",
+        align_items="center",
+        gap="0.5rem",
         background=rx.color_mode_cond(
-            light=(
-                f"linear-gradient(90deg, transparent, "
-                f"{COLOR_ACENTO_TEXTO}, transparent)"
-            ),
-            dark=(
-                f"linear-gradient(90deg, transparent, "
-                f"{COLOR_ACENTO_SOLIDO}, transparent)"
-            ),
+            light="rgba(255, 255, 255, 0.6)",
+            dark="rgba(255, 255, 255, 0.05)",
         ),
-        opacity=OPACIDAD_PARTICULAS,
-        transform=f"rotate({angulo}deg)",
-        filter="blur(1px)",
-        box_shadow=f"0 0 10px {COLOR_ACENTO_TEXTO}",
-        animation=f"deslizar_linea {duracion}s linear {delay}s infinite",
-        pointer_events="none",
-    )
-
-
-def _capa_lineas_luminosas() -> rx.Component:
-    """Capa con 3 líneas luminosas diagonales distribuidas."""
-    return rx.box(
-        _linea_luminosa(-30, "-10%", "25%", ANCHO_LINEA_1, 0.0, 8.0),
-        _linea_luminosa(45, "60%", "10%", ANCHO_LINEA_2, 2.0, 10.0),
-        _linea_luminosa(-60, "30%", "80%", ANCHO_LINEA_3, 4.0, 12.0),
-        position="absolute",
-        top="0",
-        left="0",
-        right="0",
-        bottom="0",
-        overflow="hidden",
-        pointer_events="none",
-        z_index="1",
-    )
-
-
-# ======================================================================
-# CAPA 0: Overlay de gradiente
-# ======================================================================
-
-
-def _capa_overlay_gradiente() -> rx.Component:
-    """
-    Overlay de gradiente para garantizar legibilidad del contenido
-    sobre la imagen de fondo, adaptativo al modo claro/oscuro.
-
-    Los `rgba` son intencionales: el overlay se aplica SOBRE la imagen
-    del hero, no sobre el fondo del tema. Los valores están calibrados
-    para máxima legibilidad del texto en ambos modos.
-    """
-    return rx.box(
-        position="absolute",
-        top="0",
-        left="0",
-        right="0",
-        bottom="0",
-        background=rx.color_mode_cond(
-            light=(
-                "linear-gradient(180deg, "
-                "rgba(248, 250, 252, 0.75) 0%, "
-                "rgba(248, 250, 252, 0.9) 100%)"
+        color=TEXTO_HOME_PRINCIPAL,
+        padding="1rem 2rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="1rem",
+        border=f"1px solid {BORDE_HOME_MEDIO}",
+        backdrop_filter="blur(12px)",
+        transition="all 0.2s",
+        _hover={
+            "background": rx.color_mode_cond(
+                light="rgba(255, 255, 255, 0.9)",
+                dark="rgba(255, 255, 255, 0.1)",
             ),
-            dark=(
-                "linear-gradient(180deg, "
-                "rgba(5, 4, 10, 0.5) 0%, "
-                "rgba(5, 4, 10, 0.9) 100%)"
-            ),
-        ),
-        pointer_events="none",
-        z_index="0",
-    )
-
-
-# ======================================================================
-# CAPA -1: Imagen de fondo
-# ======================================================================
-
-
-def _capa_imagen_fondo() -> rx.Component:
-    """
-    Imagen de fondo del hero (assets/fondo_hero.png).
-
-    Si la imagen no existe, se muestra el color de fondo adaptativo
-    como fallback. Los colores son hex intencionales porque el fondo
-    está pensado para combinarse con el overlay.
-    """
-    return rx.box(
-        background_image="url('/fondo_hero.png')",
-        background_size="cover",
-        background_position="center",
-        background_repeat="repeat",
-        background_color=rx.color_mode_cond(
-            light="#f8fafc",
-            dark="#05040a",
-        ),
-        position="absolute",
-        top="0",
-        left="0",
-        right="0",
-        bottom="0",
-        z_index="-1",
+            "border_color": BORDE_HOME_AZUL,
+        },
     )
 
 
@@ -329,115 +397,30 @@ def _trust_badge(icono: str, etiqueta: str) -> rx.Component:
     - Cantidad de egresados.
     - Empleabilidad.
 
+    ✅ ADAPTATIVO: fondo y borde cambian según el modo.
+
     Args:
         icono: Nombre del icono de Lucide.
         etiqueta: Texto visible del badge.
     """
     return rx.flex(
-        rx.icon(icono, size=14, color=COLOR_ACENTO_TEXTO),
+        rx.icon(icono, size=14, color=AZUL_MARINO_NEON),
         rx.text(
             etiqueta,
             font_size="0.75rem",
             font_weight="600",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_SUAVE,
         ),
         align="center",
         gap="0.4rem",
         padding="0.5rem 0.875rem",
         border_radius=RADIO_PASTILLA,
-        background=COLOR_FONDO_CARTA,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
-        backdrop_filter="blur(12px)",
-    )
-
-
-# ======================================================================
-# Contenido principal: Badge de inscripciones
-# ======================================================================
-
-
-def _badge_inscripciones_abiertas() -> rx.Component:
-    """
-    Badge con punto verde pulsante + texto "INSCRIPCIONES ABIERTAS".
-
-    Usa `green-8` para el punto (semántico de éxito/activo) y
-    fondo neutro para el resto.
-    """
-    return rx.flex(
-        rx.box(
-            height="0.5rem",
-            width="0.5rem",
-            border_radius=RADIO_PASTILLA,
-            background=rx.color("green", 8),
-            animation="pulse 2s ease-in-out infinite",
+        background=rx.color_mode_cond(
+            light="rgba(255, 255, 255, 0.7)",
+            dark="rgba(255, 255, 255, 0.03)",
         ),
-        rx.text(
-            "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
-            font_size="0.75rem",
-            font_weight="700",
-            color=COLOR_TEXTO_PRINCIPAL,
-            letter_spacing="0.05em",
-        ),
-        align="center",
-        gap="0.5rem",
-        padding="0.5rem 1rem",
-        border_radius=RADIO_PASTILLA,
-        background=COLOR_FONDO_CARTA,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        border=f"1px solid {BORDE_HOME_SUAVE}",
         backdrop_filter="blur(12px)",
-        box_shadow=SOMBRA_CAJA,
-    )
-
-
-# ======================================================================
-# Contenido principal: CTA dual
-# ======================================================================
-
-
-def _cta_primario() -> rx.Component:
-    """CTA primario 'Ver Carreras' con accent sólido."""
-    return enlace_navegacion(
-        "/carreras",
-        rx.icon("graduation-cap", size=18),
-        rx.text("Ver Carreras", as_="span", font_weight="700"),
-        display="flex",
-        align_items="center",
-        gap="0.5rem",
-        background=COLOR_ACENTO_SOLIDO,
-        color="white",
-        padding="0.875rem 1.75rem",
-        border_radius=RADIO_PASTILLA,
-        font_size="0.9375rem",
-        box_shadow=SOMBRA_FUERTE,
-        transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-2px)",
-            "filter": "brightness(1.1)",
-        },
-    )
-
-
-def _cta_secundario() -> rx.Component:
-    """CTA secundario 'Conocer más' con fondo neutro y borde sutil."""
-    return enlace_navegacion(
-        "/contacto",
-        rx.icon("message_circle", size=18),
-        rx.text("Conocer más", as_="span", font_weight="600"),
-        display="flex",
-        align_items="center",
-        gap="0.5rem",
-        background=COLOR_FONDO_CARTA,
-        color=COLOR_TEXTO_PRINCIPAL,
-        padding="0.875rem 1.75rem",
-        border_radius=RADIO_PASTILLA,
-        font_size="0.9375rem",
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
-        backdrop_filter="blur(12px)",
-        transition="all 0.2s",
-        _hover={
-            "transform": "translateY(-2px)",
-            "border_color": COLOR_ACENTO_BORDE,
-        },
     )
 
 
@@ -450,10 +433,12 @@ def _hero_titulo_y_cta() -> rx.Component:
     """
     Bloque superior del hero con:
     - Badge de inscripciones abiertas.
-    - Título principal grande.
+    - Título principal grande con gradiente de texto adaptativo.
     - Subtítulo.
     - CTA dual (primario + secundario).
     - Trust badges con credenciales.
+
+    ✅ ADAPTATIVO: todos los colores respetan el color_mode.
     """
     return rx.vstack(
         # --- Badge de inscripciones abiertas ---
@@ -461,21 +446,24 @@ def _hero_titulo_y_cta() -> rx.Component:
             _badge_inscripciones_abiertas(),
             margin_bottom="1.5rem",
         ),
-        # --- Título principal (con span en accent) ---
+        # --- Título principal con gradiente adaptativo ---
         rx.heading(
             "Forja tu futuro como ",
             rx.text.span(
                 "Técnico Superior",
-                color=COLOR_ACENTO_TEXTO,
+                background=GRADIENTE_TEXTO_HOME,
+                background_clip="text",
+                color="transparent",
+                webkit_background_clip="text",
             ),
             "",
             size="9",
             text_align="center",
             font_weight="900",
-            letter_spacing="-0.03em",
-            line_height="1.1",
-            color=COLOR_TEXTO_PRINCIPAL,
-            max_width="48rem",
+            letter_spacing="-0.04em",
+            line_height="1.05",
+            color=TEXTO_HOME_PRINCIPAL,
+            max_width="60rem",
         ),
         # --- Subtítulo ---
         rx.text(
@@ -484,17 +472,17 @@ def _hero_titulo_y_cta() -> rx.Component:
             "especializados.",
             font_size=["1rem", "1.125rem", "1.25rem"],
             text_align="center",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_MAS_SUAVE,
             max_width="42rem",
             line_height="1.6",
-            margin_top="1rem",
+            margin_top="1.5rem",
         ),
         # --- CTA dual ---
         rx.flex(
             _cta_primario(),
             _cta_secundario(),
             gap="0.75rem",
-            margin_top="2rem",
+            margin_top="2.5rem",
             flex_direction=["column", "row", "row"],
             align="center",
             justify="center",
@@ -506,16 +494,19 @@ def _hero_titulo_y_cta() -> rx.Component:
             _trust_badge("users", "500+ Egresados"),
             _trust_badge("trending-up", "100% Empleabilidad"),
             gap="0.5rem",
-            margin_top="2.5rem",
+            margin_top="3rem",
             flex_wrap="wrap",
             justify="center",
             max_width="48rem",
         ),
         align="center",
         text_align="center",
-        padding="4rem 1.5rem 2rem 1.5rem",
+        padding="6rem 1.5rem 4rem 1.5rem",
         position="relative",
         z_index="2",
+        width="100%",
+        max_width="72rem",
+        margin="0 auto",
     )
 
 
@@ -526,23 +517,39 @@ def _hero_titulo_y_cta() -> rx.Component:
 
 def hero_principal() -> rx.Component:
     """
-    Hero completo del home con sistema de capas apiladas.
+    Hero completo del home con sistema de capas apiladas — Neon adaptativo.
 
     Orden de renderizado (de atrás hacia adelante):
-    1. Imagen de fondo.
-    2. Overlay de gradiente.
-    3. Líneas luminosas diagonales.
-    4. Iconos flotantes (partículas).
-    5. Contenido principal (título + CTA + explorador).
+    1. Gradiente adaptativo (light: claro, dark: oscuro).
+    2. Orbes de glow azul marino en esquinas.
+    3. Iconos flotantes (partículas) en azul marino.
+    4. Contenido principal (título + CTA + trust badges).
+    5. Explorador de carreras.
+
+    Estilo Neon:
+    - Fondo gradiente adaptativo (`FONDO_HOME_HERO`).
+    - Orbes de glow para dar profundidad.
+    - Partículas decorativas de baja opacidad.
+    - Tipografía masiva (`size="9"`, `font_weight="900"`).
+    - Espaciado generoso (`padding="6rem"`).
+
+    ✅ ADAPTATIVO: el hero respeta el color_mode del usuario.
     """
     return rx.box(
-        # CAPA -1: Imagen de fondo
-        _capa_imagen_fondo(),
-        # CAPA 0: Overlay de gradiente
-        _capa_overlay_gradiente(),
-        # CAPA 1: Líneas luminosas diagonales
-        _capa_lineas_luminosas(),
-        # CAPA 2: Iconos flotantes (partículas)
+        # CAPA 0: Fondo gradiente adaptativo
+        rx.box(
+            position="absolute",
+            top="0",
+            left="0",
+            right="0",
+            bottom="0",
+            background=FONDO_HOME_HERO,
+            z_index="-1",
+            pointer_events="none",
+        ),
+        # CAPA 1: Orbes de glow azul marino en esquinas
+        _orbes_glow(),
+        # CAPA 2: Iconos flotantes (partículas) en azul marino
         _capa_iconos_particulas(),
         # CAPA 3: Contenido principal
         rx.vstack(

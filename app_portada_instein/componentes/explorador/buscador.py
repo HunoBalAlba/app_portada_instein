@@ -1,35 +1,65 @@
+# app_portada_instein/componentes/explorador/buscador.py
+
 """
-Buscador de carreras + card de imagen + grid de imágenes + estado vacío.
+Buscador de carreras + card de imagen + grid + estado vacío.
+Estilo Neon adaptativo (dark/light).
 
 Estructura:
 - `_buscador_carreras`: input con iconos decorativos.
-- `_card_imagen_carrera`: card con imagen destacada (patrón rx.card + rx.inset).
-- `_grid_imagenes_carreras`: grid + contador + estado vacío condicional.
-- `_estado_vacio_busqueda`: mensaje cuando la búsqueda no devuelve resultados.
+- `_card_imagen_carrera`: card con imagen destacada.
+- `_grid_imagenes_carreras`: grid + contador + estado vacío.
+- `_estado_vacio_busqueda`: estado vacío cuando no hay resultados
+  (delegado al componente unificado).
 
 Sistema de color (UX)
 ---------------------
-- Card de carrera: usa el color de marca de cada carrera para borde,
-  gradiente y hover.
-- Textos: neutros (`gray-11`/`gray-12`) para máxima legibilidad.
-- Estado vacío: botón "Restablecer búsqueda" con accent institucional.
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+
+- Fondo del buscador: `FONDO_HOME_CARD_ADAPTATIVO`.
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
+- Fondo tintado del icono: `FONDO_AZUL_SUAVE`.
+
+Nota técnica: ESTADO VACÍO UNIFICADO
+------------------------------------
+✅ REFACTORIZADO: el estado vacío ya NO tiene su propia implementación
+local. Ahora delega en el componente genérico
+`componentes/estado_vacio.py`, que centraliza el estilo y permite
+personalizar icono, título, mensaje y botones.
+
+⚠️ IMPORTANTE: como queremos mostrar el término buscado con estilo
+(azul marino neon + negrita), pasamos el `mensaje` como un
+`rx.Component` (no un `str`). El componente unificado acepta ambos.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
+from app_portada_instein.componentes.estado_vacio import (
+    estado_vacio as _estado_vacio_unificado,
+)
 from app_portada_instein.componentes.primitivos import enlace_navegacion
-from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.dominio.estado_institucional import (
+    EstadoInstitucional,
+)
 from app_portada_instein.infraestructura.constantes_visuales import (
     ANCHO_CONTENIDO,
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_CARD_ADAPTATIVO,
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
+    SOMBRA_HOVER_CARD_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
 )
 
 from .constantes import (
@@ -37,7 +67,6 @@ from .constantes import (
     PADDING_INFERIOR_GRID,
     TAMANO_ICONO_ESTADO_VACIO,
 )
-from .helpers import color_carrera
 
 
 # ======================================================================
@@ -55,19 +84,24 @@ ALTURA_BANNER_CARD = "7rem"
 
 def _buscador_carreras() -> rx.Component:
     """
-    Buscador central estilo Leonardo AI.
+    Buscador central estilo Neon adaptativo.
 
     UX:
-    - Icono de búsqueda a la izquierda.
-    - Input con placeholder.
-    - Icono de "sparkles" a la derecha (decorativo).
-    - El estado vacío se muestra en `_grid_imagenes_carreras` cuando
-      no hay resultados.
+    - Icono de búsqueda a la izquierda (azul marino neon).
+    - Input con placeholder adaptativo.
+    - Icono de "sparkles" a la derecha (decorativo, azul marino neon).
+    - Fondo adaptativo con glassmorphism.
+    - Hover: borde azul marino.
+
+    ✅ ADAPTATIVO: fondo, texto, borde y sombra cambian según el modo.
+
+    El estado vacío se muestra en `_grid_imagenes_carreras` cuando
+    no hay resultados.
     """
     return rx.box(
         rx.flex(
             rx.box(
-                rx.icon("search", size=20, color=COLOR_TEXTO_SECUNDARIO),
+                rx.icon("search", size=20, color=AZUL_MARINO_NEON),
                 padding="0.5rem",
                 display="flex",
                 align_items="center",
@@ -75,7 +109,8 @@ def _buscador_carreras() -> rx.Component:
             ),
             rx.input(
                 placeholder=(
-                    "Busca una carrera: Sistemas, Contaduría, Electrónica..."
+                    "Busca una carrera: Sistemas, Contaduría, "
+                    "Electrónica..."
                 ),
                 value=EstadoInstitucional.texto_busqueda_carrera,
                 on_change=EstadoInstitucional.actualizar_busqueda_carrera,
@@ -84,10 +119,12 @@ def _buscador_carreras() -> rx.Component:
                 width="100%",
                 border="none",
                 background="transparent",
+                color=TEXTO_HOME_PRINCIPAL,
+                _placeholder={"color": TEXTO_HOME_MAS_SUAVE},
                 _focus={"box_shadow": "none", "outline": "none"},
             ),
             rx.box(
-                rx.icon("sparkles", size=18, color=COLOR_TEXTO_SECUNDARIO),
+                rx.icon("sparkles", size=18, color=AZUL_MARINO_NEON),
                 padding="0.5rem",
                 display="flex",
                 align_items="center",
@@ -102,16 +139,22 @@ def _buscador_carreras() -> rx.Component:
         margin="0 auto 1.5rem auto",
         padding="0.75rem 1rem",
         border_radius=RADIO_GRANDE,
-        background=COLOR_FONDO_CARTA,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        background=FONDO_HOME_CARD_ADAPTATIVO,
+        border=f"1px solid {BORDE_HOME_SUAVE}",
         backdrop_filter="blur(12px)",
-        box_shadow="0 10px 30px -10px rgba(0,0,0,0.15)",
+        box_shadow=rx.color_mode_cond(
+            light=f"0 10px 30px -10px {AZUL_MARINO_NEON}20",
+            dark=f"0 10px 30px -10px {AZUL_MARINO_NEON}40",
+        ),
         transition="all 0.2s",
+        _hover={
+            "border_color": BORDE_HOME_AZUL,
+        },
     )
 
 
 # ======================================================================
-# ESTADO VACÍO (sin resultados)
+# ESTADO VACÍO (delegado al componente unificado)
 # ======================================================================
 
 
@@ -119,86 +162,53 @@ def _estado_vacio_busqueda() -> rx.Component:
     """
     Estado vacío cuando la búsqueda no devuelve resultados.
 
+    ✅ REFACTORIZADO: delega en `componentes/estado_vacio.py`.
+
     UX:
-    - Icono grande de "search-x" en gris.
-    - Título destacado.
-    - Texto explicativo con el término buscado.
-    - Botón "Restablecer búsqueda" con accent institucional.
+    - Icono grande de "search-x" en azul marino con glow.
+    - Título: "No se encontraron carreras".
+    - Mensaje enriquecido con el término buscado entre comillas
+      (azul marino neon + negrita).
+    - Botón "Restablecer búsqueda" con azul marino neon + glow.
 
     El botón dispara `actualizar_busqueda_carrera("")` para limpiar
     el input y volver a mostrar todas las carreras.
     """
-    return rx.vstack(
-        # ==========================================================
-        # Icono en caja tintada
-        # ==========================================================
-        rx.box(
-            rx.icon(
-                "search-x",
-                size=TAMANO_ICONO_ESTADO_VACIO,
-                color=COLOR_TEXTO_SECUNDARIO,
-            ),
-            padding="1.5rem",
-            border_radius=RADIO_EXTRA_GRANDE,
-            background=COLOR_FONDO_SUAVE,
-            border=f"1px solid {COLOR_BORDE_SUAVE}",
-            display="flex",
-            align_items="center",
-            justify_content="center",
+    # Mensaje enriquecido con el término buscado
+    mensaje_enriquecido = rx.text(
+        "No hay resultados para ",
+        rx.text.span(
+            f'"{EstadoInstitucional.texto_busqueda_carrera}"',
+            font_weight="700",
+            color=AZUL_MARINO_NEON,
         ),
-        # ==========================================================
-        # Título + descripción
-        # ==========================================================
-        rx.vstack(
-            rx.heading(
-                "No se encontraron carreras",
-                size="5",
-                font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
-            ),
-            rx.text(
-                "No hay resultados para ",
-                rx.text.span(
-                    f'"{EstadoInstitucional.texto_busqueda_carrera}"',
-                    font_weight="700",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                ),
-                ". Intenta con otro término o explora todas las carreras "
-                "disponibles.",
-                font_size="0.875rem",
-                color=COLOR_TEXTO_SECUNDARIO,
-                text_align="center",
-                max_width="32rem",
-                line_height="1.6",
-            ),
-            spacing="2",
-            align="center",
+        ". Intenta con otro término o explora todas las carreras "
+        "disponibles.",
+        font_size="0.875rem",
+        color=TEXTO_HOME_MAS_SUAVE,
+        text_align="center",
+        max_width="32rem",
+        line_height="1.6",
+    )
+
+    return _estado_vacio_unificado(
+        titulo="No se encontraron carreras",
+        mensaje=mensaje_enriquecido,
+        icono="search-x",
+        variante="neon",
+        tamano_icono=TAMANO_ICONO_ESTADO_VACIO,
+        icono_acento=True,
+        boton_accion_etiqueta="Restablecer búsqueda",
+        boton_accion_icono="rotate-ccw",
+        boton_accion_on_click=(
+            EstadoInstitucional.actualizar_busqueda_carrera("")
         ),
-        # ==========================================================
-        # Botón "Restablecer búsqueda"
-        # ==========================================================
-        rx.button(
-            rx.icon("rotate-ccw", size=16),
-            rx.text("Restablecer búsqueda", as_="span", font_weight="700"),
-            on_click=lambda: EstadoInstitucional.actualizar_busqueda_carrera(""),
-            size="3",
-            variant="solid",
-            color_scheme="crimson",
-            cursor="pointer",
-            margin_top="0.5rem",
-        ),
-        direction="column",
-        align="center",
-        justify="center",
-        gap="1.5rem",
-        padding="4rem 1.5rem",
-        width="100%",
+        boton_accion_color_scheme="blue",
     )
 
 
 # ======================================================================
-# CARD DE IMAGEN DE CARRERA (patrón rx.card + rx.inset)
+# CARD DE IMAGEN DE CARRERA
 # ======================================================================
 
 
@@ -212,19 +222,18 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
     - Inset top: imagen horizontal (banner) edge-to-edge.
     - Contenido: nombre corto + duración + indicador de navegación.
 
-    UX:
-    - Gradiente tintado con el color de la carrera sobre la imagen.
-    - Icono de la carrera con fondo suave del color de la carrera.
-    - Hover: borde + sombra del color de la carrera + elevación.
-    - Click: navega al detalle.
-    """
-    color = color_carrera(carrera)
+    ✅ ADAPTATIVO: fondo, textos y borde cambian según el modo.
 
+    Estilo Neon:
+    - Fondo con glassmorphism adaptativo.
+    - Icono azul marino con fondo tintado.
+    - Hover: borde azul + glow azul + elevación.
+    """
     return enlace_navegacion(
         f"/carrera/{carrera['id']}",
         rx.card(
             # ==========================================================
-            # Inset top: imagen de la carrera (edge-to-edge)
+            # Inset top: imagen de la carrera
             # ==========================================================
             rx.inset(
                 rx.box(
@@ -235,24 +244,17 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
                         height="100%",
                         object_fit="cover",
                     ),
-                    # Overlay con gradiente del color de la carrera
+                    # Overlay con gradiente azul marino
                     rx.box(
                         position="absolute",
                         top="0",
                         left="0",
                         right="0",
                         bottom="0",
-                        background=rx.color_mode_cond(
-                            light=(
-                                f"linear-gradient(180deg, "
-                                f"transparent 40%, "
-                                f"{carrera['color_principal']}44 100%)"
-                            ),
-                            dark=(
-                                f"linear-gradient(180deg, "
-                                f"transparent 40%, "
-                                f"{carrera['color_principal_dark']}55 100%)"
-                            ),
+                        background=(
+                            f"linear-gradient(180deg, "
+                            f"transparent 40%, "
+                            f"rgba(59, 91, 219, 0.4) 100%)"
                         ),
                         pointer_events="none",
                     ),
@@ -269,21 +271,18 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
             # Contenido: icono + nombre + duración
             # ==========================================================
             rx.flex(
-                # Icono de la carrera con fondo suave del color
+                # Icono de la carrera con fondo tintado azul
                 rx.flex(
                     rx.icon(
                         carrera["icono"],
                         size=14,
-                        color=color,
+                        color=AZUL_MARINO_NEON,
                     ),
                     height="1.75rem",
                     width="1.75rem",
                     border_radius=RADIO_MEDIO,
-                    background=rx.color_mode_cond(
-                        light=f"{carrera['color_principal']}15",
-                        dark=f"{carrera['color_principal_dark']}20",
-                    ),
-                    border=f"1px solid {color}",
+                    background=FONDO_AZUL_SUAVE,
+                    border=f"1px solid {BORDE_HOME_AZUL}",
                     align="center",
                     justify="center",
                     flex_shrink="0",
@@ -294,13 +293,13 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
                         carrera["nombre_corto"],
                         font_size="0.875rem",
                         font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
+                        color=TEXTO_HOME_PRINCIPAL,
                         line_height="1.2",
                     ),
                     rx.text(
                         carrera["duracion"],
                         font_size="0.6875rem",
-                        color=COLOR_TEXTO_SECUNDARIO,
+                        color=TEXTO_HOME_MAS_SUAVE,
                         line_height="1.2",
                     ),
                     spacing="0",
@@ -312,7 +311,7 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
                 rx.icon(
                     "arrow-up-right",
                     size=14,
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,
                     flex_shrink="0",
                 ),
                 align="center",
@@ -325,11 +324,14 @@ def _card_imagen_carrera(carrera: dict) -> rx.Component:
             padding="0.5rem",
             width="100%",
             cursor="pointer",
+            background=FONDO_HOME_CARD_ADAPTATIVO,
+            backdrop_filter="blur(12px)",
+            border=f"1px solid {BORDE_HOME_SUAVE}",
             transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
             _hover={
                 "transform": "translateY(-4px)",
-                "border_color": color,
-                "box_shadow": f"0 20px 40px -12px {color}",
+                "border_color": BORDE_HOME_AZUL,
+                "box_shadow": SOMBRA_HOVER_CARD_HOME,
             },
         ),
         text_decoration="none",
@@ -350,6 +352,8 @@ def _grid_imagenes_carreras() -> rx.Component:
     - Muestra el contador de resultados.
     - Si hay resultados, muestra el grid.
     - Si NO hay resultados, muestra `_estado_vacio_busqueda()`.
+
+    ✅ ADAPTATIVO: contador, texto y borde cambian según el modo.
     """
     return rx.box(
         # ==========================================================
@@ -362,15 +366,18 @@ def _grid_imagenes_carreras() -> rx.Component:
                 font_weight="700",
                 letter_spacing="0.1em",
                 text_transform="uppercase",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,
             ),
             rx.text(
-                EstadoInstitucional.carreras_filtradas.length().to_string(),
+                EstadoInstitucional.carreras_filtradas
+                .length()
+                .to_string(),
                 font_size="0.75rem",
                 font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,
                 padding="0.125rem 0.5rem",
-                background=COLOR_FONDO_SUAVE,
+                background=FONDO_AZUL_SUAVE,
+                border=f"1px solid {BORDE_HOME_AZUL}",
                 border_radius=RADIO_PASTILLA,
             ),
             align="center",
@@ -387,7 +394,12 @@ def _grid_imagenes_carreras() -> rx.Component:
                     EstadoInstitucional.carreras_filtradas,
                     _card_imagen_carrera,
                 ),
-                columns=rx.breakpoints(initial="2", sm="2", md="3", lg="5"),
+                columns=rx.breakpoints(
+                    initial="2",
+                    sm="2",
+                    md="3",
+                    lg="5",
+                ),
                 spacing="3",
                 width="100%",
             ),
@@ -398,6 +410,10 @@ def _grid_imagenes_carreras() -> rx.Component:
         margin=PADDING_INFERIOR_GRID,
     )
 
+
+# ======================================================================
+# EXPORTS
+# ======================================================================
 
 __all__ = [
     "_buscador_carreras",

@@ -9,38 +9,100 @@ Contiene:
   - categoria, autor, fecha, minutos_lectura, destacado
   - imagen (nombre del archivo en assets/blog/)
 
-Todos los datos son listas de dicts para facilitar su edición sin tocar
-la UI ni el State.
+Todos los datos son listas de `TypedDict`, lo que da:
+- Autocompletado real en el IDE.
+- Verificación de tipos con mypy/pyright.
+- Compatibilidad total con `rx.foreach` y `rx.match` de Reflex
+  (evita `ForeachVarError: Could not foreach over var of type Any`).
 
-Para agregar un post nuevo:
-    POSTS.append({
-        "id": 13,
-        "titulo": "...",
-        "extracto": "...",
-        "contenido": "...",
-        "categoria": "tecnologia",  # clave de CATEGORIAS
-        "autor": "...",
-        "fecha": "...",
-        "minutos_lectura": N,
-        "destacado": False,
-        "imagen": "nombre_archivo.webp",  # archivo en assets/blog/
-    })
+Cómo agregar un post nuevo:
+    POSTS.append(Post(
+        id=13,
+        titulo="...",
+        extracto="...",
+        contenido="...",
+        categoria="tecnologia",       # clave de CategoriaId
+        autor="...",
+        fecha="...",
+        minutos_lectura=5,
+        destacado=False,
+        imagen="nombre_archivo.webp", # archivo en assets/blog/
+    ))
 
-Para cambiar el post destacado:
-    - Marca `"destacado": True` en el post deseado.
-    - Asegúrate de que solo UN post tenga `destacado: True`.
+Cómo cambiar el post destacado:
+    - Marca `destacado=True` en el post deseado.
+    - Asegúrate de que solo UN post tenga `destacado=True`.
 
 Imágenes:
-    Los archivos viven en `assets/blog/` (o en `public/blog/` según tu
+    Los archivos viven en `assets/blog/` (o `public/blog/` según tu
     configuración) y se referencian como `/blog/nombre_archivo.webp`.
 """
+
+from __future__ import annotations
+
+from typing import Literal, TypedDict
+
+
+# ======================================================================
+# Tipos
+# ======================================================================
+
+CategoriaId = Literal[
+    "todas",
+    "tecnologia",
+    "contaduria",
+    "empleabilidad",
+    "institucional",
+    "estudiantes",
+    "tutoriales",
+]
+"""Identificadores válidos de categoría.
+
+`Literal` restringe el tipo a estos strings exactos. El IDE y mypy
+te avisarán si escribes mal un ID (ej: "tecnologiaa").
+"""
+
+ColorScheme = Literal[
+    "gray",
+    "blue",
+    "violet",
+    "green",
+    "crimson",
+    "orange",
+    "cyan",
+]
+"""Nombres de color scheme de Radix Themes usados por las categorías."""
+
+
+class Categoria(TypedDict):
+    """Metadatos visuales de una categoría del blog."""
+
+    valor: CategoriaId
+    etiqueta: str
+    icono: str
+    color: ColorScheme
+
+
+class Post(TypedDict):
+    """Estructura completa de un post del blog."""
+
+    id: int
+    titulo: str
+    extracto: str
+    contenido: str
+    categoria: CategoriaId
+    autor: str
+    fecha: str
+    minutos_lectura: int
+    destacado: bool
+    imagen: str
 
 
 # ======================================================================
 # Categorías
 # ======================================================================
 
-CATEGORIAS: list[dict] = [
+CATEGORIAS: list[Categoria] = [
     {
         "valor": "todas",
         "etiqueta": "Todas",
@@ -90,7 +152,7 @@ CATEGORIAS: list[dict] = [
 # Posts del blog
 # ======================================================================
 
-POSTS: list[dict] = [
+POSTS: list[Post] = [
     # ==================================================================
     # POST DESTACADO
     # ==================================================================
@@ -496,4 +558,51 @@ POSTS: list[dict] = [
 ]
 
 
-__all__ = ["CATEGORIAS", "POSTS"]
+# ======================================================================
+# Helpers de búsqueda
+# ======================================================================
+
+
+def obtener_post(post_id: int) -> Post | None:
+    """
+    Busca un post por su `id` en el catálogo estático.
+
+    Args:
+        post_id: ID del post a buscar.
+
+    Returns:
+        El post encontrado, o `None` si no existe.
+    """
+    for post in POSTS:
+        if post["id"] == post_id:
+            return post
+    return None
+
+
+def obtener_post_destacado() -> Post:
+    """
+    Devuelve el primer post con `destacado=True`.
+
+    Returns:
+        El post destacado, o `POSTS[0]` si ninguno está marcado.
+    """
+    for post in POSTS:
+        if post["destacado"]:
+            return post
+    return POSTS[0]
+
+
+# ======================================================================
+# EXPORTS
+# ======================================================================
+
+__all__ = [
+    "CATEGORIAS",
+    "POSTS",
+    "Categoria",
+    "CategoriaId",
+    "ColorScheme",
+    "Post",
+    "obtener_post",
+    "obtener_post_destacado",
+]

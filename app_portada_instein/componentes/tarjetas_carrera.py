@@ -1,32 +1,24 @@
+# app_portada_instein/componentes/tarjetas_carrera.py
+
 """
 Componentes visuales relacionados con la presentación de carreras
-y su plan de estudios.
+y su plan de estudios — estilo Neon dark.
 
-Estilo inspirado en Google Play Store:
+Estilo inspirado en Google Play Store (dark mode):
 - Item horizontal con ranking a la izquierda.
 - Icono circular + nombre + categoría + rating.
-- Hover con fondo sutil.
+- Hover con fondo azul marino translúcido.
 
 Sistema de color (UX)
 ---------------------
-Los elementos interactivos que representan la carrera (pastilla de año
-activa, número de materia, hover de fila) usan el COLOR DE MARCA de
-la carrera. Los textos largos son NEUTROS (`gray-11`) para mantener
-legibilidad.
+✅ REFACTORIZADO: TODAS las carreras usan azul marino (`AZUL_MARINO_NEON`).
+   Ya no hay colores de marca individuales porque el home es dark con un
+   único acento.
 
-Elementos con color de carrera:
-- Pastilla de año activa (fondo y borde).
-- Número de materia (fondo sólido).
-- Borde hover de fila de materia.
-
-Elementos con accent (institucional):
-- No se usa accent en este módulo.
-
-Elementos con color neutro:
-- Textos de nombre, descripción, duración.
-- Rating (texto).
-- Iconos decorativos.
-- Bordes base.
+- Textos: blanco puro y blanco suave (`TEXTO_OSCURO_*`).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`).
+- Bordes: oscuros translúcidos (`BORDE_OSCURO_*`).
+- Rating: estrella amarilla (`#fbbf24`).
 """
 
 import reflex as rx
@@ -38,17 +30,14 @@ from app_portada_instein.componentes.primitivos import (
 from app_portada_instein.datos.modelos_carrera import Carrera, PlanAnual
 from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_OSCURO_AZUL,
+    BORDE_OSCURO_SUAVE,
+    FONDO_HOME_CARD,
     RADIO_MEDIO,
-    RADIO_PASTILLA,
-    # Helpers de color adaptativo
-    color_carrera_adaptativo,
-    color_suave_carrera_adaptativo,
+    TEXTO_OSCURO_MAS_SUAVE,
+    TEXTO_OSCURO_PRINCIPAL,
+    TEXTO_OSCURO_SUAVE,
 )
 
 
@@ -56,26 +45,14 @@ from app_portada_instein.infraestructura.constantes_visuales import (
 # Constantes locales
 # ======================================================================
 
-# Color de la estrella de puntuación (amarillo).
-COLOR_ESTRELLA = rx.color("amber", 9)
+# Color de la estrella de puntuación (amarillo semántico).
+COLOR_ESTRELLA = "#fbbf24"
 
 # Tamaño del icono circular de la carrera.
 TAMANO_ICONO_CARRERA = "4rem"
 
-
-# ======================================================================
-# Helpers de color de carrera
-# ======================================================================
-
-
-def _color_carrera_actual() -> rx.Var:
-    """Color principal de la carrera seleccionada, adaptado al modo."""
-    return color_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
-
-
-def _color_suave_carrera_actual() -> rx.Var:
-    """Color suave de la carrera seleccionada, adaptado al modo."""
-    return color_suave_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
+# Color suave azul marino (para fondos tintados).
+COLOR_AZUL_MARINO_SUAVE = "rgba(59, 91, 219, 0.15)"
 
 
 # ======================================================================
@@ -99,6 +76,7 @@ def _icono_carrera_circular(carrera: Carrera) -> rx.Component:
         flex_shrink="0",
         border_radius=RADIO_MEDIO,
         overflow="hidden",
+        border=f"1px solid {BORDE_OSCURO_SUAVE}",
     )
 
 
@@ -114,7 +92,7 @@ def _rating_compacto(puntuacion: str = "4.8") -> rx.Component:
             puntuacion,
             font_size="0.75rem",
             font_weight="600",
-            color=COLOR_TEXTO_PRINCIPAL,
+            color=TEXTO_OSCURO_PRINCIPAL,
         ),
         rx.icon(
             "star",
@@ -150,14 +128,14 @@ def _info_carrera_compacta(
         rx.text(
             carrera["nombre_corto"],
             font_size="0.9375rem",
-            font_weight="600",
-            color=COLOR_TEXTO_PRINCIPAL,
+            font_weight="700",
+            color=TEXTO_OSCURO_PRINCIPAL,
             line_height="1.3",
         ),
         rx.text(
             texto_secundario,
             font_size="0.75rem",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_OSCURO_MAS_SUAVE,
             line_height="1.3",
         ),
         _rating_compacto(),
@@ -169,17 +147,21 @@ def _info_carrera_compacta(
 
 
 # ======================================================================
-# Item de carrera con ranking (estilo Google Play)
+# Item de carrera con ranking (estilo Google Play dark)
 # ======================================================================
 
 
 def tarjeta_carrera(carrera: Carrera) -> rx.Component:
     """
-    Item de carrera estilo Google Play Store.
+    Item de carrera estilo Google Play Store (dark).
 
     Estructura horizontal:
     - Icono circular de la carrera.
     - Nombre + duración + rating.
+
+    Estilo Neon:
+    - Fondo transparente por defecto.
+    - Hover: fondo azul marino translúcido.
     """
     return enlace_navegacion(
         f"/carrera/{carrera['id']}",
@@ -197,7 +179,7 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
         text_align="left",
         transition="all 0.15s ease-out",
         cursor="pointer",
-        _hover={"background": COLOR_FONDO_SUAVE},
+        _hover={"background": COLOR_AZUL_MARINO_SUAVE},
     )
 
 
@@ -209,7 +191,7 @@ def tarjeta_carrera(carrera: Carrera) -> rx.Component:
 def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
     """
     Item de carrera con número de ranking a la izquierda.
-    Estilo "Listas de éxitos" de Google Play.
+    Estilo "Listas de éxitos" de Google Play (dark).
     """
     return enlace_navegacion(
         f"/carrera/{carrera['id']}",
@@ -220,7 +202,7 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
                     (indice + 1).to_string(),
                     font_size="1rem",
                     font_weight="600",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_OSCURO_MAS_SUAVE,
                 ),
                 width="1.5rem",
                 text_align="center",
@@ -242,7 +224,7 @@ def item_carrera_con_ranking(carrera: Carrera, indice: int) -> rx.Component:
         text_align="left",
         transition="all 0.15s ease-out",
         cursor="pointer",
-        _hover={"background": COLOR_FONDO_SUAVE},
+        _hover={"background": COLOR_AZUL_MARINO_SUAVE},
     )
 
 
@@ -255,12 +237,14 @@ def pastilla_anio(plan_anual: PlanAnual, indice: int) -> rx.Component:
     """
     Pastilla seleccionable que representa un año del plan de estudios.
 
-    Usa el COLOR DE LA CARRERA cuando está activa para reforzar la
-    identidad visual.
+    ✅ REFACTORIZADO: usa azul marino neon en lugar del color de la
+    carrera.
+
+    Estilo Neon:
+    - Activa: fondo azul marino neon + texto blanco + glow azul.
+    - Inactiva: fondo dark translúcido + borde oscuro.
     """
     esta_activo = EstadoInstitucional.indice_anio_seleccionado == indice
-    color_carrera = _color_carrera_actual()
-    color_suave_carrera = _color_suave_carrera_actual()
 
     return contenedor_clicable(
         rx.text(plan_anual["anio"], size="2"),
@@ -269,22 +253,22 @@ def pastilla_anio(plan_anual: PlanAnual, indice: int) -> rx.Component:
         border_radius=RADIO_MEDIO,
         background=rx.cond(
             esta_activo,
-            color_carrera,          # ← color de carrera cuando activa
-            color_suave_carrera,    # ← color suave de carrera cuando inactiva
+            AZUL_MARINO_NEON,
+            "rgba(255, 255, 255, 0.05)",
         ),
         color=rx.cond(
             esta_activo,
-            "white",                # ← blanco sobre fondo sólido de carrera
-            COLOR_TEXTO_CUERPO,
+            "white",
+            TEXTO_OSCURO_SUAVE,
         ),
         border=rx.cond(
             esta_activo,
-            f"1px solid {color_carrera}",
-            f"1px solid {color_carrera}",
+            f"1px solid {AZUL_MARINO_NEON}",
+            f"1px solid {BORDE_OSCURO_SUAVE}",
         ),
         box_shadow=rx.cond(
             esta_activo,
-            f"0 4px 12px -2px {color_carrera}",
+            f"0 0 20px {AZUL_MARINO_NEON}60",
             "none",
         ),
         font_weight="600",
@@ -304,14 +288,16 @@ def fila_materia(materia: str, indice: int) -> rx.Component:
     """
     Fila individual de una materia dentro del plan de estudios.
 
-    El número de la materia usa el color de la carrera como fondo.
-    El hover de la fila usa borde con color de carrera.
-    """
-    color_carrera = _color_carrera_actual()
+    ✅ REFACTORIZADO: usa azul marino neon en lugar del color de la
+    carrera.
 
+    Estilo Neon:
+    - Número de materia: fondo azul marino neon con glow.
+    - Hover: borde azul marino + fondo translúcido + desplazamiento.
+    """
     return rx.box(
         rx.flex(
-            # --- Número de materia (con color de carrera) ---
+            # --- Número de materia (azul marino neon) ---
             rx.flex(
                 rx.text(
                     (indice + 1).to_string(),
@@ -322,7 +308,8 @@ def fila_materia(materia: str, indice: int) -> rx.Component:
                 height="2rem",
                 width="2rem",
                 border_radius=RADIO_MEDIO,
-                background=color_carrera,   # ← color de carrera
+                background=AZUL_MARINO_NEON,
+                box_shadow=f"0 0 12px {AZUL_MARINO_NEON}60",
                 align="center",
                 justify="center",
                 flex_shrink="0",
@@ -331,23 +318,28 @@ def fila_materia(materia: str, indice: int) -> rx.Component:
             rx.text(
                 materia,
                 font_size="0.9375rem",
-                color=COLOR_TEXTO_CUERPO,
+                color=TEXTO_OSCURO_SUAVE,
                 flex="1",
             ),
             # --- Icono decorativo ---
-            rx.icon("book-open", size=16, color=COLOR_TEXTO_SECUNDARIO),
+            rx.icon(
+                "book-open",
+                size=16,
+                color=TEXTO_OSCURO_MAS_SUAVE,
+            ),
             align="center",
             gap="0.875rem",
             width="100%",
         ),
         padding="0.875rem 1rem",
         border_radius=RADIO_MEDIO,
-        background=COLOR_FONDO_CARTA,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
+        background=FONDO_HOME_CARD,
+        backdrop_filter="blur(12px)",
+        border=f"1px solid {BORDE_OSCURO_SUAVE}",
         transition="all 0.2s",
         _hover={
-            "background": COLOR_FONDO_SUAVE,
-            "border_color": color_carrera,   # ← borde con color de carrera
+            "background": COLOR_AZUL_MARINO_SUAVE,
+            "border_color": BORDE_OSCURO_AZUL,
             "transform": "translateX(4px)",
         },
     )

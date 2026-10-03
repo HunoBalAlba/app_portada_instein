@@ -1,35 +1,49 @@
+# app_portada_instein/componentes/multimedia_institucional.py
+
 """
-Sección multimedia institucional del home.
+Sección multimedia institucional del home — estilo Neon adaptativo.
 
 Muestra:
-- Video institucional en formato 16:9.
+- Video institucional en formato 16:9 con glow azul adaptativo.
 - Información sobre la plataforma web de seguimiento académico.
 - Enlaces a redes sociales del instituto.
 
 Sistema de color (UX)
 ---------------------
-- Acentos institucionales (badge "PLATAFORMA OFICIAL", span del título,
-  icono de redes sociales): accent crimson.
-- Colores de marca de redes sociales (Facebook azul, Instagram rosa,
-  TikTok negro, YouTube rojo, Telegram celeste, Discord violeta):
-  hex fijos intencionales (son colores corporativos oficiales).
-- Textos: neutros (`gray-11`/`gray-12`) para legibilidad.
-- Fondos: `COLOR_FONDO_CARTA` (gray-1).
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE` / `TEXTO_HOME_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO` / `BORDE_HOME_SUAVE`.
+- Fondos tintados: `FONDO_AZUL_SUAVE`.
+- Título con gradiente: `GRADIENTE_TEXTO_HOME`.
+- Redes sociales: colores corporativos oficiales (hex fijos), NO
+  cambian con el tema (son colores de marca de terceros).
+
+Estilo Neon:
+- Tipografía masiva con gradiente de texto adaptativo.
+- Glassmorphism (blur + bordes translúcidos).
+- Hover con glow azul marino (más sutil en light).
+- Padding generoso.
 """
 
 import reflex as rx
 
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_ACENTO_TEXTO,
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    GRADIENTE_TEXTO_HOME,
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
     REDES_SOCIALES,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
 )
 
 
@@ -48,11 +62,17 @@ PADDING_LATERAL_SECCION = "1.5rem"
 
 def _video_institucional() -> rx.Component:
     """
-    Video institucional en formato 16:9 con estilo moderno.
+    Video institucional en formato 16:9 con estilo Neon adaptativo.
 
-    El video se muestra con un borde redondeado, sombra profunda y
-    un fondo oscuro para darle protagonismo. Los `rgba` de la sombra
-    son intencionales (funcionan igual en ambos modos).
+    El video se muestra con:
+    - Borde redondeado grande.
+    - Glow azul sutil (box_shadow) adaptativo.
+    - Fondo oscuro para darle protagonismo (independiente del modo,
+      porque el contenido del video suele ser oscuro).
+    - Borde translúcido azul marino en hover.
+
+    ✅ ADAPTATIVO: el fondo del reproductor y el glow cambian según
+    el color_mode. El video en sí no cambia.
     """
     return rx.box(
         rx.aspect_ratio(
@@ -71,12 +91,28 @@ def _video_institucional() -> rx.Component:
         width="100%",
         border_radius=RADIO_EXTRA_GRANDE,
         overflow="hidden",
-        box_shadow=(
-            "0 20px 40px -10px rgba(0, 0, 0, 0.25), "
-            "0 0 0 1px rgba(255, 255, 255, 0.05)"
+        box_shadow=rx.color_mode_cond(
+            light=f"0 20px 40px -10px rgba(0, 0, 0, 0.15), "
+                  f"0 0 40px -10px {AZUL_MARINO_NEON}40",
+            dark=f"0 20px 40px -10px rgba(0, 0, 0, 0.5), "
+                 f"0 0 40px -10px {AZUL_MARINO_NEON}80",
         ),
-        background="#0c0b0b",  # fondo del video (siempre oscuro)
+        border=f"1px solid {BORDE_HOME_SUAVE}",           # ✅ adaptativo
+        background=rx.color_mode_cond(                     # ✅ adaptativo
+            light="#1a1a20",   # gris muy oscuro en light (video)
+            dark="#0a0a0f",
+        ),
         padding="0.25rem",
+        transition="all 0.3s",
+        _hover={
+            "border_color": BORDE_HOME_AZUL,
+            "box_shadow": rx.color_mode_cond(
+                light=f"0 20px 40px -10px rgba(0, 0, 0, 0.15), "
+                      f"0 0 60px -10px {AZUL_MARINO_NEON}80",
+                dark=f"0 20px 40px -10px rgba(0, 0, 0, 0.5), "
+                     f"0 0 60px -10px {AZUL_MARINO_NEON}cc",
+            ),
+        },
     )
 
 
@@ -85,55 +121,136 @@ def _video_institucional() -> rx.Component:
 # ======================================================================
 
 
+def _badge_plataforma_oficial() -> rx.Component:
+    """
+    Badge "PLATAFORMA OFICIAL" con fondo azul marino neon + glow.
+
+    Estilo Neon:
+    - Fondo azul marino neon sólido (mismo en ambos modos).
+    - Icono blanco.
+    - Glow azul.
+
+    ✅ El azul marino es el mismo en ambos modos (color de marca).
+    """
+    return rx.flex(
+        rx.icon("award", size=12, color="white"),
+        rx.text(
+            "PLATAFORMA OFICIAL",
+            font_size="0.625rem",
+            font_weight="800",
+            color="white",
+            letter_spacing="0.1em",
+        ),
+        align="center",
+        gap="0.375rem",
+        background=AZUL_MARINO_NEON,
+        padding="0.375rem 0.75rem",
+        border_radius=RADIO_PASTILLA,
+        width="fit-content",
+        box_shadow=f"0 0 20px {AZUL_MARINO_NEON}80",
+    )
+
+
+def _badge_caracteristica() -> rx.Component:
+    """
+    Badge "Historial Académico Completo" con glassmorphism adaptativo.
+
+    Estilo Neon:
+    - Fondo azul marino translúcido adaptativo.
+    - Borde azul marino adaptativo.
+    - Texto adaptativo.
+
+    ✅ ADAPTATIVO: el fondo y el texto cambian según el modo.
+    """
+    return rx.flex(
+        rx.icon("graduation-cap", size=12, color=AZUL_MARINO_NEON),
+        rx.text(
+            "Historial Académico Completo",
+            font_size="0.8125rem",
+            font_weight="600",
+            color=TEXTO_HOME_SUAVE,              # ✅ adaptativo
+        ),
+        align="center",
+        gap="0.375rem",
+        padding="0.5rem 0.875rem",
+        border_radius=RADIO_PASTILLA,
+        background=FONDO_AZUL_SUAVE,             # ✅ adaptativo
+        border=f"1px solid {BORDE_HOME_AZUL}",   # ✅ adaptativo
+        backdrop_filter="blur(12px)",
+        width="fit-content",
+    )
+
+
+def _cta_crear_cuenta() -> rx.Component:
+    """
+    Botón CTA "Crear Cuenta Institucional" con glow azul marino.
+
+    Estilo Neon:
+    - Fondo azul marino neon.
+    - Icono user-plus.
+    - Glow que se intensifica en hover.
+
+    ✅ El azul marino es el mismo en ambos modos (color de marca).
+    """
+    return rx.button(
+        rx.icon("user-plus", size=18),
+        rx.text(
+            "Crear Cuenta Institucional",
+            as_="span",
+            font_weight="700",
+        ),
+        size="3",
+        width="100%",
+        max_width="24rem",
+        cursor="pointer",
+        background=AZUL_MARINO_NEON,
+        color="white",
+        border_radius=RADIO_MEDIO,
+        box_shadow=f"0 10px 25px -5px {AZUL_MARINO_NEON}80",
+        transition="all 0.2s",
+        _hover={
+            "transform": "translateY(-2px)",
+            "box_shadow": f"0 15px 35px -5px {AZUL_MARINO_NEON}cc",
+        },
+    )
+
+
 def _info_plataforma_academica() -> rx.Component:
     """
     Bloque de texto que describe la plataforma web de seguimiento académico.
 
     Incluye:
-    - Badge "PLATAFORMA OFICIAL" con accent institucional.
-    - Título grande con span en accent.
+    - Badge "PLATAFORMA OFICIAL" con azul marino neon.
+    - Título grande con span en gradiente de texto adaptativo.
     - Descripción de la plataforma.
-    - Badge de características.
-    - Botón de CTA para crear cuenta.
+    - Badge de características con glassmorphism.
+    - Botón de CTA con glow azul marino.
 
-    Los colores de marca del badge/CTA usan accent (crimson).
+    ✅ ADAPTATIVO: título, descripción y badges cambian según el modo.
     """
     return rx.vstack(
         # ==========================================================
         # Badge "PLATAFORMA OFICIAL"
         # ==========================================================
-        rx.flex(
-            rx.icon("award", size=12, color="white"),
-            rx.text(
-                "PLATAFORMA OFICIAL",
-                font_size="0.625rem",
-                font_weight="800",
-                color="white",
-                letter_spacing="0.1em",
-            ),
-            align="center",
-            gap="0.375rem",
-            background=rx.color("accent", 11),
-            padding="0.375rem 0.75rem",
-            border_radius=RADIO_PASTILLA,
-            width="fit-content",
-            box_shadow=f"0 4px 12px -2px {rx.color('accent', 11)}",
-        ),
+        _badge_plataforma_oficial(),
         # ==========================================================
-        # Título
+        # Título con gradiente adaptativo
         # ==========================================================
         rx.heading(
             "Plataforma web de ",
             rx.text.span(
                 "seguimiento académico",
-                color=COLOR_ACENTO_TEXTO,
+                background=GRADIENTE_TEXTO_HOME,   # ✅ adaptativo
+                background_clip="text",
+                color="transparent",
+                webkit_background_clip="text",
             ),
             "",
             size="7",
             font_weight="900",
             letter_spacing="-0.03em",
             line_height="1.15",
-            color=COLOR_TEXTO_PRINCIPAL,
+            color=TEXTO_HOME_PRINCIPAL,            # ✅ adaptativo
         ),
         # ==========================================================
         # Descripción
@@ -145,43 +262,17 @@ def _info_plataforma_academica() -> rx.Component:
             "formación técnica.",
             font_size="1rem",
             line_height="1.7",
-            color=COLOR_TEXTO_CUERPO,
+            color=TEXTO_HOME_MAS_SUAVE,            # ✅ adaptativo
             max_width="36rem",
         ),
         # ==========================================================
         # Badge de características
         # ==========================================================
-        rx.badge(
-            rx.flex(
-                rx.icon("graduation-cap", size=12),
-                rx.text("Historial Académico Completo", as_="span"),
-                align="center",
-                gap="0.375rem",
-            ),
-            variant="outline",
-            color_scheme="crimson",
-            size="2",
-            padding="0.5rem 0.875rem",
-        ),
+        _badge_caracteristica(),
         # ==========================================================
         # Botón de CTA
         # ==========================================================
-        rx.button(
-            rx.icon("user-plus", size=18),
-            rx.text("Crear Cuenta Institucional", as_="span", font_weight="700"),
-            size="3",
-            variant="solid",
-            color_scheme="crimson",
-            width="100%",
-            max_width="24rem",
-            cursor="pointer",
-            box_shadow=f"0 10px 25px -5px {rx.color('accent', 11)}",
-            transition="all 0.2s",
-            _hover={
-                "transform": "translateY(-2px)",
-                "box_shadow": f"0 15px 35px -5px {rx.color('accent', 11)}",
-            },
-        ),
+        _cta_crear_cuenta(),
         align="start",
         spacing="4",
         width="100%",
@@ -200,6 +291,8 @@ def _tarjeta_red_social(red: dict) -> rx.Component:
     Usa el color corporativo oficial de cada red (hex fijo) porque son
     colores de marca de terceros y no deben cambiar con el tema.
     El hover aplica un efecto de elevación + brillo.
+
+    ⚠️ El color del botón NO es adaptativo (es el color de la marca).
 
     Args:
         red: Dict con `nombre`, `icono`, `url`, `color`.
@@ -245,8 +338,10 @@ def _redes_sociales_instituto() -> rx.Component:
     """
     Sección con todas las redes sociales del instituto.
 
-    Muestra un título con accent y un grid responsive con botones
+    Muestra un título con azul marino y un grid responsive con botones
     en colores corporativos de cada red.
+
+    ✅ ADAPTATIVO: el título y el icono cambian según el modo.
     """
     return rx.vstack(
         # --- Encabezado ---
@@ -254,15 +349,15 @@ def _redes_sociales_instituto() -> rx.Component:
             rx.icon(
                 "share-2",
                 size=18,
-                color=COLOR_ACENTO_TEXTO,
+                color=AZUL_MARINO_NEON,           # mismo en ambos modos
             ),
             rx.text(
                 "Síguenos en redes sociales",
                 font_size="0.875rem",
                 font_weight="700",
-                letter_spacing="0.05em",
+                letter_spacing="0.1em",
                 text_transform="uppercase",
-                color=COLOR_TEXTO_PRINCIPAL,
+                color=TEXTO_HOME_PRINCIPAL,       # ✅ adaptativo
             ),
             align="center",
             gap="0.5rem",
@@ -275,7 +370,7 @@ def _redes_sociales_instituto() -> rx.Component:
             justify="center",
         ),
         align="center",
-        spacing="3",
+        spacing="4",
         width="100%",
     )
 
@@ -296,6 +391,13 @@ def seccion_multimedia_institucional() -> rx.Component:
     - Desktop: 60% video / 40% info.
     - Tablet: stack vertical.
     - Móvil: stack vertical.
+
+    Estilo Neon:
+    - Glassmorphism en contenedores.
+    - Glow azul marino en elementos interactivos.
+    - Padding generoso.
+
+    ✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
     """
     return rx.box(
         rx.vstack(
@@ -311,22 +413,22 @@ def seccion_multimedia_institucional() -> rx.Component:
                 # Info plataforma
                 rx.box(
                     _info_plataforma_academica(),
-                    padding="1.5rem 0 1.5rem 2rem",
+                    padding=["0", "0", "0", "0 0 0 2rem"],
                     width=["100%", "100%", "100%", "40%"],
                 ),
                 width="100%",
                 justify="center",
                 align="center",
                 flex_direction=["column", "column", "column", "row"],
-                gap="2rem",
+                gap=["2rem", "2rem", "2rem", "3rem"],
             ),
             # ==========================================================
             # Redes sociales
             # ==========================================================
             rx.box(
                 _redes_sociales_instituto(),
-                padding_top="2rem",
-                border_top=f"1px solid {COLOR_BORDE_SUAVE}",
+                padding_top="3rem",
+                border_top=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
                 width="100%",
             ),
             spacing="6",
@@ -335,7 +437,7 @@ def seccion_multimedia_institucional() -> rx.Component:
         width="100%",
         max_width=ANCHO_MAXIMO_SECCION,
         margin="0 auto",
-        padding=f"3rem {PADDING_LATERAL_SECCION}",
+        padding=f"4rem {PADDING_LATERAL_SECCION}",
     )
 
 

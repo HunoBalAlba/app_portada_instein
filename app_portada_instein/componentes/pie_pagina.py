@@ -1,5 +1,9 @@
+# app_portada_instein/componentes/pie_pagina.py
+
 """
-Pie de página institucional con:
+Pie de página institucional — estilo Neon adaptativo (dark/light).
+
+Contiene:
 - Brand block (logo + tagline + redes sociales).
 - Newsletter (input de email + botón suscribir).
 - Sección de feedback ("¿Te resultó útil?").
@@ -8,16 +12,25 @@ Pie de página institucional con:
 
 Sistema de color (UX)
 ---------------------
-- Fondo neutro (`gray-1`) con borde superior sutil.
-- Textos en `gray-11`/`gray-12`.
-- Hover de enlaces: accent institucional (crimson).
-- Botones de feedback: semánticos (`green`/`red`).
-- Estado del servidor: `green` con animación pulse + borderPulse.
-- Redes sociales: colores de marca oficiales (no cambian con el modo).
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+
+- Fondo: `FONDO_HOME` (light: claro, dark: oscuro).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_SUAVE` / `BORDE_HOME_MEDIO` / `BORDE_HOME_AZUL`.
+- Redes sociales: colores corporativos oficiales (hex fijos), NO
+  cambian con el tema (son colores de marca de terceros).
+- Estado del servidor: verde semántico con pulse + borderPulse.
+
+⚠️ Toggle de color mode
+-----------------------
+El toggle está en la **barra de navegación superior** (arriba a la
+derecha) para que sea más visible. El usuario puede cambiar el modo
+desde ahí.
 
 Referencia visual
 -----------------
-Inspirado en el footer de reflex.dev:
+Inspirado en el footer de reflex.dev y neon.com:
 - Brand block con logo + tagline + redes.
 - Newsletter con input y botón.
 - Grid de enlaces por columnas.
@@ -28,23 +41,23 @@ import reflex as rx
 
 from app_portada_instein.infraestructura.constantes_visuales import (
     ANIO_COPYRIGHT,
-    COLOR_ACENTO_TEXTO,
-    COLOR_BORDE_HOVER,
-    COLOR_BORDE_SUAVE,
-    COLOR_DIVISOR,
-    COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
     EMAIL_CONTACTO,
-    NOMBRE_COMPLETO_INSTITUTO,
+    FONDO_AZUL_MUY_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME,
     NOMBRE_INSTITUTO,
     RADIO_EXTRA_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
     REDES_SOCIALES,
     TELEFONO_PRINCIPAL,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
     WHATSAPP_URL,
 )
 
@@ -61,6 +74,12 @@ DESCRIPCION_INSTITUCIONAL = (
     "Formación técnica de excelencia con títulos de Provisión Nacional. "
     "5 carreras, equipamiento moderno y docentes especializados."
 )
+
+# Sombra del logo (glow azul marino).
+SOMBRA_LOGO = f"0 0 20px {AZUL_MARINO_NEON}80"
+
+# Color del punto verde semántico (activo).
+COLOR_VERDE_ACTIVO = "#22c55e"
 
 
 # ======================================================================
@@ -80,8 +99,16 @@ def _enlaces_footer() -> list[dict]:
             "titulo": "Plataforma",
             "items": [
                 {"etiqueta": "Inicio", "ruta": "/", "externo": False},
-                {"etiqueta": "Carreras", "ruta": "/carreras", "externo": False},
-                {"etiqueta": "Contacto", "ruta": "/contacto", "externo": False},
+                {
+                    "etiqueta": "Carreras",
+                    "ruta": "/carreras",
+                    "externo": False,
+                },
+                {
+                    "etiqueta": "Contacto",
+                    "ruta": "/contacto",
+                    "externo": False,
+                },
             ],
         },
         {
@@ -92,7 +119,6 @@ def _enlaces_footer() -> list[dict]:
                     "ruta": "/sobre-nosotros",
                     "externo": False,
                 },
-                
                 {
                     "etiqueta": "Preguntas frecuentes",
                     "ruta": "/faq",
@@ -150,8 +176,13 @@ def _enlaces_footer() -> list[dict]:
 
 
 def _logo_institucional() -> rx.Component:
-    """Logo textual del instituto con badge accent."""
+    """
+    Logo textual del instituto con badge de gradiente azul marino.
+
+    ✅ ADAPTATIVO: el texto "INSTEIN" y el subtítulo cambian según el modo.
+    """
     return rx.flex(
+        # Badge "I" con gradiente azul marino
         rx.box(
             rx.text(
                 "I",
@@ -163,26 +194,31 @@ def _logo_institucional() -> rx.Component:
             height="2.25rem",
             width="2.25rem",
             border_radius=RADIO_MEDIO,
-            background=rx.color("accent", 9),
+            background=(
+                f"linear-gradient(135deg, {AZUL_MARINO_NEON} 0%, "
+                f"#1a237e 100%)"
+            ),
             display="flex",
             align_items="center",
             justify_content="center",
+            box_shadow=SOMBRA_LOGO,
             flex_shrink="0",
         ),
+        # Texto INSTEIN + subtítulo (adaptativos)
         rx.vstack(
             rx.text(
                 NOMBRE_INSTITUTO,
                 font_size="0.9375rem",
                 font_weight="900",
-                color=COLOR_TEXTO_PRINCIPAL,
-                letter_spacing="0.05em",
+                color=TEXTO_HOME_PRINCIPAL,      # ✅ adaptativo
+                letter_spacing="0.1em",
                 line_height="1.1",
             ),
             rx.text(
                 "Instituto Técnico Integrado",
                 font_size="0.6875rem",
                 font_weight="500",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
                 line_height="1.2",
             ),
             spacing="0",
@@ -197,7 +233,7 @@ def _red_social_boton(red: dict) -> rx.Component:
     """
     Botón de red social con el color corporativo oficial.
 
-    Los colores de marca de las redes NO cambian con el modo
+    ⚠️ Los colores de marca de las redes NO cambian con el modo
     (son colores oficiales de cada plataforma).
     """
     return rx.link(
@@ -224,8 +260,7 @@ def _brand_block() -> rx.Component:
     """
     Bloque de marca con logo + tagline + redes sociales.
 
-    Similar al brand block de reflex.dev: agrupa la identidad
-    institucional en la parte superior del footer.
+    ✅ ADAPTATIVO: la descripción cambia de color según el modo.
     """
     return rx.vstack(
         # --- Logo + nombre ---
@@ -234,7 +269,7 @@ def _brand_block() -> rx.Component:
         rx.text(
             DESCRIPCION_INSTITUCIONAL,
             font_size="0.8125rem",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_MAS_SUAVE,          # ✅ adaptativo
             line_height="1.6",
             max_width="20rem",
         ),
@@ -261,22 +296,28 @@ def _newsletter() -> rx.Component:
     """
     Bloque de newsletter con input de email + botón suscribir.
 
-    Similar al "Get Updates" de reflex.dev. En una implementación
-    real, el input dispararía un evento al backend para guardar
-    el email en la base de datos.
+    ✅ ADAPTATIVO: input, textos y botón cambian según el modo.
+
+    Estilo Neon:
+    - Input con fondo translúcido adaptativo.
+    - Botón "Suscribir" con azul marino neon + glow.
+    - Hover del botón intensifica el glow.
+
+    Nota: en una implementación real, el input dispararía un evento
+    al backend para guardar el email en la base de datos.
     """
     return rx.vstack(
         rx.text(
             "Recibe novedades",
             font_size="0.875rem",
             font_weight="700",
-            color=COLOR_TEXTO_PRINCIPAL,
+            color=TEXTO_HOME_PRINCIPAL,          # ✅ adaptativo
             line_height="1.2",
         ),
         rx.text(
             "Noticias, fechas de inscripción y eventos del instituto.",
             font_size="0.75rem",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_MAS_SUAVE,          # ✅ adaptativo
             line_height="1.4",
         ),
         rx.flex(
@@ -287,15 +328,36 @@ def _newsletter() -> rx.Component:
                 width="100%",
                 flex="1",
                 min_width="0",
+                background=rx.color_mode_cond(     # ✅ adaptativo
+                    light="rgba(15, 23, 42, 0.03)",
+                    dark="rgba(255, 255, 255, 0.05)",
+                ),
+                border=f"1px solid {BORDE_HOME_MEDIO}",   # ✅ adaptativo
+                color=TEXTO_HOME_PRINCIPAL,               # ✅ adaptativo
+                _placeholder={"color": TEXTO_HOME_MAS_SUAVE},
+                _focus={
+                    "border_color": BORDE_HOME_AZUL,
+                    "box_shadow": f"0 0 0 1px {AZUL_MARINO_NEON}",
+                },
             ),
             rx.button(
                 rx.icon("send", size=14),
                 rx.text("Suscribir", as_="span"),
                 size="2",
-                variant="solid",
-                color_scheme="crimson",
                 cursor="pointer",
                 flex_shrink="0",
+                background=AZUL_MARINO_NEON,
+                color="white",
+                border_radius=RADIO_MEDIO,
+                box_shadow=rx.color_mode_cond(     # ✅ adaptativo
+                    light=f"0 4px 12px -2px {AZUL_MARINO_NEON}40",
+                    dark=f"0 4px 12px -2px {AZUL_MARINO_NEON}80",
+                ),
+                transition="all 0.2s",
+                _hover={
+                    "transform": "translateY(-1px)",
+                    "box_shadow": f"0 6px 16px -2px {AZUL_MARINO_NEON}cc",
+                },
             ),
             gap="0.5rem",
             width="100%",
@@ -317,22 +379,27 @@ def _seccion_feedback() -> rx.Component:
     """
     Sección con pregunta de feedback y botones Sí/No.
 
+    ✅ ADAPTATIVO: textos, link y borde cambian según el modo.
+
     UX:
-    - Pregunta con texto neutro destacado.
+    - Pregunta con texto destacado.
     - Botones semánticos: verde para Sí, rojo para No.
-    - Link "Reportar un problema" en gris neutro.
+    - Link "Reportar un problema" con glassmorphism adaptativo.
     - Borde inferior sutil que la separa del grid de enlaces.
+
+    Nota: los botones Sí/No usan colores semánticos (verde/rojo),
+    NO el azul marino, porque representan estados del sistema.
     """
     return rx.flex(
         rx.text(
             "¿Te resultó útil esta página?",
             font_weight="600",
             font_size="0.875rem",
-            color=COLOR_TEXTO_PRINCIPAL,
+            color=TEXTO_HOME_PRINCIPAL,          # ✅ adaptativo
         ),
         rx.flex(
             rx.button(
-                rx.icon("thumbs_up", size=14),
+                rx.icon("thumbs-up", size=14),
                 rx.text("Sí", as_="span"),
                 size="1",
                 variant="soft",
@@ -340,7 +407,7 @@ def _seccion_feedback() -> rx.Component:
                 cursor="pointer",
             ),
             rx.button(
-                rx.icon("thumbs_down", size=14),
+                rx.icon("thumbs-down", size=14),
                 rx.text("No", as_="span"),
                 size="1",
                 variant="soft",
@@ -348,21 +415,33 @@ def _seccion_feedback() -> rx.Component:
                 cursor="pointer",
             ),
             rx.link(
-                rx.icon("message_square_warning", size=14),
+                rx.icon("message-square-warning", size=14),
                 rx.text("Reportar un problema", as_="span"),
                 href="/",
                 is_external=True,
-                size="1",
-                variant="soft",
-                color_scheme="gray",
                 text_decoration="none",
                 display="inline-flex",
                 align_items="center",
                 gap="0.4rem",
                 padding="0.375rem 0.75rem",
                 border_radius=RADIO_MEDIO,
-                background=COLOR_FONDO_SUAVE,
-                color=COLOR_TEXTO_PRINCIPAL,
+                background=rx.color_mode_cond(     # ✅ adaptativo
+                    light="rgba(15, 23, 42, 0.04)",
+                    dark="rgba(255, 255, 255, 0.05)",
+                ),
+                border=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
+                color=TEXTO_HOME_SUAVE,                    # ✅ adaptativo
+                font_size="0.75rem",
+                font_weight="600",
+                transition="all 0.2s",
+                _hover={
+                    "background": rx.color_mode_cond(
+                        light="rgba(15, 23, 42, 0.08)",
+                        dark="rgba(255, 255, 255, 0.1)",
+                    ),
+                    "border_color": BORDE_HOME_MEDIO,
+                    "color": TEXTO_HOME_PRINCIPAL,
+                },
             ),
             gap="0.5rem",
             align="center",
@@ -370,8 +449,8 @@ def _seccion_feedback() -> rx.Component:
         ),
         direction="column",
         gap="0.75rem",
-        padding="1.5rem 0",
-        border_bottom=f"1px solid {COLOR_DIVISOR}",
+        padding="2rem 0",
+        border_bottom=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
         width="100%",
     )
 
@@ -385,7 +464,7 @@ def _columna_enlaces(columna: dict) -> rx.Component:
     """
     Renderiza una columna del footer con su título y sus enlaces.
 
-    Los enlaces tienen hover con accent institucional.
+    ✅ ADAPTATIVO: los textos y el hover cambian según el modo.
     """
     return rx.vstack(
         # --- Título de la columna ---
@@ -395,7 +474,7 @@ def _columna_enlaces(columna: dict) -> rx.Component:
             font_weight="700",
             text_transform="uppercase",
             letter_spacing="0.1em",
-            color=COLOR_TEXTO_SECUNDARIO,
+            color=TEXTO_HOME_MAS_SUAVE,          # ✅ adaptativo
             margin_bottom="0.5rem",
         ),
         # --- Enlaces ---
@@ -406,10 +485,10 @@ def _columna_enlaces(columna: dict) -> rx.Component:
                     href=item["ruta"],
                     is_external=item["externo"],
                     font_size="0.875rem",
-                    color=COLOR_TEXTO_CUERPO,
+                    color=TEXTO_HOME_SUAVE,      # ✅ adaptativo
                     text_decoration="none",
                     transition="color 0.2s",
-                    _hover={"color": COLOR_ACENTO_TEXTO},
+                    _hover={"color": AZUL_MARINO_NEON},
                 )
                 for item in columna["items"]
             ],
@@ -429,15 +508,15 @@ def _columna_enlaces(columna: dict) -> rx.Component:
 
 
 def _enlace_legal(etiqueta: str, ruta: str) -> rx.Component:
-    """Enlace legal pequeño en la barra inferior."""
+    """Enlace legal pequeño en la barra inferior (adaptativo)."""
     return rx.link(
         etiqueta,
         href=ruta,
         font_size="0.75rem",
-        color=COLOR_TEXTO_SECUNDARIO,
+        color=TEXTO_HOME_MAS_SUAVE,              # ✅ adaptativo
         text_decoration="none",
         transition="color 0.2s",
-        _hover={"color": COLOR_ACENTO_TEXTO},
+        _hover={"color": AZUL_MARINO_NEON},
     )
 
 
@@ -446,32 +525,38 @@ def _barra_inferior() -> rx.Component:
     Barra inferior del footer con copyright, links legales y estado
     del servidor.
 
+    ✅ ADAPTATIVO: textos, borde y fondo del indicador cambian según
+    el modo.
+
     UX:
     - Copyright + links legales a la izquierda.
-    - Indicador de estado del servidor a la derecha.
+    - Estado del servidor a la derecha.
     - Estilo inspirado en reflex.dev.
+
+    Nota: el toggle de color mode está en la barra de navegación
+    superior (arriba a la derecha) para que sea más visible.
     """
     return rx.flex(
         # ==========================================================
-        # Copyright + links legales
+        # Copyright + links legales (izquierda)
         # ==========================================================
         rx.flex(
             rx.text(
                 f"© {ANIO_COPYRIGHT} {NOMBRE_INSTITUTO} · "
                 f"Todos los derechos reservados",
                 font_size="0.75rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
             ),
             rx.text(
                 "·",
                 font_size="0.75rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
             ),
             _enlace_legal("Términos", "/terminos"),
             rx.text(
                 "·",
                 font_size="0.75rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
             ),
             _enlace_legal("Privacidad", "/privacidad"),
             align="center",
@@ -479,32 +564,40 @@ def _barra_inferior() -> rx.Component:
             flex_wrap="wrap",
         ),
         # ==========================================================
-        # Estado del servidor
+        # Estado del servidor (derecha)
         # ==========================================================
         rx.flex(
             rx.box(
                 height="0.5rem",
                 width="0.5rem",
                 border_radius=RADIO_PASTILLA,
-                background=rx.color("green", 9),
+                background=COLOR_VERDE_ACTIVO,
+                box_shadow=f"0 0 12px {COLOR_VERDE_ACTIVO}",
                 animation="pulse 2s ease-in-out infinite",
             ),
             rx.text(
                 "Todos los servicios operativos",
                 font_size="0.75rem",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
             ),
             align="center",
             gap="0.5rem",
             padding="0.5rem 0.875rem",
             border_radius=RADIO_PASTILLA,
-            border="1px solid transparent",
+            border=f"1px solid {BORDE_HOME_SUAVE}",     # ✅ adaptativo
+            background=rx.color_mode_cond(              # ✅ adaptativo
+                light="rgba(34, 197, 94, 0.08)",
+                dark="rgba(34, 197, 94, 0.05)",
+            ),
             animation="borderPulse 2.5s ease-in-out infinite",
         ),
+        # ==========================================================
+        # Layout de la barra inferior
+        # ==========================================================
         align="center",
         justify="between",
         width="100%",
-        padding_top="1.5rem",
+        padding_top="2rem",
         wrap="wrap",
         gap="1rem",
     )
@@ -520,6 +613,8 @@ def _bloque_superior() -> rx.Component:
     Bloque superior del footer: brand block + newsletter.
 
     En desktop se muestran lado a lado; en móvil se apilan.
+
+    ✅ ADAPTATIVO: el borde inferior cambia según el modo.
 
     ⚠️ `direction` en rx.flex (Radix Themes) NO acepta listas.
     Se usa `rx.breakpoints(...)` explícito.
@@ -537,8 +632,8 @@ def _bloque_superior() -> rx.Component:
         align="start",
         gap="2rem",
         width="100%",
-        padding="2.5rem 0",
-        border_bottom=f"1px solid {COLOR_DIVISOR}",
+        padding="3rem 0",
+        border_bottom=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
     )
 
 
@@ -549,14 +644,17 @@ def _bloque_superior() -> rx.Component:
 
 def pie_pagina_institucional() -> rx.Component:
     """
-    Footer institucional completo con:
+    Footer institucional completo — estilo Neon adaptativo.
+
+    Contiene:
     - Bloque superior: brand (logo + tagline + redes) + newsletter.
-    - Sección de feedback.
+    - Sección de feedback ("¿Te resultó útil?").
     - Grid de enlaces por columnas.
     - Barra inferior con copyright + legales + estado del servidor.
 
-    Usa tokens Radix adaptativos al color_mode. El fondo es neutro
-    (`gray-1`) con un borde superior sutil.
+    ✅ ADAPTATIVO: fondo, textos y bordes respetan el color_mode.
+
+    El toggle de color mode está en la barra de navegación superior.
     """
     columnas = _enlaces_footer()
 
@@ -583,7 +681,7 @@ def pie_pagina_institucional() -> rx.Component:
                 ),
                 spacing="6",
                 width="100%",
-                padding="2.5rem 0",
+                padding="3rem 0",
             ),
             # ==========================================================
             # Barra inferior
@@ -599,8 +697,8 @@ def pie_pagina_institucional() -> rx.Component:
         padding=f"0 {PADDING_LATERAL_FOOTER}",
         max_width=ANCHO_MAXIMO_FOOTER,
         margin="0 auto",
-        border_top=f"1px solid {COLOR_DIVISOR}",
-        background=COLOR_FONDO_CARTA,
+        border_top=f"1px solid {BORDE_HOME_SUAVE}",   # ✅ adaptativo
+        background=FONDO_HOME,                         # ✅ adaptativo
     )
 
 

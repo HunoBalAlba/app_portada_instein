@@ -11,20 +11,38 @@ Todos los colores usan tokens Radix (auto-adaptativos al color_mode).
 Los colores semánticos (azul, amarillo, violeta, verde) se expresan
 como `rx.color()` con la escala correcta según su rol.
 
+Nota técnica: ACORDEÓN VACÍO UNIFICADO
+--------------------------------------
+✅ REFACTORIZADO: el estado vacío ya NO tiene su propio `_estado_vacio()`
+local. Ahora delega en el componente genérico `estado_vacio`.
+
 Nota técnica: on_load
 ---------------------
-El evento `on_load` llama a `iniciar_carrusel_automatico`, que es
-idempotente (no crea tareas duplicadas si ya está corriendo).
+⚠️ Ya NO se usa `iniciar_carrusel_automatico` porque ese evento fue
+eliminado del State (el auto-avance vive en el componente
+`hero_carreras` con `rx.moment`).
 
-⚠️ NO usar `auto_avanzar_carrusel` (nombre antiguo, ya no existe).
+Nota técnica: LAYOUT
+--------------------
+- Los tokens de color son `Var` reactivos, no strings. Usar SIEMPRE
+  f-strings para concatenar con texto.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
-from app_portada_instein.componentes.barra_navegacion import barra_navegacion_superior
+from app_portada_instein.componentes.barra_navegacion import (
+    barra_navegacion_superior,
+)
+from app_portada_instein.componentes.estado_vacio import estado_vacio
 from app_portada_instein.componentes.hero_carreras import hero_carreras
-from app_portada_instein.componentes.pie_pagina import pie_pagina_institucional
-from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.componentes.pie_pagina import (
+    pie_pagina_institucional,
+)
+from app_portada_instein.dominio.estado_institucional import (
+    EstadoInstitucional,
+)
 from app_portada_instein.infraestructura.constantes_visuales import (
     ANCHO_CONTENIDO,
     COLOR_ACENTO_BORDE,
@@ -45,7 +63,6 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
-    SOMBRA_SUAVE,
 )
 
 
@@ -118,7 +135,9 @@ def _filtro_pill(
         ),
         padding="0.5rem 1rem",
         border_radius=RADIO_PASTILLA,
-        background=rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE),
+        background=rx.cond(
+            activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE
+        ),
         border=rx.cond(
             activo,
             f"1px solid {COLOR_ACENTO_SOLIDO}",
@@ -134,7 +153,9 @@ def _filtro_pill(
         ),
         _hover={
             "transform": "translateY(-1px)",
-            "background": rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA),
+            "background": rx.cond(
+                activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA
+            ),
         },
     )
 
@@ -153,7 +174,9 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
         ),
         padding="0.375rem 0.875rem",
         border_radius=RADIO_PASTILLA,
-        background=rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA),
+        background=rx.cond(
+            activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_CARTA
+        ),
         border=rx.cond(
             activo,
             f"1px solid {COLOR_ACENTO_SOLIDO}",
@@ -163,7 +186,9 @@ def _orden_pill(etiqueta: str, valor: str) -> rx.Component:
         transition="all 0.2s",
         on_click=EstadoInstitucional.cambiar_orden(valor),
         _hover={
-            "background": rx.cond(activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE),
+            "background": rx.cond(
+                activo, COLOR_ACENTO_SOLIDO, COLOR_FONDO_SUAVE
+            ),
         },
     )
 
@@ -187,7 +212,9 @@ def _barra_filtros() -> rx.Component:
         rx.vstack(
             _etiqueta_grupo("Filtrar por"),
             rx.flex(
-                _filtro_pill("Todos", "todos", EstadoInstitucional.filtro_activo),
+                _filtro_pill(
+                    "Todos", "todos", EstadoInstitucional.filtro_activo
+                ),
                 _filtro_pill(
                     "Alta demanda laboral",
                     "demanda_alta",
@@ -363,7 +390,10 @@ def _badges_demanda(carrera: dict) -> rx.Component:
 # ======================================================================
 
 
-def _chip_caracteristica(caracteristica: dict, color_carrera: rx.Var) -> rx.Component:
+def _chip_caracteristica(
+    caracteristica: dict,
+    color_carrera: rx.Var,
+) -> rx.Component:
     """Chip individual de característica."""
     return rx.box(
         rx.flex(
@@ -395,7 +425,9 @@ def _caracteristicas_carrera(carrera: dict) -> rx.Component:
     return rx.flex(
         rx.foreach(
             carrera["caracteristicas"],
-            lambda c: _chip_caracteristica(c, carrera["color_principal"]),
+            lambda c: _chip_caracteristica(
+                c, carrera["color_principal"]
+            ),
         ),
         gap="0.5rem",
         flex_wrap="wrap",
@@ -410,7 +442,10 @@ def _caracteristicas_carrera(carrera: dict) -> rx.Component:
 # ======================================================================
 
 
-def _item_carrera_enriquecido(carrera: dict, indice: int) -> rx.Component:
+def _item_carrera_enriquecido(
+    carrera: dict,
+    indice: int,
+) -> rx.Component:
     """Item de carrera con layout de 3 zonas."""
     color_carrera = carrera["color_principal"]
 
@@ -542,51 +577,6 @@ def _grid_carreras_enriquecido() -> rx.Component:
 
 
 # ======================================================================
-# Estado vacío
-# ======================================================================
-
-
-def _estado_vacio() -> rx.Component:
-    """Mensaje cuando no hay resultados."""
-    return rx.flex(
-        rx.box(
-            rx.icon(
-                "search-x",
-                size=48,
-                color=COLOR_TEXTO_APAGADO,
-            ),
-            padding="1.5rem",
-            border_radius=RADIO_GRANDE,
-            background=COLOR_FONDO_SUAVE,
-            display="flex",
-            align_items="center",
-            justify_content="center",
-        ),
-        rx.vstack(
-            rx.heading(
-                "No se encontraron carreras",
-                size="5",
-                font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
-            ),
-            rx.text(
-                "Prueba ajustando los filtros o limpiando la selección actual.",
-                font_size="0.875rem",
-                color=COLOR_TEXTO_SECUNDARIO,
-                text_align="center",
-            ),
-            spacing="2",
-            align="center",
-        ),
-        direction="column",
-        align="center",
-        gap="1.5rem",
-        padding="4rem 1.5rem",
-        width="100%",
-    )
-
-
-# ======================================================================
 # Encabezado de la sección
 # ======================================================================
 
@@ -615,7 +605,9 @@ def _encabezado_seccion() -> rx.Component:
         ),
         rx.box(
             rx.text(
-                EstadoInstitucional.carreras_filtradas_y_ordenadas.length().to_string(),
+                EstadoInstitucional.carreras_filtradas_y_ordenadas
+                .length()
+                .to_string(),
                 font_size="2rem",
                 font_weight="800",
                 color=COLOR_ACENTO_TEXTO,
@@ -652,10 +644,17 @@ def _encabezado_seccion() -> rx.Component:
 @rx.page(
     route="/carreras",
     title=f"Carreras | {NOMBRE_INSTITUTO}",
-    # on_load=EstadoInstitucional.iniciar_carrusel_automatico,  # ✅ Nombre correcto
 )
 def vista_carreras() -> rx.Component:
-    """Página con la oferta académica completa + filtros avanzados."""
+    """
+    Página con la oferta académica completa + filtros avanzados.
+
+    ✅ REFACTORIZADO: el estado vacío delega en el componente genérico
+    `estado_vacio`.
+
+    ⚠️ El auto-avance del carrusel vive en `hero_carreras` con
+    `rx.moment`. NO hay `on_load` que iniciar.
+    """
     return rx.vstack(
         barra_navegacion_superior(),
         rx.box(
@@ -664,13 +663,31 @@ def vista_carreras() -> rx.Component:
                 _encabezado_seccion(),
                 _barra_filtros(),
                 rx.cond(
-                    EstadoInstitucional.carreras_filtradas_y_ordenadas.length() > 0,
+                    EstadoInstitucional.carreras_filtradas_y_ordenadas
+                    .length()
+                    > 0,
                     _grid_carreras_enriquecido(),
-                    _estado_vacio(),
+                    estado_vacio(
+                        titulo="No se encontraron carreras",
+                        mensaje=(
+                            "Prueba ajustando los filtros o limpiando "
+                            "la selección actual."
+                        ),
+                        icono="search-x",
+                        tamano_icono=48,
+                        boton_accion_etiqueta="Limpiar filtros",
+                        boton_accion_icono="rotate-ccw",
+                        boton_accion_on_click=(
+                            EstadoInstitucional.cambiar_filtro("todos")
+                        ),
+                        boton_accion_color_scheme="crimson",
+                    ),
                 ),
                 max_width=ANCHO_CONTENIDO,
                 margin="0 auto",
-                padding=f"2rem {PADDING_LATERAL} 4rem {PADDING_LATERAL}",
+                padding=(
+                    f"2rem {PADDING_LATERAL} 4rem {PADDING_LATERAL}"
+                ),
                 width="100%",
             ),
             width="100%",
@@ -680,3 +697,6 @@ def vista_carreras() -> rx.Component:
         min_height="100vh",
         width="100%",
     )
+
+
+__all__ = ["vista_carreras"]

@@ -35,21 +35,34 @@ Por eso:
 - El `on_load` de la vista usa `carrera_es_valida` para decidir si
   redirige a `/404`. Así, si el id es inválido, la vista ni siquiera
   se renderiza.
+- Las listas de `TypedDict` (`list[Carrera]`, `list[PlanAnual]`,
+  `list[PreguntaFrecuente]`) evitan el `ForeachVarError` porque el
+  tipo interno se infiere correctamente.
 
 Nota técnica: COLORES ADAPTATIVOS
 ---------------------------------
 Los colores adaptativos (light/dark) NO se exponen como `@rx.var`
 porque `rx.color_mode_cond()` devuelve un `Var` reactivo del frontend,
-no un `str` serializable. Los componentes usan los helpers
-`color_carrera_adaptativo()` y `color_suave_carrera_adaptativo()` de
-`constantes_visuales.py`, aplicados directamente sobre el dict de la
-carrera.
+no un `str` serializable.
+
+⚠️ NOTA: Como el proyecto decidió unificar el acento bajo un único
+azul marino (`AZUL_MARINO_NEON`), los iconos flotantes de esta State
+también lo usan directamente en lugar de `carrera["color_principal"]`.
 
 Nota técnica: @rx.var SIN ARGUMENTOS
 ------------------------------------
 En Reflex 0.9.x, un `@rx.var` NO puede recibir argumentos (más allá de
 `self`). Los helpers que necesitan argumentos (como `_carrera_por_id`)
 deben ser **métodos normales de Python**, no decorados.
+
+Nota técnica: @rx.var(cache=True)
+---------------------------------
+Las `@rx.var` que dependen de otras vars y solo cambian cuando el
+catálogo cambia pueden cachearse con `@rx.var(cache=True)`. Esto evita
+recalcular la var en cada render del componente que la consume.
+
+Aplicado a: `carreras_destacadas_con_etiquetas` (depende solo de
+`self.carreras`).
 
 Nota técnica: CARRUSEL AUTOMÁTICO (FIX FUGA DE MEMORIA)
 -------------------------------------------------------
@@ -77,7 +90,10 @@ Este State solo expone los eventos `siguiente_carrusel`,
 componente `hero_carreras` (flechas, dots y el `rx.moment`).
 """
 
+from __future__ import annotations
+
 import random
+from typing import TypedDict
 
 import reflex as rx
 
@@ -89,7 +105,29 @@ from app_portada_instein.datos.modelos_carrera import (
     Carrera,
     CarreraConEtiqueta,
     PlanAnual,
+    PreguntaFrecuente,
 )
+from app_portada_instein.infraestructura.constantes_visuales import (
+    AZUL_MARINO_NEON,
+)
+
+
+# ======================================================================
+# Tipos locales
+# ======================================================================
+
+
+class OpcionAnio(TypedDict):
+    """
+    Opción de año para el `rx.segmented_control` del plan de estudios.
+
+    Attributes:
+        etiqueta: Texto visible (ej: "Primer Año").
+        valor: Valor único que se pasa al `on_change` (ej: "0", "1").
+    """
+
+    etiqueta: str
+    valor: str
 
 
 # ======================================================================
@@ -97,8 +135,8 @@ from app_portada_instein.datos.modelos_carrera import (
 # ======================================================================
 
 # --- Iconos flotantes del detalle ---
-CANTIDAD_ICONOS_FONDO = 30
-SEMILLA_ICONOS_FONDO = 42
+CANTIDAD_ICONOS_FONDO: int = 30
+SEMILLA_ICONOS_FONDO: int = 42
 TAMANOS_ICONOS_FONDO: list[int] = [16, 20, 24, 28, 32, 40]
 
 # --- Etiquetas cíclicas del carrusel ---
@@ -111,9 +149,44 @@ ETIQUETAS_CARRUSEL: list[str] = [
 ]
 
 # --- Carrusel automático ---
-SEGUNDOS_ENTRE_BANNERS = 5
+SEGUNDOS_ENTRE_BANNERS: int = 5
 """Segundos entre cada avance automático del carrusel (usado por el
 `rx.moment(interval=...)` del componente `hero_carreras`)."""
+
+# --- Secciones válidas del explorador y del detalle ---
+SECCIONES_EXPLORADOR_VALIDAS: frozenset[str] = frozenset(
+    {"info", "plan", "perfil", "campo", "faq"}
+)
+"""Secciones válidas del explorador del home."""
+
+SECCIONES_DETALLE_VALIDAS: frozenset[str] = frozenset(
+    {"info", "plan", "perfil"}
+)
+"""Secciones válidas de la vista de detalle de carrera."""
+
+# --- Filtros válidos de la lista de carreras ---
+FILTROS_VALIDOS: frozenset[str] = frozenset({
+    "demanda_alta",
+    "puntuacion_top",
+    "mas_inscritos",
+    "mas_graduados",
+})
+"""Claves de filtros válidos para `carreras_filtradas_y_ordenadas`."""
+
+# --- Órdenes válidos de la lista de carreras ---
+ORDENES_VALIDAS: frozenset[str] = frozenset({
+    "puntuacion_desc",
+    "inscritos_desc",
+    "graduados_desc",
+    "empleabilidad_desc",
+    "salario_desc",
+})
+"""Claves de ordenamiento válidos para `carreras_filtradas_y_ordenadas`."""
+
+
+# ======================================================================
+# Estado
+# ======================================================================
 
 
 class EstadoInstitucional(rx.State):
@@ -123,21 +196,28 @@ class EstadoInstitucional(rx.State):
     # ESTADO PERSISTENTE
     # ==================================================================
 
+    # --- Catálogo ---
     carreras: list[Carrera] = CATALOGO_CARRERAS
+    """Catálogo de carreras. Puede ser modificado por
+    `aleatorizar_colores_carreras`."""
+
+    # --- Home: carrera destacada y explorador ---
     id_carrera_destacada: int = 0
-    indice_anio_seleccionado: int = 0
-    seccion_detalle_activa: str = "info"
     seccion_explorador_activa: str = "info"
     indice_anio_explorador: int = 0
     texto_busqueda_carrera: str = ""
     mostrar_panel_flotante: bool = False
+
+    # --- Detalle: sección y año ---
+    indice_anio_seleccionado: int = 0
+    seccion_detalle_activa: str = "info"
+
+    # --- Filtros y ordenamiento de la lista ---
     filtro_activo: str = "demanda_alta"
     orden_activo: str = "puntuacion_desc"
-    indice_carrusel: int = 0
 
-    # ⚠️ ELIMINADO: `carrusel_activo: bool = False`
-    # Ya no se necesita porque el auto-avance vive en el cliente
-    # (`rx.moment`), no en una tarea de Python.
+    # --- Carrusel ---
+    indice_carrusel: int = 0
 
     # ==================================================================
     # HELPERS INTERNOS (métodos normales, NO decorados con @rx.var)
@@ -171,25 +251,31 @@ class EstadoInstitucional(rx.State):
             return False
         return any(c["id"] == id_carrera for c in self.carreras)
 
+    @staticmethod
     def _plan_anual_seguro(
-        self,
         plan_estudios: list[PlanAnual],
         indice: int,
     ) -> PlanAnual:
-        """Devuelve el plan anual en `indice`, con fallback seguro."""
+        """
+        Devuelve el plan anual en `indice`, con fallback seguro.
+
+        No usa `self` → `@staticmethod` para permitir testearlo sin
+        instanciar el State.
+        """
         if not plan_estudios:
             return {"anio": "Sin plan", "materias": []}
         if indice < 0 or indice >= len(plan_estudios):
             return plan_estudios[0]
         return plan_estudios[indice]
 
+    @classmethod
     def _materias_del_plan(
-        self,
+        cls,
         plan_estudios: list[PlanAnual],
         indice: int,
     ) -> list[str]:
         """Devuelve las materias del año en `indice`, con fallback seguro."""
-        plan = self._plan_anual_seguro(plan_estudios, indice)
+        plan = cls._plan_anual_seguro(plan_estudios, indice)
         return plan["materias"]
 
     # ==================================================================
@@ -335,7 +421,9 @@ class EstadoInstitucional(rx.State):
         )
 
     @rx.var
-    def preguntas_frecuentes_carrera_destacada(self) -> list[dict]:
+    def preguntas_frecuentes_carrera_destacada(
+        self,
+    ) -> list[PreguntaFrecuente]:
         """Devuelve las preguntas frecuentes de la carrera destacada."""
         return self.carrera_destacada.get("preguntas_frecuentes", [])
 
@@ -360,7 +448,7 @@ class EstadoInstitucional(rx.State):
     # ==================================================================
 
     @rx.var
-    def opciones_anio_plan(self) -> list[dict]:
+    def opciones_anio_plan(self) -> list[OpcionAnio]:
         """Devuelve las opciones de año para el segmented control."""
         carrera = self.carrera_seleccionada
         return [
@@ -380,6 +468,7 @@ class EstadoInstitucional(rx.State):
         """Devuelve las carreras filtradas y ordenadas según los filtros."""
         carreras = list(self.carreras)
 
+        # --- Filtro ---
         if self.filtro_activo == "demanda_alta":
             carreras = [
                 c for c in carreras
@@ -403,12 +492,21 @@ class EstadoInstitucional(rx.State):
                 reverse=True,
             )[:3]
 
+        # --- Ordenamiento ---
         ordenamientos = {
             "puntuacion_desc": lambda c: c["estadisticas"]["puntuacion"],
-            "inscritos_desc": lambda c: c["estadisticas"]["estudiantes_inscritos"],
-            "graduados_desc": lambda c: c["estadisticas"]["estudiantes_graduados"],
-            "empleabilidad_desc": lambda c: c["estadisticas"]["tasa_empleabilidad"],
-            "salario_desc": lambda c: c["estadisticas"]["salario_promedio_bs"],
+            "inscritos_desc": (
+                lambda c: c["estadisticas"]["estudiantes_inscritos"]
+            ),
+            "graduados_desc": (
+                lambda c: c["estadisticas"]["estudiantes_graduados"]
+            ),
+            "empleabilidad_desc": (
+                lambda c: c["estadisticas"]["tasa_empleabilidad"]
+            ),
+            "salario_desc": (
+                lambda c: c["estadisticas"]["salario_promedio_bs"]
+            ),
         }
 
         clave = ordenamientos.get(self.orden_activo)
@@ -423,9 +521,14 @@ class EstadoInstitucional(rx.State):
 
     @rx.var
     def iconos_flotantes_detalle(self) -> list[rx.Component]:
-        """Devuelve los componentes de iconos flotantes precalculados."""
+        """
+        Devuelve los componentes de iconos flotantes precalculados.
+
+        ✅ REFACTORIZADO: usa `AZUL_MARINO_NEON` en lugar del color
+        de la carrera, porque el proyecto unificó el acento bajo un
+        único azul marino.
+        """
         carrera = self.carrera_seleccionada
-        color_principal = carrera["color_principal"]
 
         iconos_disponibles: list[str] = [carrera["icono"]]
         for icono_animado in carrera["iconos_animados"]:
@@ -445,7 +548,11 @@ class EstadoInstitucional(rx.State):
 
             componentes.append(
                 rx.box(
-                    rx.icon(tag=nombre, size=tamano, color=color_principal),
+                    rx.icon(
+                        tag=nombre,
+                        size=tamano,
+                        color=AZUL_MARINO_NEON,
+                    ),
                     position="absolute",
                     left=f"{x}%",
                     top=f"{y}%",
@@ -464,9 +571,17 @@ class EstadoInstitucional(rx.State):
     # VARIABLES COMPUTADAS: CARRUSEL
     # ==================================================================
 
-    @rx.var
-    def carreras_destacadas_con_etiquetas(self) -> list[CarreraConEtiqueta]:
-        """Devuelve TODAS las carreras del catálogo con su etiqueta."""
+    @rx.var(cache=True)
+    def carreras_destacadas_con_etiquetas(
+        self,
+    ) -> list[CarreraConEtiqueta]:
+        """
+        Devuelve TODAS las carreras del catálogo con su etiqueta.
+
+        ✅ CACHEADA con `@rx.var(cache=True)` porque solo depende de
+        `self.carreras` (que rara vez cambia). Evita recalcular la
+        lista en cada render del carrusel.
+        """
         resultado: list[CarreraConEtiqueta] = []
         for i, carrera in enumerate(self.carreras):
             etiqueta = ETIQUETAS_CARRUSEL[i % len(ETIQUETAS_CARRUSEL)]
@@ -636,7 +751,7 @@ class EstadoInstitucional(rx.State):
         rng.shuffle(seleccionados)
 
         carreras_actualizadas: list[Carrera] = []
-        for carrera, colores in zip(self.carreras, seleccionados, strict=False):
+        for carrera, colores in zip(self.carreras, seleccionados):
             principal, suave, principal_dark, suave_dark = colores
             nueva_carrera = dict(carrera)
             nueva_carrera["color_principal"] = principal
@@ -648,10 +763,19 @@ class EstadoInstitucional(rx.State):
         self.carreras = carreras_actualizadas
 
 
+# ======================================================================
+# EXPORTS
+# ======================================================================
+
 __all__ = [
     "CANTIDAD_ICONOS_FONDO",
     "ETIQUETAS_CARRUSEL",
     "EstadoInstitucional",
+    "FILTROS_VALIDOS",
+    "ORDENES_VALIDAS",
+    "OpcionAnio",
+    "SECCIONES_DETALLE_VALIDAS",
+    "SECCIONES_EXPLORADOR_VALIDAS",
     "SEGUNDOS_ENTRE_BANNERS",
     "SEMILLA_ICONOS_FONDO",
     "TAMANOS_ICONOS_FONDO",

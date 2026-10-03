@@ -1,5 +1,7 @@
 """
 Punto de entrada de la aplicación web del INSTEIN.
+
+✅ ACTUALIZADO: usa `accent_color="blue"` (azul primario del proyecto).
 """
 
 import reflex as rx
@@ -11,18 +13,16 @@ from app_portada_instein.dominio.kepler import (
     generar_pasos_orbita,
 )
 from app_portada_instein.infraestructura.constantes_visuales import (
+    ACCENT_COLOR_TEMA,           # ✅ NUEVO
     ESTILO_BASE,
     ESTILOS_GLOBALES_CSS,
     FUENTE_PRINCIPAL,
     HOJAS_DE_ESTILO_BASE,
 )
 
-# ⚠️ NUEVO: importar la función del keyframe del carrusel.
 from app_portada_instein.componentes.hero_carreras import (
     keyframes_progreso_carrusel,
 )
-
-# ... (resto de imports)
 
 from app_portada_instein.vistas import (  # noqa: F401
     vista_404,
@@ -129,7 +129,7 @@ def _generar_keyframes_orbitales() -> dict:
 
 ESTILOS_GLOBALES: dict = {
     **KEYFRAMES_UI,
-    **keyframes_progreso_carrusel(),  # ⚠️ NUEVO: keyframe de la barra
+    **keyframes_progreso_carrusel(),
     **_generar_keyframes_orbitales(),
     **ESTILOS_GLOBALES_CSS,
     **ESTILO_BASE,
@@ -143,7 +143,7 @@ ESTILOS_GLOBALES: dict = {
 app = rx.App(
     theme=rx.theme(
         appearance="light",
-        accent_color="crimson",
+        accent_color=ACCENT_COLOR_TEMA,   # ✅ CAMBIO: "blue" (era "blue" también, pero ahora viene de la constante)
         radius="medium",
         font_family=FUENTE_PRINCIPAL,
     ),

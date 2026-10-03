@@ -26,15 +26,38 @@ Sistema de color (UX)
 - Niveles de beca: verde (30%), ámbar (50%), crimson (100%).
 - Textos: neutros (`gray-11`/`gray-12`).
 
-Nota técnica
-------------
-- Los tokens de color son `Var` reactivos, no strings. Usar f-strings.
+Nota técnica: ACORDEÓN FAQ UNIFICADO
+------------------------------------
+✅ REFACTORIZADO: la sección de preguntas frecuentes ya NO tiene su
+propio `EstadoFAQBecas` ni su propio item. Ahora delega en el
+componente genérico `acordeon_faq` con variante `"light"`, que usa
+el `EstadoAcordeonFaq` global.
+
+Esto elimina ~60 líneas de código duplicado.
+
+Nota técnica: `ItemFaq` ES `TypedDict`
+--------------------------------------
+`PREGUNTAS_BECA` ahora es `list[ItemFaq]` (TypedDict), no `list[dict]`.
+Los items se construyen con **dicts literales**:
+
+    {"pregunta": "¿...?", "respuesta": "..."}
+
+NO con `ItemFaq(pregunta=..., respuesta=...)`.
+
+Nota técnica: LAYOUT
+--------------------
 - `rx.flex` y `rx.vstack` (Radix Themes) NO aceptan listas en
   `direction`, `align`, `justify`. Usar `rx.breakpoints(...)`.
 """
 
+from __future__ import annotations
+
 import reflex as rx
 
+from app_portada_instein.componentes.acordeon_faq import (
+    ItemFaq,
+    acordeon_faq,
+)
 from app_portada_instein.componentes.barra_navegacion import (
     barra_navegacion_superior,
 )
@@ -340,8 +363,12 @@ PROYECTOS_GANADORES: list[dict] = [
 # ======================================================================
 # Datos: preguntas frecuentes del programa
 # ======================================================================
+# ✅ Ahora es `list[ItemFaq]` (TypedDict) en lugar de `list[dict]`.
+# Se construye con dicts literales:
+#     {"pregunta": "...", "respuesta": "..."}
+# ----------------------------------------------------------------------
 
-PREGUNTAS_BECA: list[dict] = [
+PREGUNTAS_BECA: list[ItemFaq] = [
     {
         "pregunta": "¿Hay becas por promedio académico?",
         "respuesta": (
@@ -407,25 +434,6 @@ PREGUNTAS_BECA: list[dict] = [
         ),
     },
 ]
-
-
-# ======================================================================
-# Estado del acordeón
-# ======================================================================
-
-
-class EstadoFAQBecas(rx.State):
-    """Estado del acordeón de preguntas frecuentes del programa."""
-
-    indice_abierto: int = -1
-
-    @rx.event
-    def alternar(self, indice: int):
-        """Abre o cierra una pregunta."""
-        if self.indice_abierto == indice:
-            self.indice_abierto = -1
-        else:
-            self.indice_abierto = indice
 
 
 # ======================================================================
@@ -761,7 +769,11 @@ def _tarjeta_area(item: dict) -> rx.Component:
                 line_height="1.6",
             ),
             rx.flex(
-                rx.icon("graduation-cap", size=12, color=rx.color(color_scheme, 11)),
+                rx.icon(
+                    "graduation-cap",
+                    size=12,
+                    color=rx.color(color_scheme, 11),
+                ),
                 rx.text(
                     item["carrera"],
                     font_size="0.6875rem",
@@ -833,7 +845,9 @@ def _seccion_areas() -> rx.Component:
             ),
             rx.grid(
                 *[_tarjeta_area(item) for item in AREAS_INNOVACION],
-                columns=rx.breakpoints(initial="1", sm="2", md="2", lg="3"),
+                columns=rx.breakpoints(
+                    initial="1", sm="2", md="2", lg="3"
+                ),
                 spacing="4",
                 width="100%",
                 align_items="stretch",
@@ -853,7 +867,10 @@ def _seccion_areas() -> rx.Component:
 # ======================================================================
 
 
-def _tarjeta_nivel(nivel: dict, destacado: bool = False) -> rx.Component:
+def _tarjeta_nivel(
+    nivel: dict,
+    destacado: bool = False,
+) -> rx.Component:
     """Tarjeta de nivel de beca."""
     color_scheme = nivel["color"]
 
@@ -1049,6 +1066,7 @@ def _item_requisito(item: dict) -> rx.Component:
             "transform": "translateX(4px)",
         },
     )
+
 
 def _seccion_requisitos() -> rx.Component:
     """Sección con los requisitos para participar."""
@@ -1266,84 +1284,25 @@ def _seccion_ganadores() -> rx.Component:
 
 
 # ======================================================================
-# Preguntas frecuentes
+# Preguntas frecuentes (delegadas al acordeón unificado)
 # ======================================================================
 
 
-def _item_faq(pregunta: dict, indice: int) -> rx.Component:
-    """Item individual del acordeón de FAQs."""
-    esta_abierta = EstadoFAQBecas.indice_abierto == indice
-
-    return rx.box(
-        rx.box(
-            rx.flex(
-                rx.icon(
-                    "help-circle",
-                    size=18,
-                    color=COLOR_ACENTO_TEXTO,
-                    flex_shrink="0",
-                ),
-                rx.text(
-                    pregunta["pregunta"],
-                    font_size="0.9375rem",
-                    font_weight="600",
-                    color=COLOR_TEXTO_PRINCIPAL,
-                    flex="1",
-                    line_height="1.4",
-                ),
-                rx.icon(
-                    "chevron-down",
-                    size=18,
-                    color=COLOR_TEXTO_SECUNDARIO,
-                    transform=rx.cond(
-                        esta_abierta,
-                        "rotate(180deg)",
-                        "rotate(0deg)",
-                    ),
-                    transition="transform 0.3s",
-                    flex_shrink="0",
-                ),
-                align="center",
-                gap="0.75rem",
-                width="100%",
-            ),
-            on_click=lambda: EstadoFAQBecas.alternar(indice),
-            cursor="pointer",
-            padding="1.125rem 1.25rem",
-            role="button",
-            tab_index=0,
-            width="100%",
-        ),
-        rx.cond(
-            esta_abierta,
-            rx.box(
-                rx.text(
-                    pregunta["respuesta"],
-                    font_size="0.875rem",
-                    line_height="1.6",
-                    color=COLOR_TEXTO_CUERPO,
-                ),
-                padding="0 1.25rem 1.25rem 3.25rem",
-            ),
-            rx.fragment(),
-        ),
-        width="100%",
-        border=rx.cond(
-            esta_abierta,
-            f"1px solid {COLOR_ACENTO_TEXTO}",
-            f"1px solid {COLOR_BORDE_SUAVE}",
-        ),
-        border_radius=RADIO_MEDIO,
-        background=COLOR_FONDO_CARTA,
-        transition="all 0.2s",
-        _hover={"border_color": COLOR_ACENTO_TEXTO},
-    )
-
-
 def _seccion_faq() -> rx.Component:
-    """Sección de preguntas frecuentes del programa."""
+    """
+    Sección de preguntas frecuentes del programa.
+
+    ✅ REFACTORIZADO: usa el componente genérico `acordeon_faq` con
+    variante `"light"`. El estado del acordeón vive en
+    `EstadoAcordeonFaq` (compartido por toda la app).
+
+    Estructura:
+    1. Encabezado con etiqueta + título + subtítulo.
+    2. Acordeón con las preguntas del programa.
+    """
     return rx.box(
         rx.vstack(
+            # --- Encabezado ---
             rx.vstack(
                 rx.text(
                     "PREGUNTAS FRECUENTES",
@@ -1371,13 +1330,12 @@ def _seccion_faq() -> rx.Component:
                 spacing="2",
                 margin_bottom="2rem",
             ),
-            rx.vstack(
-                *[
-                    _item_faq(p, i)
-                    for i, p in enumerate(PREGUNTAS_BECA)
-                ],
-                spacing="3",
-                width="100%",
+            # --- Acordeón unificado ---
+            acordeon_faq(
+                items=PREGUNTAS_BECA,
+                variante="light",
+                icono="help-circle",
+                color_acento=COLOR_ACENTO_TEXTO,
             ),
             width="100%",
             align="center",
@@ -1433,7 +1391,11 @@ def _cta_becas() -> rx.Component:
             rx.flex(
                 rx.link(
                     rx.icon("message-circle", size=18),
-                    rx.text("Consultar por WhatsApp", as_="span", font_weight="700"),
+                    rx.text(
+                        "Consultar por WhatsApp",
+                        as_="span",
+                        font_weight="700",
+                    ),
                     href="/contacto",
                     text_decoration="none",
                     display="inline-flex",
@@ -1444,7 +1406,9 @@ def _cta_becas() -> rx.Component:
                     padding="1rem 2rem",
                     border_radius=RADIO_PASTILLA,
                     font_size="1rem",
-                    box_shadow=f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}",
+                    box_shadow=(
+                        f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}"
+                    ),
                     transition="all 0.2s",
                     _hover={
                         "transform": "translateY(-2px)",
@@ -1453,7 +1417,11 @@ def _cta_becas() -> rx.Component:
                 ),
                 rx.link(
                     rx.icon("calendar-check", size=18),
-                    rx.text("Ver calendario", as_="span", font_weight="600"),
+                    rx.text(
+                        "Ver calendario",
+                        as_="span",
+                        font_weight="600",
+                    ),
                     href="/calendario",
                     text_decoration="none",
                     display="inline-flex",
@@ -1521,3 +1489,6 @@ def vista_becas() -> rx.Component:
         width="100%",
         spacing="0",
     )
+
+
+__all__ = ["vista_becas"]

@@ -1,23 +1,33 @@
+# app_portada_instein/infraestructura/constantes_visuales.py
+
 """
 Constantes visuales, datos institucionales y utilidades de estilo.
+
+✅ ESQUEMA DE COLOR: azul marino (`#000080`) + azul primario (`#0000FF`)
+   traducidos a la paleta Radix `blue` como equivalente profesional
+   (WCAG AA garantizado).
+
+✅ HOME: estilo Neon adaptativo con azul marino neon
+   (`AZUL_MARINO_NEON` = `#3b5bdb`) como acento en ambos modos.
 
 Este módulo es la ÚNICA FUENTE DE VERDAD para:
 
 1. Datos institucionales (nombre, teléfonos, direcciones, redes).
 2. Sombras, radios y dimensiones reutilizables.
 3. Paleta de colores semántica (adaptativa al color_mode).
-4. Estilos predefinidos (páginas, enlaces, botones).
-5. Fuentes y hojas de estilo externas.
+4. Esquema Neon del home (tokens adaptativos light/dark).
+5. Estilos predefinidos (páginas, enlaces, botones).
+6. Fuentes y hojas de estilo externas.
 
 Filosofía de color
 ------------------
-Todos los colores se expresan como **tokens Radix** mediante `rx.color()`
-o como **variables CSS de Radix** (`var(--gray-N)`, `var(--accent-N)`).
-Esto garantiza:
-
-- Adaptación automática al modo claro/oscuro (sin `rx.color_mode_cond`).
-- Coherencia con el `accent_color` definido en `rx.theme(...)`.
-- Cumplimiento de contraste WCAG AA por defecto.
+- Colores semánticos (texto, bordes, fondos) usan tokens Radix vía
+  `rx.color(...)` — adaptativos al color_mode automáticamente.
+- Colores del home usan tokens adaptativos (`rx.color_mode_cond`) —
+  el fondo, el texto y los bordes cambian; el AZUL MARINO permanece
+  como acento de marca en ambos modos.
+- El AZUL MARINO NEON (`AZUL_MARINO_NEON` = `#3b5bdb`) es el acento
+  ÚNICO del proyecto. Todas las carreras comparten el mismo acento.
 
 Escala Radix (steps 1 → 12)
 ---------------------------
@@ -30,21 +40,27 @@ Escala Radix (steps 1 → 12)
 | 11   | Texto de bajo énfasis sobre fondo suave      |
 | 12   | Texto principal de máximo contraste          |
 
-Para fondos sólidos (`accent-9`), usa `var(--accent-9-contrast)`
-como color de texto: Radix lo ajusta automáticamente según el accent.
+Nota técnica: TIPADO DE `REDES_SOCIALES`
+----------------------------------------
+`REDES_SOCIALES` usa `TypedDict` (`RedSocial`) en lugar de `dict`
+genérico. Esto garantiza que `rx.foreach` sobre las redes no falle
+con `ForeachVarError: Could not foreach over var of type Any`.
 
-Nota sobre reactividad
-----------------------
-`rx.color()` devuelve un `Var` reactivo: si se usa dentro del árbol de
-componentes, se recalcula al cambiar el color_mode. Si una constante
-se usa fuera del árbol (por ejemplo en `style={}` estático), NO se
-actualizará dinámicamente. En esos casos, evalúa el color dentro de la
-función que lo consume.
+Nota técnica: NOMBRES DE ICONOS LUCIDE
+--------------------------------------
+Los iconos siguen el formato **kebab-case** oficial de Lucide
+(https://lucide.dev/icons). Reflex tolera snake_case pero kebab-case
+evita sorpresas al actualizar la versión de Lucide:
+
+    ✅ music-2        ❌ music_2
+    ✅ circle-play    ❌ circle_play
+    ✅ message-circle ❌ message_circle
 """
 
 from __future__ import annotations
 
 import reflex as rx
+from typing import TypedDict
 
 
 # ======================================================================
@@ -67,7 +83,27 @@ EMAIL_CONTACTO = "contacto@instein.edu.bo"
 
 
 # ======================================================================
-# 2. REDES SOCIALES
+# 2. ESQUEMA DE COLOR BASE (azul primario + azul marino)
+# ======================================================================
+
+# --- Colores base solicitados (referencia) ---
+COLOR_AZUL_PRIMARIO_HEX = "#0000FF"      # Azul primario (puro)
+COLOR_AZUL_MARINO_HEX = "#000080"        # Azul marino
+
+# --- Tokens Radix equivalentes (los que se usan en la práctica) ---
+# La paleta Radix `blue` es el equivalente profesional del azul puro.
+COLOR_PRIMARIO = rx.color("blue", 9)      # Botones, CTAs
+COLOR_PRIMARIO_HOVER = rx.color("blue", 10)
+COLOR_PRIMARIO_ACTIVO = rx.color("blue", 11)
+COLOR_MARINO = rx.color("blue", 12)       # Texto principal, headers
+COLOR_MARINO_SUAVE = rx.color("blue", 11)
+
+# Nombre del accent para `rx.theme(accent_color=...)`
+ACCENT_COLOR_TEMA = "blue"
+
+
+# ======================================================================
+# 3. REDES SOCIALES
 # ======================================================================
 
 TIKTOK_URL = "https://www.tiktok.com/@instein.oficial"
@@ -78,8 +114,26 @@ DISCORD_URL = "https://discord.gg/instein"
 YOUTUBE_URL = "https://www.youtube.com/@instein_oficial"
 WHATSAPP_CANAL_URL = "https://whatsapp.com/channel/instein"
 
+
+class RedSocial(TypedDict):
+    """
+    Estructura de una red social institucional.
+
+    Attributes:
+        nombre: Nombre visible (ej: "Facebook").
+        icono: Nombre del icono Lucide en kebab-case.
+        url: URL del perfil institucional.
+        color: Color corporativo oficial (hex, no cambia con el modo).
+    """
+
+    nombre: str
+    icono: str
+    url: str
+    color: str
+
+
 # Colores corporativos de cada red (NO cambian con el modo; son de marca).
-REDES_SOCIALES: list[dict] = [
+REDES_SOCIALES: list[RedSocial] = [
     {
         "nombre": "Facebook",
         "icono": "users",
@@ -94,13 +148,13 @@ REDES_SOCIALES: list[dict] = [
     },
     {
         "nombre": "TikTok",
-        "icono": "music_2",
+        "icono": "music-2",
         "url": TIKTOK_URL,
         "color": "#000000",
     },
     {
         "nombre": "YouTube",
-        "icono": "circle_play",
+        "icono": "circle-play",
         "url": YOUTUBE_URL,
         "color": "#FF0000",
     },
@@ -112,7 +166,7 @@ REDES_SOCIALES: list[dict] = [
     },
     {
         "nombre": "Discord",
-        "icono": "message_circle",
+        "icono": "message-circle",
         "url": DISCORD_URL,
         "color": "#5865F2",
     },
@@ -120,15 +174,12 @@ REDES_SOCIALES: list[dict] = [
 
 
 # ======================================================================
-# 3. SOMBRAS
+# 4. SOMBRAS
 # ======================================================================
-# Las sombras se expresan como strings porque no dependen del modo. Si en
-# el futuro quieres variantes light/dark, envuélvelas en un helper
-# `sombra_suave()` que retorne `rx.color_mode_cond(...)`.
 
 SOMBRA_SUAVE = "0 1px 2px 0 rgb(0 0 0 / 0.05)"
-SOMBRA_MEDIA = "0 4px 12px -2px rgb(37 99 235 / 0.30)"
-SOMBRA_FUERTE = "0 10px 25px -5px rgb(37 99 235 / 0.25)"
+SOMBRA_MEDIA = "0 4px 12px -2px rgb(0 0 255 / 0.25)"
+SOMBRA_FUERTE = "0 10px 25px -5px rgb(0 0 255 / 0.20)"
 SOMBRA_CAJA = "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)"
 
 
@@ -138,11 +189,11 @@ def sombra_hover_acento() -> rx.Var | str:
 
     Se calcula dinámicamente porque depende del accent_color del tema.
     """
-    return f"0 12px 32px -8px {rx.color('accent', 8)}"
+    return f"0 12px 32px -8px {rx.color('blue', 8)}"
 
 
 # ======================================================================
-# 4. RADIOS
+# 5. RADIOS
 # ======================================================================
 
 RADIO_PEQUENO = "0.5rem"
@@ -154,7 +205,7 @@ RADIO_BORDE = "var(--radius-2)"
 
 
 # ======================================================================
-# 5. DIMENSIONES
+# 6. DIMENSIONES
 # ======================================================================
 
 ANCHO_CONTENIDO_VW = "90vw"
@@ -168,40 +219,39 @@ TAMANOS_CAJA_COLOR = ["2.25rem", "2.25rem", "2.5rem"]
 
 
 # ======================================================================
-# 6. PALETA SEMÁNTICA (tokens Radix — adaptativos al color_mode)
+# 7. PALETA SEMÁNTICA (tokens Radix — adaptativos al color_mode)
 # ======================================================================
-# Todas estas constantes devuelven `Var` reactivos. Se recalculan
-# automáticamente cuando el usuario cambia entre modo claro/oscuro.
+# Todos los colores de acento usan la paleta `blue`.
 # ----------------------------------------------------------------------
 
 # --- Texto ---
-COLOR_TEXTO_PRINCIPAL = rx.color("gray", 12)     # Máximo contraste
-COLOR_TEXTO_SECUNDARIO = rx.color("gray", 11)    # Énfasis medio
-COLOR_TEXTO_CUERPO = rx.color("gray", 11)        # Párrafos
-COLOR_TEXTO_APAGADO = rx.color("gray", 10)       # Placeholder / meta
+COLOR_TEXTO_PRINCIPAL = rx.color("gray", 12)
+COLOR_TEXTO_SECUNDARIO = rx.color("gray", 11)
+COLOR_TEXTO_CUERPO = rx.color("gray", 11)
+COLOR_TEXTO_APAGADO = rx.color("gray", 10)
 COLOR_GRIS = rx.color("gray", 11)
 COLOR_TEXTO = rx.color("gray", 11)
 
 # --- Fondos ---
-COLOR_FONDO_CARTA = rx.color("gray", 1)          # Superficie de tarjeta
-COLOR_FONDO_SUAVE = rx.color("gray", 2)          # Fondo secundario
-COLOR_FONDO_GRIS = rx.color("gray", 3)           # Chips / badges grises
+COLOR_FONDO_CARTA = rx.color("gray", 1)
+COLOR_FONDO_SUAVE = rx.color("gray", 2)
+COLOR_FONDO_GRIS = rx.color("gray", 3)
 
 # --- Bordes ---
-COLOR_BORDE_SUAVE = rx.color("gray", 6)          # Borde por defecto
-COLOR_BORDE_HOVER = rx.color("gray", 7)          # Borde en hover
-COLOR_BORDE_ACTIVO = rx.color("gray", 8)         # Borde activo/focus
-COLOR_DIVISOR = rx.color("gray", 4)              # Línea divisoria sutil
+COLOR_BORDE_SUAVE = rx.color("gray", 6)
+COLOR_BORDE_HOVER = rx.color("gray", 7)
+COLOR_BORDE_ACTIVO = rx.color("gray", 8)
+COLOR_DIVISOR = rx.color("gray", 4)
 BORDE_PREDETERMINADO = f"1px solid {COLOR_BORDE_SUAVE}"
 
-# --- Acento (respeta accent_color del tema) ---
-COLOR_ACENTO_SOLIDO = rx.color("accent", 9)      # Fondo sólido (botón)
-COLOR_ACENTO_TEXTO_SOLIDO = "var(--accent-9-contrast)"  # Texto sobre sólido
-COLOR_ACENTO_TEXTO = rx.color("accent", 11)      # Texto de acento
-COLOR_ACENTO_FONDO = rx.color("accent", 3)       # Fondo suave de acento
-COLOR_ACENTO_BORDE = rx.color("accent", 7)       # Borde de acento
-COLOR_ACENTO = rx.color("accent", 1)             # Fondo casi neutro
-COLOR_FONDO_ACENTO = COLOR_ACENTO_FONDO          # Alias retrocompatible
+# --- Acento (forzado a `blue`) ---
+COLOR_ACENTO_SOLIDO = rx.color("blue", 9)
+COLOR_ACENTO_TEXTO_SOLIDO = "var(--blue-9-contrast)"
+COLOR_ACENTO_TEXTO = rx.color("blue", 11)
+COLOR_ACENTO_FONDO = rx.color("blue", 3)
+COLOR_ACENTO_BORDE = rx.color("blue", 7)
+COLOR_ACENTO = rx.color("blue", 1)
+COLOR_FONDO_ACENTO = COLOR_ACENTO_FONDO  # Alias retrocompatible
 
 # --- Estados semánticos (éxito, warning, error) ---
 COLOR_EXITO_TEXTO = rx.color("green", 11)
@@ -216,11 +266,59 @@ COLOR_ERROR_FONDO = rx.color("red", 3)
 
 
 # ======================================================================
-# 7. HELPERS DE ESTILO REACTIVOS
+# 8. ESQUEMA NEON (colores hex de referencia)
 # ======================================================================
-# Funciones que devuelven dicts de estilo listos para usar con `**`.
-# Evitan repetir lógica en cada componente y garantizan consistencia.
+# Inspirado en neon.com: mucho contraste y espaciado generoso.
+#
+# ⚠️  Estos colores son HEX/RGBA intencionales (NO son tokens Radix).
+#     Se usan como valores de referencia para los tokens adaptativos
+#     de la sección 14.
 # ----------------------------------------------------------------------
+
+# --- Colores base ---
+AZUL_MARINO_HEX = "#000080"
+AZUL_MARINO_PROFUNDO = "#0a0f2e"      # #000080 oscurecido
+AZUL_MARINO_CLARO = "#1a237e"         # #000080 aclarado
+AZUL_MARINO_NEON = "#3b5bdb"          # Azul "neon" para glows y acentos
+
+# --- Fondos oscuros para el home ---
+FONDO_HOME_OSCURO = "#0a0f1f"
+FONDO_HOME_OSCURO_2 = "#0f172a"
+FONDO_HOME_CARD = "rgba(15, 23, 42, 0.6)"
+FONDO_HOME_CARD_HOVER = "rgba(26, 35, 126, 0.4)"
+
+# --- Texto sobre fondo oscuro ---
+TEXTO_OSCURO_PRINCIPAL = "#ffffff"
+TEXTO_OSCURO_SUAVE = "rgba(255, 255, 255, 0.8)"
+TEXTO_OSCURO_MAS_SUAVE = "rgba(255, 255, 255, 0.6)"
+TEXTO_OSCURO_APAGADO = "rgba(255, 255, 255, 0.4)"
+
+# --- Bordes sobre fondo oscuro ---
+BORDE_OSCURO_SUAVE = "rgba(255, 255, 255, 0.08)"
+BORDE_OSCURO_MEDIO = "rgba(255, 255, 255, 0.15)"
+BORDE_OSCURO_AZUL = "rgba(59, 91, 219, 0.4)"
+
+# --- Gradientes Neon-style (dark fijo) ---
+GRADIENTE_HOME = "linear-gradient(180deg, #0a0f1f 0%, #0f172a 100%)"
+GRADIENTE_HOME_HERO = (
+    "linear-gradient(135deg, #0a0f1f 0%, #0f172a 50%, #1a237e 100%)"
+)
+GRADIENTE_TEXTO_AZUL = (
+    "linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)"
+)
+
+# --- Tokens Radix para acentos azul marino ---
+COLOR_MARINO_TEXTO = rx.color("blue", 11)
+COLOR_MARINO_SOLIDO = rx.color("blue", 9)
+COLOR_MARINO_HOVER = rx.color("blue", 10)
+COLOR_MARINO_FONDO = rx.color("blue", 3)
+COLOR_MARINO_BORDE = rx.color("blue", 7)
+COLOR_MARINO_GLOW = rx.color("blue", 8)
+
+
+# ======================================================================
+# 9. HELPERS DE ESTILO
+# ======================================================================
 
 
 def estilo_tarjeta_acento(
@@ -244,7 +342,7 @@ def estilo_tarjeta_acento(
         "transition": "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         "_hover": {
             "border_color": COLOR_ACENTO_SOLIDO,
-            "box_shadow": f"0 12px 32px -8px {rx.color('accent', 7)}",
+            "box_shadow": f"0 12px 32px -8px {rx.color('blue', 7)}",
             "transform": "translateY(-2px)",
         },
     }
@@ -272,14 +370,7 @@ def estilo_icono_solido(
     tamano: str = "0.5rem",
     radio: str = RADIO_MEDIO,
 ) -> dict:
-    """
-    Estilo para un contenedor de icono con fondo sólido de acento.
-
-    Args:
-        color: Color de fondo. Si None, usa el accent sólido del tema.
-        tamano: Padding interior.
-        radio: Radio del borde.
-    """
+    """Estilo para un contenedor de icono con fondo sólido de acento."""
     return {
         "padding": tamano,
         "border_radius": radio,
@@ -297,20 +388,12 @@ def estilo_icono_suave(
     tamano: str = "0.5rem",
     radio: str = RADIO_MEDIO,
 ) -> dict:
-    """
-    Estilo para un contenedor de icono con fondo suave de acento.
-
-    Args:
-        color: Color de acento. Si None, usa el accent del tema.
-        tamano: Padding interior.
-        radio: Radio del borde.
-    """
-    c = color if color is not None else rx.color("accent", 11)
+    """Estilo para un contenedor de icono con fondo suave de acento."""
     return {
         "padding": tamano,
         "border_radius": radio,
-        "background": rx.color("accent", 3),
-        "border": f"1px solid {rx.color('accent', 6)}",
+        "background": rx.color("blue", 3),
+        "border": f"1px solid {rx.color('blue', 6)}",
         "display": "flex",
         "align_items": "center",
         "justify_content": "center",
@@ -332,7 +415,7 @@ def estilo_enlace_acento() -> dict:
 
 
 # ======================================================================
-# 8. ESTILOS PREDEFINIDOS (compatibilidad con código existente)
+# 10. ESTILOS PREDEFINIDOS
 # ======================================================================
 
 ESTILO_PAGINA_PLANTILLA = {
@@ -366,7 +449,7 @@ ESTILO_SELECTOR_COLOR = {
 
 
 # ======================================================================
-# 9. FUENTES
+# 11. FUENTES
 # ======================================================================
 
 FUENTE_PRINCIPAL = "Inter"
@@ -399,7 +482,7 @@ ESTILO_BASE = {
 
 
 # ======================================================================
-# 10. ANIMACIONES CSS GLOBALES
+# 12. ANIMACIONES CSS GLOBALES
 # ======================================================================
 
 ESTILOS_GLOBALES_CSS = {
@@ -408,21 +491,172 @@ ESTILOS_GLOBALES_CSS = {
         "50%": {"transform": "scale(1.1)", "opacity": "1"},
         "100%": {"transform": "scale(0.95)", "opacity": "0.5"},
     },
+    # Pulso azul (coherente con el esquema)
     "@keyframes borderPulse": {
         "0%": {
-            "border-color": "rgba(34, 197, 94, 0.3)",
-            "box-shadow": "0 0 0 0 rgba(34, 197, 94, 0.2)",
+            "border-color": "rgba(0, 144, 255, 0.3)",
+            "box-shadow": "0 0 0 0 rgba(0, 144, 255, 0.2)",
         },
         "50%": {
-            "border-color": "rgba(34, 197, 94, 1)",
-            "box-shadow": "0 0 0 4px rgba(34, 197, 94, 0.4)",
+            "border-color": "rgba(0, 144, 255, 1)",
+            "box-shadow": "0 0 0 4px rgba(0, 144, 255, 0.4)",
         },
         "100%": {
-            "border-color": "rgba(34, 197, 94, 0.3)",
-            "box-shadow": "0 0 0 0 rgba(34, 197, 94, 0)",
+            "border-color": "rgba(0, 144, 255, 0.3)",
+            "box-shadow": "0 0 0 0 rgba(0, 144, 255, 0)",
         },
     },
 }
+
+
+# ======================================================================
+# 13. HELPERS DE COLOR POR CARRERA — DEPRECADOS Y ELIMINADOS
+# ======================================================================
+# ❌ ELIMINADOS: `color_carrera_adaptativo()` y
+#    `color_suave_carrera_adaptativo()`.
+#
+# Motivo
+# ------
+# El proyecto decidió unificar el acento visual bajo un único azul
+# marino (`AZUL_MARINO_NEON` = `#3b5bdb`). Los dos helpers existían
+# solo para mantener compatibilidad durante la migración. Una vez
+# completada, se eliminaron para reducir indirección y evitar que
+# nuevos componentes los usen por error.
+#
+# Migración aplicada
+# ------------------
+# Los siguientes archivos migraron de los helpers a constantes
+# directas (`AZUL_MARINO_NEON`, `FONDO_AZUL_SUAVE`):
+#
+# - `componentes/tarjetas_carrera.py`
+# - `componentes/vinetas.py`
+# - `componentes/secciones_detalle.py`
+# - `componentes/hero_carreras.py`
+# - `componentes/explorador/helpers.py`
+# - `componentes/explorador/buscador.py`
+# - `componentes/explorador/contenido.py`
+# - `componentes/explorador/widgets_explorador.py`
+# - `vistas/vista_detalle_carrera.py`
+#
+# Cómo revertir (si algún día se quiere colorear por carrera)
+# -----------------------------------------------------------
+# 1. Crear un módulo DEDICADO `infraestructura/colores_carrera.py`
+#    con funciones que lean `carrera["color_principal"]` y
+#    `carrera["color_suave"]`, aplicando `rx.color_mode_cond` para
+#    light/dark.
+#
+# 2. NO reintroducir los helpers en este módulo. Este archivo debe
+#    seguir siendo la única fuente de verdad para constantes visuales
+#    globales, no para reglas de negocio por carrera.
+#
+# 3. Migrar los componentes consumidores al nuevo módulo.
+#
+# Referencia del acento único
+# ---------------------------
+# - Color sólido: `AZUL_MARINO_NEON` (`#3b5bdb`).
+# - Color suave adaptativo: `FONDO_AZUL_SUAVE` (Var adaptativa).
+# - Borde adaptativo: `BORDE_HOME_AZUL` (Var adaptativa).
+# ----------------------------------------------------------------------
+
+
+# ======================================================================
+# 14. TOKENS ADAPTATIVOS DEL HOME (dark ↔ light)
+# ======================================================================
+# Estos tokens encapsulan la lógica de `rx.color_mode_cond` para que
+# los componentes del home puedan cambiar entre modo claro y oscuro
+# sin repetir el condicional en cada uno.
+#
+# ✅ El AZUL MARINO es el acento en AMBOS modos (color de marca).
+#    Lo que cambia es el fondo, el texto y los bordes.
+# ----------------------------------------------------------------------
+
+# --- Fondos principales ---
+FONDO_HOME = rx.color_mode_cond(
+    light="#f8fafc",
+    dark="#0a0f1f",
+)
+
+FONDO_HOME_CARD_ADAPTATIVO = rx.color_mode_cond(
+    light="rgba(255, 255, 255, 0.8)",      # blanco translúcido
+    dark="rgba(15, 23, 42, 0.6)",          # azul oscuro translúcido
+)
+
+FONDO_HOME_HERO = rx.color_mode_cond(
+    light="linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #c7d2fe 100%)",
+    dark="linear-gradient(135deg, #0a0f1f 0%, #0f172a 50%, #1a237e 100%)",
+)
+
+# --- Texto ---
+TEXTO_HOME_PRINCIPAL = rx.color_mode_cond(
+    light="#0f172a",       # gris muy oscuro
+    dark="#ffffff",
+)
+
+TEXTO_HOME_SUAVE = rx.color_mode_cond(
+    light="rgba(15, 23, 42, 0.75)",
+    dark="rgba(255, 255, 255, 0.8)",
+)
+
+TEXTO_HOME_MAS_SUAVE = rx.color_mode_cond(
+    light="rgba(15, 23, 42, 0.6)",
+    dark="rgba(255, 255, 255, 0.6)",
+)
+
+TEXTO_HOME_APAGADO = rx.color_mode_cond(
+    light="rgba(15, 23, 42, 0.4)",
+    dark="rgba(255, 255, 255, 0.4)",
+)
+
+# --- Bordes ---
+BORDE_HOME_SUAVE = rx.color_mode_cond(
+    light="rgba(15, 23, 42, 0.1)",
+    dark="rgba(255, 255, 255, 0.08)",
+)
+
+BORDE_HOME_MEDIO = rx.color_mode_cond(
+    light="rgba(15, 23, 42, 0.15)",
+    dark="rgba(255, 255, 255, 0.15)",
+)
+
+BORDE_HOME_AZUL = rx.color_mode_cond(
+    light="rgba(59, 91, 219, 0.5)",
+    dark="rgba(59, 91, 219, 0.4)",
+)
+
+# --- Glassmorphism (fondo de la barra sticky) ---
+FONDO_BARRA_HOME = rx.color_mode_cond(
+    light="rgba(255, 255, 255, 0.75)",
+    dark="rgba(10, 15, 31, 0.75)",
+)
+
+# --- Gradiente de texto del título ---
+GRADIENTE_TEXTO_HOME = rx.color_mode_cond(
+    light="linear-gradient(135deg, #1a237e 0%, #3b5bdb 100%)",
+    dark="linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)",
+)
+
+# --- Fondos tintados del acento (azul marino translúcido) ---
+FONDO_AZUL_SUAVE = rx.color_mode_cond(
+    light="rgba(59, 91, 219, 0.1)",
+    dark="rgba(59, 91, 219, 0.15)",
+)
+
+FONDO_AZUL_MUY_SUAVE = rx.color_mode_cond(
+    light="rgba(59, 91, 219, 0.05)",
+    dark="rgba(59, 91, 219, 0.1)",
+)
+
+# --- Sombra hover de cards ---
+SOMBRA_HOVER_CARD_HOME = rx.color_mode_cond(
+    light=f"0 20px 40px -10px {AZUL_MARINO_NEON}40",
+    dark=f"0 20px 40px -10px {AZUL_MARINO_NEON}",
+)
+
+# --- Gradiente del banner CTA final (adaptativo) ---
+GRADIENTE_HOME_BANNER = rx.color_mode_cond(
+    light="linear-gradient(135deg, #eef2ff 0%, #c7d2fe 50%, #a5b4fc 100%)",
+    dark="linear-gradient(135deg, #0a0f1f 0%, #0f172a 50%, #1a237e 100%)",
+)
 
 
 # ======================================================================
@@ -443,11 +677,21 @@ __all__ = [
     "TELEFONO_SECUNDARIO",
     "UBICACION_FISICA",
     "WHATSAPP_URL",
+    # --- Esquema de color base ---
+    "ACCENT_COLOR_TEMA",
+    "COLOR_AZUL_MARINO_HEX",
+    "COLOR_AZUL_PRIMARIO_HEX",
+    "COLOR_MARINO",
+    "COLOR_MARINO_SUAVE",
+    "COLOR_PRIMARIO",
+    "COLOR_PRIMARIO_ACTIVO",
+    "COLOR_PRIMARIO_HOVER",
     # --- Redes sociales ---
     "DISCORD_URL",
     "FACEBOOK_URL",
     "INSTAGRAM_URL",
     "REDES_SOCIALES",
+    "RedSocial",
     "TELEGRAM_URL",
     "TIKTOK_URL",
     "WHATSAPP_CANAL_URL",
@@ -503,6 +747,31 @@ __all__ = [
     "COLOR_TEXTO_CUERPO",
     "COLOR_TEXTO_PRINCIPAL",
     "COLOR_TEXTO_SECUNDARIO",
+    # --- Esquema Neon (hex de referencia) ---
+    "AZUL_MARINO_CLARO",
+    "AZUL_MARINO_HEX",
+    "AZUL_MARINO_NEON",
+    "AZUL_MARINO_PROFUNDO",
+    "BORDE_OSCURO_AZUL",
+    "BORDE_OSCURO_MEDIO",
+    "BORDE_OSCURO_SUAVE",
+    "COLOR_MARINO_BORDE",
+    "COLOR_MARINO_FONDO",
+    "COLOR_MARINO_GLOW",
+    "COLOR_MARINO_HOVER",
+    "COLOR_MARINO_SOLIDO",
+    "COLOR_MARINO_TEXTO",
+    "FONDO_HOME_CARD",
+    "FONDO_HOME_CARD_HOVER",
+    "FONDO_HOME_OSCURO",
+    "FONDO_HOME_OSCURO_2",
+    "GRADIENTE_HOME",
+    "GRADIENTE_HOME_HERO",
+    "GRADIENTE_TEXTO_AZUL",
+    "TEXTO_OSCURO_APAGADO",
+    "TEXTO_OSCURO_MAS_SUAVE",
+    "TEXTO_OSCURO_PRINCIPAL",
+    "TEXTO_OSCURO_SUAVE",
     # --- Helpers de estilo ---
     "estilo_badge_acento",
     "estilo_enlace_acento",
@@ -523,48 +792,21 @@ __all__ = [
     "FUENTE_MONOESPACIADA",
     "FUENTE_PRINCIPAL",
     "HOJAS_DE_ESTILO_BASE",
+    # --- Tokens adaptativos del home ---
+    "FONDO_HOME",
+    "FONDO_HOME_CARD_ADAPTATIVO",
+    "FONDO_HOME_HERO",
+    "TEXTO_HOME_PRINCIPAL",
+    "TEXTO_HOME_SUAVE",
+    "TEXTO_HOME_MAS_SUAVE",
+    "TEXTO_HOME_APAGADO",
+    "BORDE_HOME_SUAVE",
+    "BORDE_HOME_MEDIO",
+    "BORDE_HOME_AZUL",
+    "FONDO_BARRA_HOME",
+    "GRADIENTE_TEXTO_HOME",
+    "FONDO_AZUL_SUAVE",
+    "FONDO_AZUL_MUY_SUAVE",
+    "SOMBRA_HOVER_CARD_HOME",
+    "GRADIENTE_HOME_BANNER",
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ======================================================================
-# HELPERS DE COLOR ADAPTATIVO POR CARRERA
-# ======================================================================
-
-
-def color_carrera_adaptativo(carrera: dict) -> rx.Var:
-    """
-    Color principal de una carrera, adaptado al color_mode.
-
-    Args:
-        carrera: Dict de carrera con `color_principal` y
-            `color_principal_dark`.
-
-    Returns:
-        Var reactivo que devuelve el hex correcto según el modo.
-    """
-    return rx.color_mode_cond(
-        light=carrera["color_principal"],
-        dark=carrera["color_principal_dark"],
-    )
-
-
-def color_suave_carrera_adaptativo(carrera: dict) -> rx.Var:
-    """Color suave de una carrera, adaptado al color_mode."""
-    return rx.color_mode_cond(
-        light=carrera["color_suave"],
-        dark=carrera["color_suave_dark"],
-    )

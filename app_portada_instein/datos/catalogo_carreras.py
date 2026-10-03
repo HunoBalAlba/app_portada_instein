@@ -11,18 +11,79 @@ Sistema de color
 ----------------
 Cada carrera expone 4 colores adaptativos al color_mode:
 
-- `color_principal` / `color_suave`       → light mode
+- `color_principal` / `color_suave`          → light mode
 - `color_principal_dark` / `color_suave_dark` → dark mode
 
 Los hex de dark mode son variantes más luminosas del color de marca
 para garantizar contraste sobre fondos oscuros (`gray-1` de Radix).
 
-NOTA: Los nombres de los iconos siguen el formato oficial de Lucide
-(https://lucide.dev/icons) usando snake_case: `code_xml`, `chart_line`,
-`calendar_clock`, `file_text`, `circuit_board`, `plug_zap`.
+Nota técnica: NOMBRES DE ICONOS LUCIDE
+--------------------------------------
+Todos los nombres siguen el formato **kebab-case** oficial de Lucide
+(https://lucide.dev/icons), que es el recomendado por Reflex:
+
+    ✅ code-xml       ❌ code_xml
+    ✅ chart-line     ❌ chart_line
+    ✅ calendar-clock ❌ calendar_clock
+    ✅ file-text      ❌ file_text
+    ✅ circuit-board  ❌ circuit_board
+    ✅ plug-zap       ❌ plug_zap
+
+Reflex normalmente tolera snake_case, pero kebab-case evita sorpresas
+si en el futuro actualizas la versión de Lucide.
+
+Nota técnica: TURNOS
+--------------------
+Los turnos disponibles del instituto se definen en `modelos_carrera`:
+
+    - "Mañana"  → horario estándar de mañana.
+    - "Tarde"   → horario estándar de tarde.
+    - "Noche"   → 19:00 - 22:00 (para quienes trabajan).
+    - "Sábado"  → 08:00 - 14:00 (intensivo, para quienes no pueden
+                   asistir entre semana).
+
+`TURNOS_DISPONIBLES` se re-exporta desde aquí por conveniencia, pero
+la fuente de verdad es `modelos_carrera.TURNOS_VALIDOS`.
+
+Nota técnica: PALETA_COLORES
+----------------------------
+La constante `PALETA_COLORES` se mantiene porque
+`EstadoInstitucional.aleatorizar_colores_carreras` la usa para asignar
+colores aleatorios al catálogo (útil para prototipado y demos).
+
+⚠️ Si el proyecto decide usar **un solo acento global** (ej: azul
+marino `#3b5bdb`) para todas las carreras, `PALETA_COLORES` puede
+eliminarse y los campos `color_principal`, `color_suave`,
+`color_principal_dark`, `color_suave_dark` de cada carrera pueden
+apuntar todos al mismo valor, o directamente reemplazarse por los
+tokens de `constantes_visuales.py`.
 """
 
-from app_portada_instein.datos.modelos_carrera import Carrera, IconoAnimado
+from __future__ import annotations
+
+from app_portada_instein.datos.modelos_carrera import (
+    Carrera,
+    IconoAnimado,
+    Turno,
+    TURNOS_VALIDOS,
+)
+
+
+# ======================================================================
+# Re-export de constantes de dominio
+# ======================================================================
+# `TURNOS_DISPONIBLES` se mantiene como alias retrocompatible de
+# `TURNOS_VALIDOS`. La fuente de verdad vive en `modelos_carrera`.
+# ----------------------------------------------------------------------
+
+TURNOS_DISPONIBLES: tuple[Turno, ...] = TURNOS_VALIDOS
+"""Alias retrocompatible de `TURNOS_VALIDOS`.
+
+⚠️ La fuente de verdad es `modelos_carrera.TURNOS_VALIDOS`.
+"""
+
+MODALIDAD_PRESENCIAL: str = "Presencial"
+"""Valor por defecto del campo `modalidad` de cada carrera."""
 
 
 # ======================================================================
@@ -45,6 +106,35 @@ PALETA_COLORES: list[tuple[str, str, str, str]] = [
     ("#059669", "#ecfdf5", "#34d399", "#064e3b"),  # emerald
     ("#9333ea", "#faf5ff", "#c084fc", "#581c87"),  # purple
 ]
+"""Paleta de 12 colores para asignación aleatoria a carreras.
+
+Cada tupla contiene:
+    (color_principal, color_suave, color_principal_dark, color_suave_dark)
+"""
+
+
+# ======================================================================
+# Iconos Lucide usados en el catálogo
+# ======================================================================
+# Lista consolidada de todos los iconos Lucide que aparecen en
+# `CATALOGO_CARRERAS` (tanto en `icono`, `iconos_animados` como en
+# `caracteristicas`). Útil para validar contra la versión instalada de
+# Lucide o para documentar los requisitos del proyecto.
+# ----------------------------------------------------------------------
+
+ICONOS_LUCIDE_DISPONIBLES: frozenset[str] = frozenset({
+    # Iconos principales de cada carrera
+    "cpu", "calculator", "briefcase", "globe", "zap",
+    # Iconos orbitales
+    "code-xml", "database", "wifi", "terminal",
+    "receipt", "coins", "chart-line", "wallet",
+    "calendar-clock", "mail", "users", "file-text",
+    "ship", "package", "truck",
+    "circuit-board", "radio", "plug-zap",
+    # Iconos de características
+    "award", "code-2", "languages", "file-check",
+})
+"""Conjunto de iconos Lucide usados en este catálogo."""
 
 
 # ======================================================================
@@ -64,10 +154,11 @@ def _icono_orbital_config(
     tiene_anillos: bool = False,
 ) -> IconoAnimado:
     """
-    Construye un IconoAnimado con los parámetros orbitales de su elipse.
+    Construye un `IconoAnimado` con los parámetros orbitales de su elipse.
 
     Args:
-        nombre: Identificador del icono Lucide (snake_case, ej: "code_xml").
+        nombre: Identificador del icono Lucide en **kebab-case**
+            (ej: "code-xml", "chart-line").
         semieje_mayor: Radio horizontal de la elipse en % del contenedor.
         excentricidad: Excentricidad orbital (0 = círculo).
         factor_perspectiva: Aplanamiento vertical (0.5 = disco de lado).
@@ -78,7 +169,7 @@ def _icono_orbital_config(
         tiene_anillos: Si debe dibujarse con anillos tipo Saturno.
 
     Returns:
-        Diccionario IconoAnimado listo para renderizar.
+        Diccionario `IconoAnimado` listo para renderizar.
     """
     sufijo = f"{angulo_inicial}_{int(semieje_mayor * 10)}"
 
@@ -97,7 +188,8 @@ def _icono_orbital_config(
 
 
 # Factor de aplanamiento por defecto (equivale a INCLINACION = 0.5).
-PERSPECTIVA_DEFECTO = 0.5
+PERSPECTIVA_DEFECTO: float = 0.5
+"""Factor de aplanamiento vertical por defecto para las órbitas."""
 
 
 # ======================================================================
@@ -107,6 +199,7 @@ PERSPECTIVA_DEFECTO = 0.5
 CATALOGO_CARRERAS: list[Carrera] = [
     # ------------------------------------------------------------------
     # Carrera 0 — Sistemas Informáticos
+    # Turnos: Mañana · Tarde · Noche · Sábado
     # ------------------------------------------------------------------
     {
         "id": 0,
@@ -151,8 +244,9 @@ CATALOGO_CARRERAS: list[Carrera] = [
             {
                 "pregunta": "¿Puedo trabajar mientras estudio?",
                 "respuesta": (
-                    "Sí, ofrecemos turno nocturno (19:00-22:00) especialmente "
-                    "diseñado para estudiantes que trabajan."
+                    "Sí, ofrecemos turno nocturno (19:00-22:00) y turno de "
+                    "sábados (09:00-14:30) especialmente diseñados para "
+                    "estudiantes que trabajan."
                 ),
             },
             {
@@ -220,16 +314,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_banner": "sistemas_banner.avif",
         "iconos_animados": [
             _icono_orbital_config(
-                "code_xml", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#2563eb", True
+                "code-xml", 55.0, 0.25, PERSPECTIVA_DEFECTO,
+                0, 18.0, 0.0, "#2563eb", True,
             ),
             _icono_orbital_config(
-                "database", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"
+                "database", 70.0, 0.15, PERSPECTIVA_DEFECTO,
+                90, 24.0, 3.0, "#0891b2",
             ),
             _icono_orbital_config(
-                "wifi", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"
+                "wifi", 62.0, 0.30, PERSPECTIVA_DEFECTO,
+                180, 21.0, 6.0, "#7c3aed",
             ),
             _icono_orbital_config(
-                "terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
+                "terminal", 85.0, 0.20, PERSPECTIVA_DEFECTO,
+                270, 27.0, 9.0, "#ea580c",
             ),
         ],
         "estadisticas": {
@@ -263,11 +361,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "modalidad": "Presencial",
-        "turnos": ["Mañana", "Tarde", "Noche"],
+        "turnos": ["Mañana", "Tarde", "Noche", "Sábado"],
         "cupos_disponibles": 30,
     },
     # ------------------------------------------------------------------
     # Carrera 1 — Contaduría General
+    # Turnos: Mañana · Noche · Sábado
     # ------------------------------------------------------------------
     {
         "id": 1,
@@ -381,16 +480,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_banner": "contaduria_banner.avif",
         "iconos_animados": [
             _icono_orbital_config(
-                "receipt", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#0891b2", True
+                "receipt", 55.0, 0.25, PERSPECTIVA_DEFECTO,
+                0, 18.0, 0.0, "#0891b2", True,
             ),
             _icono_orbital_config(
-                "coins", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#16a34a"
+                "coins", 70.0, 0.15, PERSPECTIVA_DEFECTO,
+                90, 24.0, 3.0, "#16a34a",
             ),
             _icono_orbital_config(
-                "chart_line", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"
+                "chart-line", 62.0, 0.30, PERSPECTIVA_DEFECTO,
+                180, 21.0, 6.0, "#ea580c",
             ),
             _icono_orbital_config(
-                "wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
+                "wallet", 85.0, 0.20, PERSPECTIVA_DEFECTO,
+                270, 27.0, 9.0, "#7c3aed",
             ),
         ],
         "estadisticas": {
@@ -419,11 +522,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "modalidad": "Presencial",
-        "turnos": ["Mañana", "Noche"],
+        "turnos": ["Mañana", "Noche", "Sábado"],
         "cupos_disponibles": 25,
     },
     # ------------------------------------------------------------------
     # Carrera 2 — Secretariado Ejecutivo
+    # Turnos: Mañana · Tarde · Sábado
     # ------------------------------------------------------------------
     {
         "id": 2,
@@ -538,16 +642,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_banner": "secretariado_banner.avif",
         "iconos_animados": [
             _icono_orbital_config(
-                "calendar_clock", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#7c3aed", True
+                "calendar-clock", 55.0, 0.25, PERSPECTIVA_DEFECTO,
+                0, 18.0, 0.0, "#7c3aed", True,
             ),
             _icono_orbital_config(
-                "mail", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#db2777"
+                "mail", 70.0, 0.15, PERSPECTIVA_DEFECTO,
+                90, 24.0, 3.0, "#db2777",
             ),
             _icono_orbital_config(
-                "users", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#0891b2"
+                "users", 62.0, 0.30, PERSPECTIVA_DEFECTO,
+                180, 21.0, 6.0, "#0891b2",
             ),
             _icono_orbital_config(
-                "file_text", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#ea580c"
+                "file-text", 85.0, 0.20, PERSPECTIVA_DEFECTO,
+                270, 27.0, 9.0, "#ea580c",
             ),
         ],
         "estadisticas": {
@@ -576,11 +684,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "modalidad": "Presencial",
-        "turnos": ["Mañana", "Tarde"],
+        "turnos": ["Mañana", "Tarde", "Sábado"],
         "cupos_disponibles": 20,
     },
     # ------------------------------------------------------------------
     # Carrera 3 — Comercio Internacional
+    # Turnos: Mañana · Noche · Sábado
     # ------------------------------------------------------------------
     {
         "id": 3,
@@ -694,16 +803,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_banner": "comercio_banner.avif",
         "iconos_animados": [
             _icono_orbital_config(
-                "ship", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#ea580c", True
+                "ship", 55.0, 0.25, PERSPECTIVA_DEFECTO,
+                0, 18.0, 0.0, "#ea580c", True,
             ),
             _icono_orbital_config(
-                "package", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#0891b2"
+                "package", 70.0, 0.15, PERSPECTIVA_DEFECTO,
+                90, 24.0, 3.0, "#0891b2",
             ),
             _icono_orbital_config(
-                "file_text", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#7c3aed"
+                "file-text", 62.0, 0.30, PERSPECTIVA_DEFECTO,
+                180, 21.0, 6.0, "#7c3aed",
             ),
             _icono_orbital_config(
-                "truck", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#16a34a"
+                "truck", 85.0, 0.20, PERSPECTIVA_DEFECTO,
+                270, 27.0, 9.0, "#16a34a",
             ),
         ],
         "estadisticas": {
@@ -732,11 +845,12 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "modalidad": "Presencial",
-        "turnos": ["Mañana", "Noche"],
+        "turnos": ["Mañana", "Noche", "Sábado"],
         "cupos_disponibles": 25,
     },
     # ------------------------------------------------------------------
     # Carrera 4 — Electrónica
+    # Turnos: Mañana · Tarde · Noche · Sábado
     # ------------------------------------------------------------------
     {
         "id": 4,
@@ -849,14 +963,20 @@ CATALOGO_CARRERAS: list[Carrera] = [
         "imagen_banner": "electronica_banner.avif",
         "iconos_animados": [
             _icono_orbital_config(
-                "circuit_board", 55.0, 0.25, PERSPECTIVA_DEFECTO, 0, 18.0, 0.0, "#16a34a", True
-            ),
-            _icono_orbital_config("cpu", 70.0, 0.15, PERSPECTIVA_DEFECTO, 90, 24.0, 3.0, "#2563eb"),
-            _icono_orbital_config(
-                "radio", 62.0, 0.30, PERSPECTIVA_DEFECTO, 180, 21.0, 6.0, "#ea580c"
+                "circuit-board", 55.0, 0.25, PERSPECTIVA_DEFECTO,
+                0, 18.0, 0.0, "#16a34a", True,
             ),
             _icono_orbital_config(
-                "plug_zap", 85.0, 0.20, PERSPECTIVA_DEFECTO, 270, 27.0, 9.0, "#7c3aed"
+                "cpu", 70.0, 0.15, PERSPECTIVA_DEFECTO,
+                90, 24.0, 3.0, "#2563eb",
+            ),
+            _icono_orbital_config(
+                "radio", 62.0, 0.30, PERSPECTIVA_DEFECTO,
+                180, 21.0, 6.0, "#ea580c",
+            ),
+            _icono_orbital_config(
+                "plug-zap", 85.0, 0.20, PERSPECTIVA_DEFECTO,
+                270, 27.0, 9.0, "#7c3aed",
             ),
         ],
         "estadisticas": {
@@ -885,13 +1005,58 @@ CATALOGO_CARRERAS: list[Carrera] = [
             },
         ],
         "modalidad": "Presencial",
-        "turnos": ["Mañana", "Tarde", "Noche"],
+        "turnos": ["Mañana", "Tarde", "Noche", "Sábado"],
         "cupos_disponibles": 30,
     },
 ]
 
 
+# ======================================================================
+# Helper de acceso: paleta por ID de carrera
+# ======================================================================
+
+
+def paleta_por_id_carrera(
+    carrera_id: int,
+) -> tuple[str, str, str, str] | None:
+    """
+    Devuelve la tupla de colores (principal, suave, principal_dark,
+    suave_dark) de la carrera indicada.
+
+    Útil para el `aleatorizar_colores_carreras` del State, o para
+    cualquier consumidor que necesite acceso rápido a los colores de
+    una carrera sin iterar sobre el catálogo.
+
+    Args:
+        carrera_id: ID de la carrera (0-4).
+
+    Returns:
+        Tupla de colores, o `None` si el ID no existe.
+    """
+    for carrera in CATALOGO_CARRERAS:
+        if carrera["id"] == carrera_id:
+            return (
+                carrera["color_principal"],
+                carrera["color_suave"],
+                carrera["color_principal_dark"],
+                carrera["color_suave_dark"],
+            )
+    return None
+
+
+# ======================================================================
+# EXPORTS
+# ======================================================================
+
 __all__ = [
     "CATALOGO_CARRERAS",
+    "ICONOS_LUCIDE_DISPONIBLES",
+    "MODALIDAD_PRESENCIAL",
     "PALETA_COLORES",
+    "PERSPECTIVA_DEFECTO",
+    "TURNOS_DISPONIBLES",
+    # Re-exportados desde modelos_carrera para conveniencia
+    "TURNOS_VALIDOS",
+    "Turno",
+    "paleta_por_id_carrera",
 ]

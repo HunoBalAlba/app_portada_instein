@@ -9,12 +9,20 @@ Hero para la página de carreras, estilo Google Play Store:
 
 Sistema de color (UX)
 ---------------------
-- Colores de carrera: mediante los helpers globales
-  `color_carrera_adaptativo()` y `color_suave_carrera_adaptativo()`.
+- El ACENTO VISUAL es ÚNICO para todas las carreras: azul marino neon
+  (`AZUL_MARINO_NEON` = `#3b5bdb`).
 - Elementos institucionales (grid perspectiva, flechas, dots inactivos):
   tokens Radix.
 - Overlay sobre imagen del banner: `rgba` intencionales para legibilidad.
-- Barra de progreso: color de la carrera activa.
+- Barra de progreso: usa el acento único.
+
+Nota técnica: ACENTO ÚNICO
+--------------------------
+Los helpers `color_carrera_adaptativo()` y
+`color_suave_carrera_adaptativo()` fueron ELIMINADOS de
+`constantes_visuales.py`. Este archivo usa directamente
+`AZUL_MARINO_NEON` (str) y los tokens neutros (`COLOR_*`) para todo
+lo demás.
 
 Nota técnica: AUTO-AVANCE CON `rx.moment`
 -----------------------------------------
@@ -41,19 +49,23 @@ usando un `@keyframes` global que anima `width` de 0% a 100% durante
 Se reinicia automáticamente al cambiar el índice del carrusel porque
 la barra es un componente nuevo (React lo remonta al cambiar la
 `key`).
-
-El color de la barra coincide con el color de la carrera activa,
-reforzando la identidad visual del banner.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
-from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.datos.modelos_carrera import CarreraConEtiqueta
+from app_portada_instein.dominio.estado_institucional import (
+    EstadoInstitucional,
+)
 from app_portada_instein.infraestructura.constantes_visuales import (
+    # Acento único del proyecto
+    AZUL_MARINO_NEON,
+    # Colores neutros
     ANCHO_CONTENIDO,
     ANCHO_SECCION,
     COLOR_ACENTO_BORDE,
-    COLOR_BORDE_HOVER,
     COLOR_BORDE_SUAVE,
     COLOR_FONDO_CARTA,
     COLOR_FONDO_SUAVE,
@@ -63,8 +75,6 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     RADIO_MEDIO,
     RADIO_PASTILLA,
     SOMBRA_CAJA,
-    color_carrera_adaptativo,
-    color_suave_carrera_adaptativo,
 )
 
 
@@ -125,18 +135,38 @@ def keyframes_progreso_carrusel() -> dict:
 
 
 # ======================================================================
-# Helpers de color adaptativo (alias de los globales)
+# Helpers de color (delegan en el acento único)
 # ======================================================================
 
 
-def _color_carrera(carrera: dict) -> rx.Var:
-    """Alias local para `color_carrera_adaptativo`."""
-    return color_carrera_adaptativo(carrera)
+def _color_carrera(carrera: dict | None = None) -> str:
+    """
+    Color del acento global (azul marino neon).
+
+    ✅ REFACTORIZADO: ya no depende de la carrera. Mantiene el
+    parámetro `carrera` por compatibilidad con los llamadores.
+
+    Returns:
+        Hex del azul marino neon (`#3b5bdb`).
+    """
+    return AZUL_MARINO_NEON
 
 
-def _color_suave_carrera(carrera: dict) -> rx.Var:
-    """Alias local para `color_suave_carrera_adaptativo`."""
-    return color_suave_carrera_adaptativo(carrera)
+def _color_suave_carrera(carrera: dict | None = None) -> rx.Var:
+    """
+    Color suave de fondo del acento global.
+
+    ✅ REFACTORIZADO: usa `FONDO_AZUL_SUAVE` adaptativo en lugar del
+    color suave de la carrera.
+
+    ⚠️ Actualmente no se usa en este archivo, pero se mantiene por si
+    algún consumidor externo lo importa.
+    """
+    # Import local para evitar ciclo si FONDO_AZUL_SUAVE se moviera
+    from app_portada_instein.infraestructura.constantes_visuales import (
+        FONDO_AZUL_SUAVE,
+    )
+    return FONDO_AZUL_SUAVE
 
 
 # ======================================================================
@@ -192,7 +222,7 @@ def _barra_progreso_auto_avance() -> rx.Component:
     `key=EstadoInstitucional.indice_carrusel` para forzar el remount.
 
     La barra:
-    - Tiene el color de la carrera activa.
+    - Tiene el acento único.
     - Se llena de 0% a 100% en `INTERVALO_AUTO_AVANCE_SEG` segundos.
     - Está posicionada al fondo del banner, superpuesta.
 
@@ -202,7 +232,7 @@ def _barra_progreso_auto_avance() -> rx.Component:
     return rx.box(
         rx.box(
             height="100%",
-            background=_color_carrera(EstadoInstitucional.item_carrusel_actual["carrera"]),
+            background=_color_carrera(),
             border_radius=RADIO_PASTILLA,
             # Animación CSS: la barra se llena linealmente durante 5s.
             animation=(
@@ -230,11 +260,11 @@ def _barra_progreso_auto_avance() -> rx.Component:
 # ======================================================================
 
 
-def _banner_carrera(item: dict) -> rx.Component:
+def _banner_carrera(item: CarreraConEtiqueta) -> rx.Component:
     """
     Banner horizontal grande, estilo Google Play Store.
 
-    Recibe un dict con la estructura:
+    Recibe un `CarreraConEtiqueta`:
     {
         "carrera": { ...datos de la carrera... },
         "etiqueta": "Inscripciones abiertas",
@@ -439,11 +469,11 @@ def _flecha_navegacion(direccion: str) -> rx.Component:
 # ======================================================================
 
 
-def _dot_indicador(item: dict, idx: int) -> rx.Component:
+def _dot_indicador(item: CarreraConEtiqueta, idx: int) -> rx.Component:
     """
     Dot individual del carrusel.
 
-    El dot activo se alarga (pill) y usa el color de la carrera;
+    El dot activo se alarga (pill) y usa el acento;
     los inactivos usan `COLOR_BORDE_SUAVE`.
     """
     esta_activo = EstadoInstitucional.indice_carrusel == idx
@@ -483,11 +513,14 @@ def _indicadores_dots() -> rx.Component:
 # ======================================================================
 
 
-def _miniatura_carrera(item: dict, idx: int) -> rx.Component:
+def _miniatura_carrera(
+    item: CarreraConEtiqueta,
+    idx: int,
+) -> rx.Component:
     """
     Miniatura individual de carrera en el carrusel.
 
-    La miniatura activa usa borde y texto con el color de la carrera.
+    La miniatura activa usa borde y texto con el acento.
     """
     esta_activa = EstadoInstitucional.indice_carrusel == idx
     carrera = item["carrera"]

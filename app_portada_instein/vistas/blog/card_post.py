@@ -6,8 +6,9 @@ Estructura:
 - `_card_post`: card con imagen real + badge + título + extracto + meta.
   Es un enlace a `/blog/{id}` (ya NO un trigger de diálogo).
 - `_imagen_post`: capa de imagen con fallback de icono por categoría.
+- `_cta_leer_articulo`: CTA "Leer artículo" con flecha animada.
 - `grid_posts`: grid responsive de cards.
-- `estado_vacio`: estado vacío cuando los filtros no devuelven nada.
+- `estado_vacio`: estado vacío (delegado al componente unificado).
 - `boton_cargar_mas`: botón de paginación simple.
 
 Sistema de color (UX)
@@ -28,14 +29,40 @@ Ventajas:
 - Botón atrás del navegador funciona.
 - Sin problemas de scroll en móvil.
 
+Nota técnica: TIPADO ESTRICTO CON `Post`
+----------------------------------------
+`_imagen_post(post)` y `_card_post(post)` están tipadas como `Post`
+(el `TypedDict` de `datos_blog`), NO como `dict` genérico.
+
+Esto es CRÍTICO porque Reflex necesita tipos precisos para props
+tipadas como `rx.image(alt=str)`:
+
+    ❌ dict genérico → post["titulo"] se infiere como str | int | bool
+    ✅ Post          → post["titulo"] se infiere como str
+
+Sin esto, Reflex lanza:
+
+    TypeError: Invalid var passed for prop Img.alt, expected type
+    <class 'str'>, got value ... of type str | int | bool.
+
+Nota técnica: ESTADO VACÍO UNIFICADO
+------------------------------------
+✅ REFACTORIZADO: el estado vacío ya NO tiene su propia implementación
+local. Ahora delega en el componente genérico
+`componentes/estado_vacio.py`, que centraliza el estilo y permite
+personalizar icono, título, mensaje y botones.
+
 Nota técnica: imágenes
 ----------------------
 - `post["imagen"]` es el nombre del archivo en `assets/blog/`.
 - El fallback usa `icono_categoria` como fondo detrás de la imagen.
 """
 
+from __future__ import annotations
+
 import reflex as rx
 
+from app_portada_instein.componentes.estado_vacio import estado_vacio as _estado_vacio_unificado
 from app_portada_instein.infraestructura.constantes_visuales import (
     COLOR_ACENTO_SOLIDO,
     COLOR_ACENTO_TEXTO,
@@ -44,11 +71,10 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     COLOR_FONDO_SUAVE,
     COLOR_TEXTO_CUERPO,
     COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
     RADIO_EXTRA_GRANDE,
-    RADIO_MEDIO,
 )
 
+from .datos_blog import Post
 from .estado_blog import EstadoBlog
 from .helpers_categoria import (
     badge_categoria,
@@ -74,16 +100,17 @@ RUTA_IMAGENES_BLOG = "/blog/"
 # ======================================================================
 
 
-def _imagen_post(post) -> rx.Component:
+def _imagen_post(post: Post) -> rx.Component:
     """
     Bloque de imagen del post con:
     - Fallback de icono de categoría como fondo.
     - Imagen real encima.
     - Overlay sutil con el color de la categoría.
-    - Zoom sutil en hover (delegado a la card padre).
+    - Zoom sutil en hover (delegado a la card padre vía `_group_hover`).
 
     Args:
-        post: Dict del post (puede ser estático o Var).
+        post: `Post` (TypedDict). Tipado estricto para que Reflex
+            sepa que `post["titulo"]` y `post["imagen"]` son `str`.
     """
     return rx.box(
         # --- Capa 1: fondo con icono de categoría (fallback) ---
@@ -133,27 +160,33 @@ def _imagen_post(post) -> rx.Component:
                 post["categoria"],
                 (
                     "tecnologia",
-                    "linear-gradient(180deg, transparent 60%, rgba(37, 99, 235, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(37, 99, 235, 0.15) 100%)",
                 ),
                 (
                     "contaduria",
-                    "linear-gradient(180deg, transparent 60%, rgba(124, 58, 237, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(124, 58, 237, 0.15) 100%)",
                 ),
                 (
                     "empleabilidad",
-                    "linear-gradient(180deg, transparent 60%, rgba(22, 163, 74, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(22, 163, 74, 0.15) 100%)",
                 ),
                 (
                     "institucional",
-                    "linear-gradient(180deg, transparent 60%, rgba(196, 30, 58, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(196, 30, 58, 0.15) 100%)",
                 ),
                 (
                     "estudiantes",
-                    "linear-gradient(180deg, transparent 60%, rgba(234, 88, 12, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(234, 88, 12, 0.15) 100%)",
                 ),
                 (
                     "tutoriales",
-                    "linear-gradient(180deg, transparent 60%, rgba(8, 145, 178, 0.15) 100%)",
+                    "linear-gradient(180deg, transparent 60%, "
+                    "rgba(8, 145, 178, 0.15) 100%)",
                 ),
                 "transparent",
             ),
@@ -171,11 +204,40 @@ def _imagen_post(post) -> rx.Component:
 
 
 # ======================================================================
+# CTA "Leer artículo"
+# ======================================================================
+
+
+def _cta_leer_articulo() -> rx.Component:
+    """
+    CTA "Leer artículo" con flecha animada en hover.
+
+    La flecha lleva la clase `arrow-leer`, que la card padre
+    anima al recibir hover (`& .arrow-leer`).
+    """
+    return rx.flex(
+        rx.text("Leer artículo", as_="span", font_weight="700"),
+        rx.icon(
+            "arrow-right",
+            size=14,
+            class_name="arrow-leer",
+            transition="transform 0.2s",
+        ),
+        align="center",
+        gap="0.375rem",
+        color=COLOR_ACENTO_TEXTO,
+        font_size="0.8125rem",
+        margin_top="0.5rem",
+        transition="all 0.2s",
+    )
+
+
+# ======================================================================
 # Card individual de post (enlace a la página de detalle)
 # ======================================================================
 
 
-def _card_post(post) -> rx.Component:
+def _card_post(post: Post) -> rx.Component:
     """
     Card individual de post que enlaza a la página de detalle.
 
@@ -190,7 +252,8 @@ def _card_post(post) -> rx.Component:
     - Al hacer clic en cualquier parte de la card → navega al detalle.
 
     Args:
-        post: Dict del post (puede ser estático o Var en `rx.foreach`).
+        post: `Post` (TypedDict). Tipado estricto para que Reflex
+            sepa que `post["titulo"]` es `str`.
     """
     # ==========================================================
     # Card interna (contenido visual)
@@ -219,21 +282,7 @@ def _card_post(post) -> rx.Component:
             # --- Meta info (autor · fecha · minutos) ---
             meta_info_post(post),
             # --- CTA "Leer artículo" con flecha animada ---
-            rx.flex(
-                rx.text("Leer artículo", as_="span", font_weight="700"),
-                rx.icon(
-                    "arrow-right",
-                    size=14,
-                    class_name="arrow-leer",
-                    transition="transform 0.2s",
-                ),
-                align="center",
-                gap="0.375rem",
-                color=COLOR_ACENTO_TEXTO,
-                font_size="0.8125rem",
-                margin_top="0.5rem",
-                transition="all 0.2s",
-            ),
+            _cta_leer_articulo(),
             align="start",
             spacing="2",
             width="100%",
@@ -294,67 +343,30 @@ def grid_posts() -> rx.Component:
 
 
 # ======================================================================
-# Estado vacío
+# Estado vacío (delegado al componente unificado)
 # ======================================================================
 
 
 def estado_vacio() -> rx.Component:
-    """Estado vacío cuando los filtros no devuelven resultados."""
-    return rx.vstack(
-        # ==========================================================
-        # Icono en caja tintada
-        # ==========================================================
-        rx.box(
-            rx.icon("search-x", size=48, color=COLOR_TEXTO_SECUNDARIO),
-            padding="1.5rem",
-            border_radius=RADIO_EXTRA_GRANDE,
-            background=COLOR_FONDO_SUAVE,
-            border=f"1px solid {COLOR_BORDE_SUAVE}",
-            display="flex",
-            align_items="center",
-            justify_content="center",
+    """
+    Estado vacío cuando los filtros no devuelven resultados.
+
+    ✅ REFACTORIZADO: delega en `componentes/estado_vacio.py`.
+    Mantiene esta función como wrapper para no tocar el import de
+    `vista_blog.py`.
+    """
+    return _estado_vacio_unificado(
+        titulo="No hay artículos con esos filtros",
+        mensaje=(
+            "Prueba ajustando la búsqueda o seleccionando otra "
+            "categoría."
         ),
-        # ==========================================================
-        # Título + mensaje
-        # ==========================================================
-        rx.vstack(
-            rx.heading(
-                "No hay artículos con esos filtros",
-                size="5",
-                font_weight="700",
-                color=COLOR_TEXTO_PRINCIPAL,
-                text_align="center",
-            ),
-            rx.text(
-                "Prueba ajustando la búsqueda o seleccionando otra categoría.",
-                font_size="0.875rem",
-                color=COLOR_TEXTO_SECUNDARIO,
-                text_align="center",
-                max_width="32rem",
-                line_height="1.6",
-            ),
-            spacing="2",
-            align="center",
-        ),
-        # ==========================================================
-        # Botón "Limpiar filtros"
-        # ==========================================================
-        rx.button(
-            rx.icon("rotate-ccw", size=16),
-            rx.text("Limpiar filtros", as_="span", font_weight="700"),
-            on_click=EstadoBlog.limpiar_filtros,
-            size="3",
-            variant="solid",
-            color_scheme="crimson",
-            cursor="pointer",
-            margin_top="0.5rem",
-        ),
-        direction="column",
-        align="center",
-        justify="center",
-        gap="1.5rem",
-        padding="4rem 1.5rem",
-        width="100%",
+        icono="search-x",
+        tamano_icono=48,
+        boton_accion_etiqueta="Limpiar filtros",
+        boton_accion_icono="rotate-ccw",
+        boton_accion_on_click=EstadoBlog.limpiar_filtros,
+        boton_accion_color_scheme="crimson",
     )
 
 
@@ -383,7 +395,9 @@ def boton_cargar_mas() -> rx.Component:
                 transition="all 0.2s",
                 _hover={
                     "transform": "translateY(-2px)",
-                    "box_shadow": f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}",
+                    "box_shadow": (
+                        f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}"
+                    ),
                 },
             ),
             justify="center",

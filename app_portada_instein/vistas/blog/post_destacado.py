@@ -4,6 +4,7 @@ Post destacado (featured) del blog con imagen real.
 Estructura:
 - `_imagen_destacada`: bloque de imagen grande con overlay y badge
   "DESTACADO".
+- `_cta_leer_articulo`: botón CTA "Leer artículo" con flecha animada.
 - `post_destacado`: card completa con layout de dos columnas (imagen +
   contenido) que enlaza a la página de detalle del post.
 
@@ -25,6 +26,21 @@ Ventajas:
 - Botón atrás del navegador funciona.
 - Sin problemas de scroll en móvil.
 
+Nota técnica: TIPADO ESTRICTO CON `Post`
+----------------------------------------
+Todas las funciones que reciben un post están tipadas como `Post`
+(el `TypedDict` de `datos_blog`), NO como `dict` genérico.
+
+Esto es CRÍTICO para Reflex: si el tipo es `dict` genérico, los
+campos internos se infieren como `str | int | bool` y props como
+`rx.image(alt=str)` fallan con:
+
+    TypeError: Invalid var passed for prop Img.alt, expected type
+    <class 'str'>, got value ... of type str | int | bool.
+
+Con `Post` (TypedDict), Reflex sabe que `post["titulo"]` es `str` y
+lo acepta sin problemas.
+
 Nota técnica: imágenes
 ----------------------
 - `post["imagen"]` es el nombre del archivo en `assets/blog/`.
@@ -32,6 +48,8 @@ Nota técnica: imágenes
 - El zoom de la imagen se logra con el selector `& img` en el hover
   de la card.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
@@ -49,6 +67,7 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     RADIO_PASTILLA,
 )
 
+from .datos_blog import Post
 from .estado_blog import EstadoBlog
 from .helpers_categoria import badge_categoria, fondo_categoria
 from .meta_info import meta_info_post
@@ -69,21 +88,61 @@ RUTA_IMAGENES_BLOG = "/blog/"
 
 
 # ======================================================================
+# Badge "DESTACADO"
+# ======================================================================
+
+
+def _badge_destacado() -> rx.Component:
+    """
+    Badge "DESTACADO" flotante sobre la imagen (esquina superior
+    izquierda).
+
+    Usa `rgba(0,0,0,0.5)` con blur intencional para garantizar
+    legibilidad sobre cualquier imagen de fondo, independientemente
+    del color_mode del usuario.
+    """
+    return rx.flex(
+        rx.icon("star", size=12, color="white", fill="white"),
+        rx.text(
+            "DESTACADO",
+            font_size="0.625rem",
+            font_weight="800",
+            color="white",
+            letter_spacing="0.15em",
+        ),
+        align="center",
+        gap="0.375rem",
+        padding="0.375rem 0.75rem",
+        border_radius=RADIO_PASTILLA,
+        background="rgba(0,0,0,0.5)",
+        backdrop_filter="blur(8px)",
+        border="1px solid rgba(255,255,255,0.2)",
+        position="absolute",
+        top="1rem",
+        left="1rem",
+        z_index="3",
+        width="fit-content",
+    )
+
+
+# ======================================================================
 # Bloque de imagen destacada
 # ======================================================================
 
 
-def _imagen_destacada(post) -> rx.Component:
+def _imagen_destacada(post: Post) -> rx.Component:
     """
     Bloque de imagen grande del post destacado con:
     - Fallback de color de categoría como fondo.
     - Imagen real encima.
-    - Overlay sutil con gradiente del color de la categoría.
+    - Overlay sutil con gradiente.
     - Badge "DESTACADO" en la esquina superior izquierda.
     - Zoom sutil en hover (vía `& img` en la card padre).
 
     Args:
-        post: Dict del post destacado (Var reactivo).
+        post: `Post` destacado. Tipado estricto (no `dict`) para que
+            Reflex sepa que `post["titulo"]` y `post["imagen"]` son
+            `str` y los acepte en `rx.image`.
     """
     return rx.box(
         # ==========================================================
@@ -132,30 +191,9 @@ def _imagen_destacada(post) -> rx.Component:
             pointer_events="none",
         ),
         # ==========================================================
-        # CAPA 4: Badge "DESTACADO" en la esquina superior izquierda
+        # CAPA 4: Badge "DESTACADO"
         # ==========================================================
-        rx.flex(
-            rx.icon("star", size=12, color="white", fill="white"),
-            rx.text(
-                "DESTACADO",
-                font_size="0.625rem",
-                font_weight="800",
-                color="white",
-                letter_spacing="0.15em",
-            ),
-            align="center",
-            gap="0.375rem",
-            padding="0.375rem 0.75rem",
-            border_radius=RADIO_PASTILLA,
-            background="rgba(0,0,0,0.5)",
-            backdrop_filter="blur(8px)",
-            border="1px solid rgba(255,255,255,0.2)",
-            position="absolute",
-            top="1rem",
-            left="1rem",
-            z_index="3",
-            width="fit-content",
-        ),
+        _badge_destacado(),
         # ==========================================================
         # Contenedor principal
         # ==========================================================
@@ -166,6 +204,40 @@ def _imagen_destacada(post) -> rx.Component:
         overflow="hidden",
         background=COLOR_FONDO_SUAVE,
         flex_shrink="0",
+    )
+
+
+# ======================================================================
+# CTA "Leer artículo"
+# ======================================================================
+
+
+def _cta_leer_articulo() -> rx.Component:
+    """
+    Botón CTA "Leer artículo" con flecha animada en hover.
+
+    La flecha lleva la clase `arrow-destacado`, que la card padre
+    anima al recibir hover (`& .arrow-destacado`).
+    """
+    return rx.flex(
+        rx.text("Leer artículo", as_="span", font_weight="700"),
+        rx.icon(
+            "arrow-right",
+            size=16,
+            class_name="arrow-destacado",
+            transition="transform 0.2s",
+        ),
+        align="center",
+        gap="0.5rem",
+        background=COLOR_ACENTO_SOLIDO,
+        color="white",
+        padding="0.75rem 1.5rem",
+        border_radius=RADIO_PASTILLA,
+        font_size="0.875rem",
+        margin_top="0.5rem",
+        box_shadow=f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}",
+        transition="all 0.2s",
+        cursor="pointer",
     )
 
 
@@ -227,26 +299,7 @@ def post_destacado() -> rx.Component:
                 # --- Meta info ---
                 meta_info_post(post),
                 # --- CTA "Leer artículo" ---
-                rx.flex(
-                    rx.text("Leer artículo", as_="span", font_weight="700"),
-                    rx.icon(
-                        "arrow-right",
-                        size=16,
-                        class_name="arrow-destacado",
-                        transition="transform 0.2s",
-                    ),
-                    align="center",
-                    gap="0.5rem",
-                    background=COLOR_ACENTO_SOLIDO,
-                    color="white",
-                    padding="0.75rem 1.5rem",
-                    border_radius=RADIO_PASTILLA,
-                    font_size="0.875rem",
-                    margin_top="0.5rem",
-                    box_shadow=f"0 10px 25px -5px {COLOR_ACENTO_SOLIDO}",
-                    transition="all 0.2s",
-                    cursor="pointer",
-                ),
+                _cta_leer_articulo(),
                 align="start",
                 spacing="3",
                 flex="1",

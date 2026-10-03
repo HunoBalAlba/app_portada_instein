@@ -1,16 +1,29 @@
+# app_portada_instein/componentes/explorador/panel_flotante.py
+
 """
-Panel flotante de selección de carrera.
+Panel flotante de selección de carrera — estilo Neon adaptativo.
 
 Estructura:
-- Botón flotante (esquina inferior derecha) con accent institucional.
-- Overlay oscuro cuando el panel está abierto.
+- Botón flotante (esquina inferior derecha) con azul marino neon.
+- Overlay adaptativo cuando el panel está abierto.
 - Panel desplegable con grid de cards de carrera.
 
 UX:
 - Cada carrera se muestra como una card con imagen destacada arriba
   (patrón `rx.card` + `rx.inset`) y datos debajo.
-- Hover de card: borde + sombra del color de la carrera.
+- Hover de card: borde azul marino + glow azul.
 - Click en card: navega al detalle `/carrera/{id}`.
+
+Sistema de color (UX)
+---------------------
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
+
+- Fondo del panel: `FONDO_HOME_CARD_ADAPTATIVO`.
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_SUAVE`.
+- Overlay: negro translúcido con blur (más suave en light).
+- Fondo tintado del icono: `FONDO_AZUL_SUAVE`.
 """
 
 import reflex as rx
@@ -18,36 +31,29 @@ import reflex as rx
 from app_portada_instein.componentes.primitivos import contenedor_clicable
 from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_ACENTO_SOLIDO,
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_FONDO_SUAVE,
-    COLOR_TEXTO_CUERPO,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_CARD_ADAPTATIVO,
     RADIO_EXTRA_GRANDE,
-    RADIO_GRANDE,
     RADIO_MEDIO,
     RADIO_PASTILLA,
     RADIO_PEQUENO,
+    SOMBRA_HOVER_CARD_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
-# ✅ Imports relativos (NO absolutos desde el propio paquete)
 from .constantes import TAMANO_BOTON_FLOTANTE
-from .helpers import color_carrera
 
 
 # ======================================================================
 # Constantes locales
 # ======================================================================
 
-# Ancho de las cards de carrera en el panel.
 ANCHO_CARD_PANEL = "100%"
-
-# Altura del banner (imagen) de la card.
 ALTURA_BANNER_CARD = "5rem"
-
-# Ancho máximo del panel flotante.
 ANCHO_MAXIMO_PANEL = ["24rem", "28rem"]
 
 
@@ -64,13 +70,13 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
     - Inset top: imagen horizontal (banner).
     - Contenido: nombre + duración + icono.
 
-    UX:
-    - La imagen usa `imagen_banner` de la carrera.
-    - El borde y hover usan el color de marca de la carrera.
-    - Click navega al detalle.
-    """
-    color = color_carrera(carrera)
+    ✅ ADAPTATIVO: fondo, textos y borde cambian según el modo.
 
+    Estilo Neon:
+    - Fondo con glassmorphism adaptativo.
+    - Overlay con gradiente azul marino sobre la imagen.
+    - Hover: borde azul + glow azul.
+    """
     return rx.link(
         rx.card(
             # ==========================================================
@@ -85,22 +91,16 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
                         height="100%",
                         object_fit="cover",
                     ),
-                    # Overlay sutil con el color de la carrera
+                    # Overlay con gradiente azul marino
                     rx.box(
                         position="absolute",
                         top="0",
                         left="0",
                         right="0",
                         bottom="0",
-                        background=rx.color_mode_cond(
-                            light=(
-                                f"linear-gradient(180deg, transparent 40%, "
-                                f"{carrera['color_principal']}33 100%)"
-                            ),
-                            dark=(
-                                f"linear-gradient(180deg, transparent 40%, "
-                                f"{carrera['color_principal_dark']}33 100%)"
-                            ),
+                        background=(
+                            f"linear-gradient(180deg, transparent 40%, "
+                            f"rgba(59, 91, 219, 0.3) 100%)"
                         ),
                         pointer_events="none",
                     ),
@@ -117,21 +117,18 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
             # Contenido: nombre + duración
             # ==========================================================
             rx.flex(
-                # Icono de la carrera con fondo suave
+                # Icono de la carrera con fondo tintado
                 rx.flex(
                     rx.icon(
                         carrera["icono"],
                         size=16,
-                        color=color,
+                        color=AZUL_MARINO_NEON,
                     ),
                     height="2rem",
                     width="2rem",
                     border_radius=RADIO_MEDIO,
-                    background=rx.color_mode_cond(
-                        light=f"{carrera['color_principal']}15",
-                        dark=f"{carrera['color_principal_dark']}20",
-                    ),
-                    border=f"1px solid {color}",
+                    background=FONDO_AZUL_SUAVE,       # ✅ adaptativo
+                    border=f"1px solid {BORDE_HOME_AZUL}",
                     align="center",
                     justify="center",
                     flex_shrink="0",
@@ -142,13 +139,13 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
                         carrera["nombre_corto"],
                         font_size="0.875rem",
                         font_weight="700",
-                        color=COLOR_TEXTO_PRINCIPAL,
+                        color=TEXTO_HOME_PRINCIPAL,    # ✅ adaptativo
                         line_height="1.2",
                     ),
                     rx.text(
                         carrera["duracion"],
                         font_size="0.6875rem",
-                        color=COLOR_TEXTO_SECUNDARIO,
+                        color=TEXTO_HOME_MAS_SUAVE,    # ✅ adaptativo
                         line_height="1.2",
                     ),
                     spacing="0",
@@ -156,11 +153,11 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
                     flex="1",
                     min_width="0",
                 ),
-                # Icono de flecha (indica navegación)
+                # Icono de flecha
                 rx.icon(
                     "arrow-up-right",
                     size=14,
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    color=TEXTO_HOME_MAS_SUAVE,        # ✅ adaptativo
                     flex_shrink="0",
                 ),
                 align="center",
@@ -173,11 +170,14 @@ def _card_carrera_panel(carrera: dict) -> rx.Component:
             width=ANCHO_CARD_PANEL,
             padding="0.5rem",
             cursor="pointer",
+            background=FONDO_HOME_CARD_ADAPTATIVO,      # ✅ adaptativo
+            backdrop_filter="blur(12px)",
+            border=f"1px solid {BORDE_HOME_SUAVE}",     # ✅ adaptativo
             transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
             _hover={
                 "transform": "translateY(-2px)",
-                "border_color": color,
-                "box_shadow": f"0 10px 25px -8px {color}",
+                "border_color": BORDE_HOME_AZUL,
+                "box_shadow": SOMBRA_HOVER_CARD_HOME,   # ✅ adaptativo
             },
         ),
         href=f"/carrera/{carrera['id']}",
@@ -197,10 +197,12 @@ def _panel_flotante_selector() -> rx.Component:
 
     Cada card del panel NAVEGA al detalle de la carrera.
 
-    UX:
-    - Botón con accent institucional (crimson) — es un control global.
-    - Overlay oscuro cuando está abierto (con cierre al hacer click).
-    - Panel desplegable con grid responsive de cards de carrera.
+    ✅ ADAPTATIVO: overlay, panel, textos y bordes cambian según el modo.
+
+    Estilo Neon:
+    - Botón flotante con azul marino neon + glow.
+    - Overlay adaptativo (más suave en light).
+    - Panel con glassmorphism y borde azul marino.
     """
     return rx.box(
         # ==========================================================
@@ -214,8 +216,11 @@ def _panel_flotante_selector() -> rx.Component:
                 left="0",
                 right="0",
                 bottom="0",
-                background="rgba(0,0,0,0.5)",
-                backdrop_filter="blur(4px)",
+                background=rx.color_mode_cond(       # ✅ adaptativo
+                    light="rgba(15, 23, 42, 0.4)",   # más suave en light
+                    dark="rgba(0, 0, 0, 0.6)",
+                ),
+                backdrop_filter="blur(8px)",
                 z_index="998",
                 on_click=EstadoInstitucional.cerrar_panel_flotante,
                 cursor="pointer",
@@ -223,7 +228,7 @@ def _panel_flotante_selector() -> rx.Component:
             rx.fragment(),
         ),
         # ==========================================================
-        # Botón flotante (accent institucional)
+        # Botón flotante (azul marino neon + glow)
         # ==========================================================
         contenedor_clicable(
             rx.icon("layout-grid", size=22, color="white"),
@@ -233,17 +238,20 @@ def _panel_flotante_selector() -> rx.Component:
             height=TAMANO_BOTON_FLOTANTE,
             width=TAMANO_BOTON_FLOTANTE,
             border_radius=RADIO_PASTILLA,
-            background=COLOR_ACENTO_SOLIDO,
+            background=AZUL_MARINO_NEON,
             display="flex",
             align_items="center",
             justify_content="center",
-            box_shadow=f"0 20px 40px -10px {COLOR_ACENTO_SOLIDO}",
+            box_shadow=rx.color_mode_cond(           # ✅ adaptativo
+                light=f"0 0 30px {AZUL_MARINO_NEON}50",
+                dark=f"0 0 40px {AZUL_MARINO_NEON}80",
+            ),
             z_index="999",
             transition="all 0.3s",
             al_hacer_clic=EstadoInstitucional.alternar_panel_flotante,
             _hover={
                 "transform": "scale(1.1)",
-                "box_shadow": f"0 25px 50px -12px {COLOR_ACENTO_SOLIDO}",
+                "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
             },
         ),
         # ==========================================================
@@ -262,13 +270,14 @@ def _panel_flotante_selector() -> rx.Component:
                                 "Elige una carrera",
                                 font_size="1rem",
                                 font_weight="800",
-                                color=COLOR_TEXTO_PRINCIPAL,
+                                color=TEXTO_HOME_PRINCIPAL,   # ✅ adaptativo
                                 line_height="1.2",
+                                letter_spacing="-0.02em",
                             ),
                             rx.text(
                                 "Accede rápido al detalle",
                                 font_size="0.75rem",
-                                color=COLOR_TEXTO_SECUNDARIO,
+                                color=TEXTO_HOME_MAS_SUAVE,   # ✅ adaptativo
                                 line_height="1.3",
                             ),
                             spacing="0",
@@ -278,14 +287,19 @@ def _panel_flotante_selector() -> rx.Component:
                             rx.icon(
                                 "x",
                                 size=18,
-                                color=COLOR_TEXTO_SECUNDARIO,
+                                color=TEXTO_HOME_MAS_SUAVE,   # ✅ adaptativo
                             ),
                             padding="0.5rem",
                             border_radius=RADIO_PEQUENO,
-                            al_hacer_clic=EstadoInstitucional.cerrar_panel_flotante,
+                            al_hacer_clic=(
+                                EstadoInstitucional.cerrar_panel_flotante
+                            ),
                             _hover={
-                                "background": COLOR_FONDO_SUAVE,
-                                "color": COLOR_TEXTO_PRINCIPAL,
+                                "background": rx.color_mode_cond(   # ✅ adaptativo
+                                    light="rgba(15, 23, 42, 0.05)",
+                                    dark="rgba(255, 255, 255, 0.05)",
+                                ),
+                                "color": TEXTO_HOME_PRINCIPAL,       # ✅ adaptativo
                             },
                         ),
                         align="center",
@@ -324,9 +338,18 @@ def _panel_flotante_selector() -> rx.Component:
                 overflow_y="auto",
                 padding="1.5rem",
                 border_radius=RADIO_EXTRA_GRANDE,
-                background=COLOR_FONDO_CARTA,
-                border=f"1px solid {COLOR_BORDE_SUAVE}",
-                box_shadow="0 30px 60px -15px rgba(0,0,0,0.4)",
+                background=FONDO_HOME_CARD_ADAPTATIVO,       # ✅ adaptativo
+                border=f"1px solid {BORDE_HOME_AZUL}",       # ✅ adaptativo
+                box_shadow=rx.color_mode_cond(                # ✅ adaptativo
+                    light=(
+                        f"0 30px 60px -15px rgba(0, 0, 0, 0.15), "
+                        f"0 0 40px -10px {AZUL_MARINO_NEON}20"
+                    ),
+                    dark=(
+                        f"0 30px 60px -15px rgba(0, 0, 0, 0.5), "
+                        f"0 0 40px -10px {AZUL_MARINO_NEON}40"
+                    ),
+                ),
                 z_index="999",
                 animation="deslizar_desde_abajo 0.3s ease-out",
             ),

@@ -1,5 +1,7 @@
+# app_portada_instein/componentes/estadisticas_instituto.py
+
 """
-Bloque de estadísticas del instituto con gráfico de barras horizontales.
+Estadísticas del instituto — estilo Neon adaptativo (dark/light).
 
 Estructura:
 1. Grid de 4 tarjetas con cifras clave:
@@ -12,28 +14,39 @@ Estructura:
 
 Sistema de color (UX)
 ---------------------
-- Cards: cada stat tiene su color de marca (azul, cyan, violeta, verde),
-  coherente con el catálogo de carreras y la sección "¿Por qué INSTEIN?".
-- Gráfico: usa el accent institucional (crimson) para todas las barras
-  y mantiene la coherencia con el resto del sitio.
-- Textos: neutros (`gray-11`/`gray-12`) para máxima legibilidad.
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
 
-Layout responsive
------------------
-- Desktop (lg): 4 columnas de cards + gráfico full width.
-- Tablet (md):  2 columnas de cards + gráfico full width.
-- Móvil (sm):   1 columna de cards + gráfico full width.
+- Cards: `FONDO_HOME_CARD_ADAPTATIVO` (light: blanco translúcido,
+  dark: azul oscuro translúcido).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_SUAVE` / `BORDE_HOME_AZUL`.
+- Fondo tintado del icono: `FONDO_AZUL_SUAVE`.
+- Sombra hover: `SOMBRA_HOVER_CARD_HOME`.
+- Gráfico: barras en azul marino neon, ejes en `TEXTO_HOME_MAS_SUAVE`,
+  grid adaptativo.
+
+Estilo Neon:
+- Tipografía masiva (valores `2.5rem` con `font_weight="900"`).
+- Glassmorphism (blur + bordes translúcidos).
+- Hover con glow azul marino.
+- Padding generoso.
 """
 
 import reflex as rx
 
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_BORDE_SUAVE,
-    COLOR_FONDO_CARTA,
-    COLOR_TEXTO_PRINCIPAL,
-    COLOR_TEXTO_SECUNDARIO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    BORDE_HOME_SUAVE,
+    FONDO_AZUL_SUAVE,
+    FONDO_HOME_CARD_ADAPTATIVO,
     RADIO_EXTRA_GRANDE,
     RADIO_GRANDE,
+    SOMBRA_HOVER_CARD_HOME,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
 )
 
 
@@ -42,13 +55,16 @@ from app_portada_instein.infraestructura.constantes_visuales import (
 # ======================================================================
 
 # Padding del bloque de estadísticas.
-PADDING_BLOQUE = "2rem 1.5rem"
+PADDING_BLOQUE = "4rem 1.5rem"
 
 # Tamaño del icono en cada stat card.
 TAMANO_ICONO_STAT = 20
 
 # Altura del gráfico de barras (px).
-ALTURA_GRAFICO = 260
+ALTURA_GRAFICO = 280
+
+# Ancho máximo del contenido.
+ANCHO_MAXIMO_CONTENIDO = "72rem"
 
 
 # ======================================================================
@@ -61,32 +77,24 @@ ESTADISTICAS: list[dict] = [
         "sufijo": "",
         "etiqueta": "Carreras Técnicas",
         "icono": "graduation-cap",
-        "color_light": "#2563eb",
-        "color_dark": "#60a5fa",
     },
     {
         "valor": "15",
         "sufijo": "+",
         "etiqueta": "Años de Experiencia",
         "icono": "award",
-        "color_light": "#0891b2",
-        "color_dark": "#22d3ee",
     },
     {
         "valor": "500",
         "sufijo": "+",
         "etiqueta": "Egresados",
         "icono": "users",
-        "color_light": "#7c3aed",
-        "color_dark": "#a78bfa",
     },
     {
         "valor": "100",
         "sufijo": "%",
         "etiqueta": "Empleabilidad",
         "icono": "trending-up",
-        "color_light": "#16a34a",
-        "color_dark": "#4ade80",
     },
 ]
 
@@ -105,66 +113,44 @@ DATA_EGRESADOS: list[dict] = [
 
 
 # ======================================================================
-# Helpers internos
-# ======================================================================
-
-
-def _color_adaptativo(stat: dict) -> rx.Var:
-    """Devuelve el color del stat adaptado al color_mode."""
-    return rx.color_mode_cond(
-        light=stat["color_light"],
-        dark=stat["color_dark"],
-    )
-
-
-def _fondo_tintado(stat: dict) -> rx.Var:
-    """Devuelve el fondo tintado del color de marca (para el icono)."""
-    return rx.color_mode_cond(
-        light=f"{stat['color_light']}15",
-        dark=f"{stat['color_dark']}20",
-    )
-
-
-# ======================================================================
 # Tarjeta individual de estadística
 # ======================================================================
 
 
 def _tarjeta_estadistica(stat: dict) -> rx.Component:
     """
-    Tarjeta individual de estadística.
+    Tarjeta individual de estadística — estilo Neon adaptativo.
 
     UX:
-    - Icono pequeño arriba con fondo tintado del color de marca.
-    - Número grande con sufijo (+/%/etc) en el mismo bloque.
-    - Etiqueta descriptiva en gris.
-    - Hover: elevación + borde del color de marca.
+    - Icono pequeño arriba con fondo tintado azul marino + borde azul.
+    - Número grande con sufijo (+/%) en azul marino neon.
+    - Etiqueta descriptiva adaptativa.
+    - Hover: elevación + borde azul + glow azul marino (adaptativo).
+
+    ✅ ADAPTATIVO: fondo, texto, borde y sombra cambian según el modo.
 
     Args:
-        stat: Dict con `valor`, `sufijo`, `etiqueta`, `icono`,
-            `color_light`, `color_dark`.
+        stat: Dict con `valor`, `sufijo`, `etiqueta`, `icono`.
     """
-    color_stat = _color_adaptativo(stat)
-
     return rx.box(
         rx.vstack(
             # ==========================================================
-            # Icono con fondo tintado
+            # Icono con fondo tintado azul marino
             # ==========================================================
             rx.flex(
                 rx.icon(
                     stat["icono"],
                     size=TAMANO_ICONO_STAT,
-                    color=color_stat,
+                    color=AZUL_MARINO_NEON,
                 ),
-                height="2.5rem",
-                width="2.5rem",
+                height="2.75rem",
+                width="2.75rem",
                 border_radius=RADIO_GRANDE,
-                background=_fondo_tintado(stat),
-                border=f"1px solid {color_stat}",
+                background=FONDO_AZUL_SUAVE,      # ✅ adaptativo
+                border=f"1px solid {BORDE_HOME_AZUL}",
                 align="center",
                 justify="center",
-                margin_bottom="0.75rem",
+                margin_bottom="1rem",
             ),
             # ==========================================================
             # Valor grande + sufijo
@@ -172,17 +158,17 @@ def _tarjeta_estadistica(stat: dict) -> rx.Component:
             rx.flex(
                 rx.text(
                     stat["valor"],
-                    font_size="2.25rem",
+                    font_size="2.5rem",
                     font_weight="900",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,   # ✅ adaptativo
                     line_height="1",
-                    letter_spacing="-0.03em",
+                    letter_spacing="-0.04em",
                 ),
                 rx.text(
                     stat["sufijo"],
                     font_size="1.5rem",
                     font_weight="800",
-                    color=color_stat,
+                    color=AZUL_MARINO_NEON,       # mismo en ambos modos
                     line_height="1",
                     margin_left="0.125rem",
                 ),
@@ -196,25 +182,27 @@ def _tarjeta_estadistica(stat: dict) -> rx.Component:
                 stat["etiqueta"],
                 font_size="0.75rem",
                 font_weight="600",
-                letter_spacing="0.05em",
+                letter_spacing="0.1em",
                 text_transform="uppercase",
-                color=COLOR_TEXTO_SECUNDARIO,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
+                margin_top="0.5rem",
             ),
             align="start",
             spacing="1",
             width="100%",
         ),
-        padding="1.5rem",
+        padding="1.75rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
-        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {BORDE_HOME_SUAVE}",              # ✅ adaptativo
+        background=FONDO_HOME_CARD_ADAPTATIVO,                # ✅ adaptativo
+        backdrop_filter="blur(12px)",
         width="100%",
         height="100%",
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         _hover={
             "transform": "translateY(-4px)",
-            "border_color": color_stat,
-            "box_shadow": f"0 20px 40px -10px {color_stat}",
+            "border_color": BORDE_HOME_AZUL,
+            "box_shadow": SOMBRA_HOVER_CARD_HOME,             # ✅ adaptativo
         },
     )
 
@@ -232,10 +220,13 @@ def _grafico_egresados() -> rx.Component:
     horizontales. El eje X es numérico (cantidad de egresados) y el
     eje Y es categórico (nombre de la carrera).
 
+    ✅ ADAPTATIVO: fondo, ejes y grid cambian según el color_mode.
+
     UX:
     - Encabezado con título y subtítulo.
-    - Barras en accent institucional (crimson) con hover tooltip.
+    - Barras en azul marino neon con hover tooltip.
     - Grid cartesiano horizontal sutil para guiar la lectura.
+    - Fondo adaptativo con glassmorphism y borde azul en hover.
     """
     return rx.box(
         # ==========================================================
@@ -245,15 +236,15 @@ def _grafico_egresados() -> rx.Component:
             rx.vstack(
                 rx.text(
                     "Egresados por carrera",
-                    font_size="0.9375rem",
+                    font_size="1rem",
                     font_weight="700",
-                    color=COLOR_TEXTO_PRINCIPAL,
+                    color=TEXTO_HOME_PRINCIPAL,   # ✅ adaptativo
                     line_height="1.2",
                 ),
                 rx.text(
                     "Distribución histórica de egresados en las 5 carreras.",
-                    font_size="0.75rem",
-                    color=COLOR_TEXTO_SECUNDARIO,
+                    font_size="0.8125rem",
+                    color=TEXTO_HOME_MAS_SUAVE,   # ✅ adaptativo
                     line_height="1.4",
                 ),
                 spacing="0",
@@ -261,7 +252,7 @@ def _grafico_egresados() -> rx.Component:
             ),
             align="start",
             width="100%",
-            margin_bottom="1rem",
+            margin_bottom="1.5rem",
         ),
         # ==========================================================
         # Gráfico Recharts
@@ -269,21 +260,28 @@ def _grafico_egresados() -> rx.Component:
         rx.recharts.bar_chart(
             rx.recharts.bar(
                 data_key="egresados",
-                stroke=rx.color("accent", 8),
-                fill=rx.color("accent", 9),
+                stroke=AZUL_MARINO_NEON,
+                fill=AZUL_MARINO_NEON,
                 radius=[0, 6, 6, 0],  # esquinas redondeadas a la derecha
             ),
-            rx.recharts.x_axis(type_="number"),
+            rx.recharts.x_axis(
+                type_="number",
+                stroke=TEXTO_HOME_MAS_SUAVE,   # ✅ adaptativo
+            ),
             rx.recharts.y_axis(
                 data_key="carrera",
                 type_="category",
                 width=110,
+                stroke=TEXTO_HOME_MAS_SUAVE,   # ✅ adaptativo
             ),
             rx.recharts.cartesian_grid(
                 stroke_dasharray="3 3",
                 horizontal=False,
                 vertical=True,
-                stroke=rx.color("gray", 5),
+                stroke=rx.color_mode_cond(     # ✅ adaptativo
+                    light="rgba(15, 23, 42, 0.08)",
+                    dark="rgba(255, 255, 255, 0.06)",
+                ),
             ),
             rx.recharts.tooltip(),
             data=DATA_EGRESADOS,
@@ -295,11 +293,16 @@ def _grafico_egresados() -> rx.Component:
         # ==========================================================
         # Estilos del contenedor
         # ==========================================================
-        padding="1.5rem",
+        padding="2rem",
         border_radius=RADIO_EXTRA_GRANDE,
-        border=f"1px solid {COLOR_BORDE_SUAVE}",
-        background=COLOR_FONDO_CARTA,
+        border=f"1px solid {BORDE_HOME_SUAVE}",              # ✅ adaptativo
+        background=FONDO_HOME_CARD_ADAPTATIVO,                # ✅ adaptativo
+        backdrop_filter="blur(12px)",
         width="100%",
+        transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        _hover={
+            "border_color": BORDE_HOME_AZUL,
+        },
     )
 
 
@@ -310,7 +313,7 @@ def _grafico_egresados() -> rx.Component:
 
 def seccion_estadisticas() -> rx.Component:
     """
-    Bloque completo con las estadísticas del instituto:
+    Bloque completo con las estadísticas del instituto.
 
     1. Grid de 4 tarjetas con cifras clave.
     2. Gráfico de barras horizontales con egresados por carrera.
@@ -319,6 +322,10 @@ def seccion_estadisticas() -> rx.Component:
     - Desktop: 4 columnas de stats + gráfico full width.
     - Tablet:  2 columnas de stats + gráfico full width.
     - Móvil:   1 columna de stats + gráfico full width.
+
+    Contenido centrado con `max_width="72rem"` (como el resto del home).
+
+    ✅ ADAPTATIVO: todo el bloque respeta el color_mode del usuario.
     """
     return rx.box(
         rx.vstack(
@@ -339,6 +346,8 @@ def seccion_estadisticas() -> rx.Component:
             width="100%",
         ),
         width="100%",
+        max_width=ANCHO_MAXIMO_CONTENIDO,
+        margin="0 auto",
         padding=PADDING_BLOQUE,
     )
 

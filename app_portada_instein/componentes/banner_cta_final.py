@@ -1,24 +1,30 @@
+# app_portada_instein/componentes/banner_cta_final.py
+
 """
-Banner CTA final con fondo oscuro, trust indicators y micro-interacciones.
+Banner CTA final — estilo Neon adaptativo (dark/light).
+
+Banner de llamada a la acción con trust indicators y micro-interacciones.
+Cierra visualmente el home con impacto.
 
 Sistema de color (UX)
 ---------------------
-Este banner mantiene un fondo OSCURO INTENCIONAL (independiente del
-color_mode) para crear un cierre visual impactante. Los colores se
-eligen para garantizar contraste sobre el fondo oscuro:
+✅ ADAPTATIVO: todos los colores respetan el color_mode del usuario.
 
-- Fondo: gradiente oscuro (`#0f172a` → `#1e293b`) intencional.
-- Orbes radiales: accent crimson + azul en esquinas opuestas.
-- Texto: blanco puro / blanco con opacidad.
-- Botón primario: fondo blanco, texto oscuro (máximo contraste).
-- Botón secundario: transparente con borde blanco.
+- Fondo: gradiente adaptativo (`GRADIENTE_HOME_BANNER`).
+    - Dark: `#0a0f1f` → `#0f172a` → `#1a237e` (azul marino profundo).
+    - Light: `#eef2ff` → `#c7d2fe` → `#a5b4fc` (azul claro).
+- Acentos: azul marino neon (`AZUL_MARINO_NEON` = `#3b5bdb`) en AMBOS modos.
+- Texto: `TEXTO_HOME_PRINCIPAL` / `TEXTO_HOME_SUAVE` / `TEXTO_HOME_MAS_SUAVE`.
+- Bordes: `BORDE_HOME_AZUL` / `BORDE_HOME_MEDIO`.
+- Avatares: tintes azul marino con borde adaptativo.
+- Punto verde: `#22c55e` (semántico, mismo en ambos modos).
 
 Mejoras UX aplicadas
 --------------------
 1. Badge "Inscripciones abiertas" con punto verde pulsante.
 2. Microcopy específico con urgencia y escasez ("30 cupos").
 3. Trust indicators: avatares + rating + egresados.
-4. Trust badges inline: título nacional + empleabilidad.
+4. Trust badges inline: título nacional + empleabilidad + convenios.
 5. Dos orbes radiales decorativos (arriba-izq + abajo-der).
 6. Botón primario con flecha animada en hover.
 7. Botón secundario con WhatsApp (canal directo).
@@ -28,9 +34,15 @@ import reflex as rx
 
 from app_portada_instein.componentes.primitivos import enlace_navegacion
 from app_portada_instein.infraestructura.constantes_visuales import (
-    COLOR_ACENTO_SOLIDO,
+    AZUL_MARINO_NEON,
+    BORDE_HOME_AZUL,
+    BORDE_HOME_MEDIO,
+    GRADIENTE_HOME_BANNER,
     RADIO_EXTRA_GRANDE,
     RADIO_PASTILLA,
+    TEXTO_HOME_MAS_SUAVE,
+    TEXTO_HOME_PRINCIPAL,
+    TEXTO_HOME_SUAVE,
     WHATSAPP_URL,
 )
 
@@ -45,13 +57,17 @@ ANCHO_MAXIMO_BANNER = "72rem"
 # Padding del contenido.
 PADDING_CONTENIDO = "4.5rem 1.5rem"
 
-# Colores del gradiente oscuro (intencionales, NO dependen del modo).
-GRADIENTE_OSCURO = "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"
+# Color del punto verde semántico (activo) — mismo en ambos modos.
+COLOR_VERDE_ACTIVO = "#22c55e"
 
-# Colores del texto sobre el fondo oscuro.
-COLOR_TEXTO_BLANCO = "#ffffff"
-COLOR_TEXTO_BLANCO_SUAVE = "rgba(255,255,255,0.8)"
-COLOR_TEXTO_BLANCO_MAS_SUAVE = "rgba(255,255,255,0.6)"
+# Colores base para los avatares apilados (tintes azul marino).
+COLORES_AVATARES = [
+    "#3b5bdb",   # azul marino neon
+    "#1a237e",   # azul marino profundo
+    "#283593",   # azul índigo
+    "#3949ab",   # azul indigo claro
+    "#5c6bc0",   # azul medio
+]
 
 
 # ======================================================================
@@ -64,13 +80,16 @@ def _orbes_radiales_fondo() -> rx.Component:
     Dos orbes radiales decorativos en esquinas opuestas.
 
     Añade profundidad visual con:
-    - Orbe accent (crimson) en la esquina superior izquierda.
-    - Orbe azul cian en la esquina inferior derecha.
+    - Orbe azul marino neon en la esquina superior izquierda.
+    - Orbe azul profundo en la esquina inferior derecha.
 
-    Ambos con opacidad baja y `pointer-events: none`.
+    ✅ ADAPTATIVO: en light mode los orbes tienen menos opacidad para
+    no saturar el fondo claro.
+
+    Ambos con `pointer-events: none`.
     """
     return rx.fragment(
-        # Orbe accent superior izquierda
+        # Orbe azul marino neon - superior izquierda
         rx.box(
             position="absolute",
             top="-20%",
@@ -79,14 +98,17 @@ def _orbes_radiales_fondo() -> rx.Component:
             height="80%",
             background=(
                 f"radial-gradient(circle at center, "
-                f"{COLOR_ACENTO_SOLIDO} 0%, transparent 60%)"
+                f"{AZUL_MARINO_NEON} 0%, transparent 60%)"
             ),
-            opacity="0.25",
-            filter="blur(40px)",
+            opacity=rx.color_mode_cond(     # ✅ adaptativo
+                light="0.15",   # sutil en light
+                dark="0.30",
+            ),
+            filter="blur(60px)",
             z_index="0",
             pointer_events="none",
         ),
-        # Orbe azul inferior derecha
+        # Orbe azul profundo - inferior derecha
         rx.box(
             position="absolute",
             bottom="-20%",
@@ -95,10 +117,13 @@ def _orbes_radiales_fondo() -> rx.Component:
             height="80%",
             background=(
                 "radial-gradient(circle at center, "
-                "#3b82f6 0%, transparent 60%)"
+                "#1a237e 0%, transparent 60%)"
             ),
-            opacity="0.20",
-            filter="blur(40px)",
+            opacity=rx.color_mode_cond(     # ✅ adaptativo
+                light="0.12",
+                dark="0.25",
+            ),
+            filter="blur(60px)",
             z_index="0",
             pointer_events="none",
         ),
@@ -115,29 +140,36 @@ def _badge_inscripciones_abiertas() -> rx.Component:
     Badge con punto verde pulsante + texto "INSCRIPCIONES ABIERTAS".
 
     Coherente con el hero principal. Añade sensación de "activo ahora".
+
+    ✅ ADAPTATIVO: el fondo azul y el texto cambian según el modo.
     """
     return rx.flex(
         rx.box(
             height="0.5rem",
             width="0.5rem",
             border_radius=RADIO_PASTILLA,
-            background="#22c55e",
+            background=COLOR_VERDE_ACTIVO,
+            box_shadow=f"0 0 12px {COLOR_VERDE_ACTIVO}",
             animation="pulse 2s ease-in-out infinite",
+            flex_shrink="0",
         ),
         rx.text(
             "INSCRIPCIONES ABIERTAS · GESTIÓN 2026",
             font_size="0.75rem",
             font_weight="700",
-            color=COLOR_TEXTO_BLANCO,
-            letter_spacing="0.05em",
+            color=TEXTO_HOME_PRINCIPAL,      # ✅ adaptativo
+            letter_spacing="0.1em",
         ),
         align="center",
         gap="0.5rem",
         padding="0.5rem 1rem",
         border_radius=RADIO_PASTILLA,
-        background="rgba(255,255,255,0.08)",
-        border="1px solid rgba(255,255,255,0.15)",
-        backdrop_filter="blur(8px)",
+        background=rx.color_mode_cond(       # ✅ adaptativo
+            light="rgba(59, 91, 219, 0.08)",
+            dark="rgba(59, 91, 219, 0.1)",
+        ),
+        border=f"1px solid {BORDE_HOME_AZUL}",   # ✅ adaptativo
+        backdrop_filter="blur(12px)",
         width="fit-content",
         margin_bottom="1.5rem",
     )
@@ -150,17 +182,19 @@ def _badge_inscripciones_abiertas() -> rx.Component:
 
 def _avatars_apilados() -> rx.Component:
     """
-    Fila de 5 avatares apilados con degradado.
+    Fila de 5 avatares apilados con tintes azul marino.
 
     Simula "caras reales" que refuerzan la prueba social. Cada avatar
-    tiene un color distinto y está solapado con el anterior.
+    tiene un tinte azul distinto y está solapado con el anterior.
+
+    ✅ ADAPTATIVO: el borde del avatar cambia según el modo (para que
+    contraste con el fondo del banner).
     """
-    colores = ["#2563eb", "#0891b2", "#7c3aed", "#ea580c", "#16a34a"]
+    letras = ["A", "M", "J", "L", "S"]
 
     return rx.flex(
         *[
             rx.box(
-                # Inicial del "estudiante" decorativa
                 rx.text(
                     letra,
                     font_size="0.6875rem",
@@ -172,16 +206,17 @@ def _avatars_apilados() -> rx.Component:
                 width="1.75rem",
                 border_radius=RADIO_PASTILLA,
                 background=color,
-                border="2px solid #0f172a",
+                border=rx.color_mode_cond(      # ✅ adaptativo
+                    light="2px solid #eef2ff",   # borde claro en light
+                    dark="2px solid #0a0f1f",    # borde oscuro en dark
+                ),
                 display="flex",
                 align_items="center",
                 justify_content="center",
                 margin_left="-0.5rem" if i > 0 else "0",
                 flex_shrink="0",
             )
-            for i, (letra, color) in enumerate(
-                zip(["A", "M", "J", "L", "S"], colores)
-            )
+            for i, (letra, color) in enumerate(zip(letras, COLORES_AVATARES))
         ],
         align="center",
     )
@@ -192,7 +227,9 @@ def _trust_indicators() -> rx.Component:
     Bloque de trust indicators: avatares + rating + egresados.
 
     Estructura:
-    [👤👤👤👤👤]  ⭐ 4.9/5  ·  500+ egresados
+        [👤👤👤👤👤]  ⭐ 4.9/5  ·  500+ egresados
+
+    ✅ ADAPTATIVO: todos los textos cambian según el modo.
     """
     return rx.flex(
         # --- Avatares apilados ---
@@ -204,18 +241,18 @@ def _trust_indicators() -> rx.Component:
                 "4.9/5",
                 font_size="0.8125rem",
                 font_weight="700",
-                color=COLOR_TEXTO_BLANCO,
+                color=TEXTO_HOME_PRINCIPAL,      # ✅ adaptativo
             ),
             rx.text(
                 "·",
                 font_size="0.8125rem",
-                color=COLOR_TEXTO_BLANCO_MAS_SUAVE,
+                color=TEXTO_HOME_MAS_SUAVE,      # ✅ adaptativo
             ),
             rx.text(
                 "500+ egresados",
                 font_size="0.8125rem",
                 font_weight="600",
-                color=COLOR_TEXTO_BLANCO_SUAVE,
+                color=TEXTO_HOME_SUAVE,          # ✅ adaptativo
             ),
             align="center",
             gap="0.375rem",
@@ -234,22 +271,30 @@ def _trust_indicators() -> rx.Component:
 
 
 def _trust_badge_inline(icono: str, texto: str) -> rx.Component:
-    """Badge inline con icono + texto para credenciales."""
+    """
+    Badge inline con icono + texto para credenciales.
+
+    ✅ ADAPTATIVO: fondo, borde y texto cambian según el modo.
+    """
     return rx.flex(
-        rx.icon(icono, size=12, color=COLOR_TEXTO_BLANCO),
+        rx.icon(icono, size=12, color=AZUL_MARINO_NEON),
         rx.text(
             texto,
             font_size="0.6875rem",
             font_weight="600",
-            color=COLOR_TEXTO_BLANCO_SUAVE,
+            color=TEXTO_HOME_SUAVE,          # ✅ adaptativo
             white_space="nowrap",
         ),
         align="center",
         gap="0.375rem",
         padding="0.375rem 0.75rem",
         border_radius=RADIO_PASTILLA,
-        background="rgba(255,255,255,0.06)",
-        border="1px solid rgba(255,255,255,0.1)",
+        background=rx.color_mode_cond(       # ✅ adaptativo
+            light="rgba(59, 91, 219, 0.06)",
+            dark="rgba(59, 91, 219, 0.08)",
+        ),
+        border=f"1px solid {BORDE_HOME_MEDIO}",   # ✅ adaptativo
+        backdrop_filter="blur(12px)",
     )
 
 
@@ -273,9 +318,15 @@ def _trust_badges_row() -> rx.Component:
 
 def _boton_primario_banner() -> rx.Component:
     """
-    Botón primario "Ver Carreras" con fondo blanco + flecha animada.
+    Botón primario "Ver Carreras" con azul marino neon + flecha animada.
 
-    La flecha `→` se mueve a la derecha al hacer hover.
+    Estilo Neon:
+    - Fondo azul marino neon sólido.
+    - Glow intenso (`box_shadow`).
+    - Flecha `→` que se desplaza a la derecha en hover.
+    - Elevación sutil al pasar el mouse.
+
+    ✅ El azul marino es el mismo en ambos modos (color de marca).
     """
     return enlace_navegacion(
         "/carreras",
@@ -289,16 +340,17 @@ def _boton_primario_banner() -> rx.Component:
         display="flex",
         align_items="center",
         gap="0.5rem",
-        background=COLOR_TEXTO_BLANCO,
-        color="#0f172a",
+        background=AZUL_MARINO_NEON,
+        color="white",
         padding="1rem 2rem",
         border_radius=RADIO_PASTILLA,
         font_size="1rem",
-        box_shadow="0 10px 25px -5px rgba(255, 255, 255, 0.3)",
+        font_weight="700",
+        box_shadow=f"0 0 40px {AZUL_MARINO_NEON}80",
         transition="all 0.2s",
         _hover={
             "transform": "translateY(-2px)",
-            "box_shadow": "0 15px 35px -5px rgba(255, 255, 255, 0.4)",
+            "box_shadow": f"0 0 60px {AZUL_MARINO_NEON}cc",
             "& .arrow-icon": {"transform": "translateX(4px)"},
         },
     )
@@ -306,9 +358,14 @@ def _boton_primario_banner() -> rx.Component:
 
 def _boton_secundario_banner() -> rx.Component:
     """
-    Botón secundario "WhatsApp" con borde blanco.
+    Botón secundario "WhatsApp" con glassmorphism.
 
-    Redirige directamente a WhatsApp (canal directo de conversión).
+    Estilo Neon:
+    - Fondo translúcido con blur adaptativo.
+    - Borde adaptativo.
+    - Hover: borde azul marino + fondo más opaco.
+
+    ✅ ADAPTATIVO: el fondo y borde cambian según el modo.
     """
     return enlace_navegacion(
         WHATSAPP_URL,
@@ -317,16 +374,23 @@ def _boton_secundario_banner() -> rx.Component:
         display="flex",
         align_items="center",
         gap="0.5rem",
-        background="transparent",
-        color=COLOR_TEXTO_BLANCO,
+        background=rx.color_mode_cond(       # ✅ adaptativo
+            light="rgba(255, 255, 255, 0.6)",
+            dark="rgba(255, 255, 255, 0.05)",
+        ),
+        color=TEXTO_HOME_PRINCIPAL,          # ✅ adaptativo
         padding="1rem 2rem",
         border_radius=RADIO_PASTILLA,
         font_size="1rem",
-        border="1px solid rgba(255, 255, 255, 0.3)",
+        border=f"1px solid {BORDE_HOME_MEDIO}",   # ✅ adaptativo
+        backdrop_filter="blur(12px)",
         transition="all 0.2s",
         _hover={
-            "background": "rgba(255, 255, 255, 0.1)",
-            "border_color": "rgba(255, 255, 255, 0.5)",
+            "background": rx.color_mode_cond(
+                light="rgba(255, 255, 255, 0.9)",
+                dark="rgba(255, 255, 255, 0.1)",
+            ),
+            "border_color": BORDE_HOME_AZUL,
         },
     )
 
@@ -338,16 +402,21 @@ def _boton_secundario_banner() -> rx.Component:
 
 def banner_cta_final() -> rx.Component:
     """
-    Banner de llamada a la acción final con fondo oscuro degradado.
+    Banner de llamada a la acción final — estilo Neon adaptativo.
 
     Estructura:
-    - 2 orbes radiales decorativos en esquinas opuestas.
+    - 2 orbes radiales decorativos (azul marino) en esquinas opuestas.
     - Badge "Inscripciones abiertas" con punto pulsante.
-    - Título grande + subtítulo con urgencia.
+    - Título grande + subtítulo con urgencia ("30 cupos").
     - Trust indicators (avatares + rating + egresados).
     - Trust badges inline (título nacional, empleabilidad, convenios).
     - Par de botones (primario con flecha + secundario WhatsApp).
-    - Fondo con gradiente oscuro intencional.
+    - Fondo con gradiente adaptativo.
+
+    ✅ ADAPTATIVO: todo el banner respeta el color_mode del usuario.
+
+    El banner tiene `border_radius` grande y está centrado con
+    `max_width="72rem"`, coherente con el resto del home.
     """
     return rx.box(
         # ==========================================================
@@ -364,10 +433,11 @@ def banner_cta_final() -> rx.Component:
             rx.heading(
                 "¿Listo para empezar?",
                 size="8",
-                color=COLOR_TEXTO_BLANCO,
+                color=TEXTO_HOME_PRINCIPAL,      # ✅ adaptativo
                 text_align="center",
                 font_weight="900",
                 letter_spacing="-0.03em",
+                line_height="1.1",
             ),
             # --- Subtítulo con urgencia ---
             rx.text(
@@ -375,12 +445,12 @@ def banner_cta_final() -> rx.Component:
                 rx.text.span(
                     "30 cupos",
                     font_weight="800",
-                    color=COLOR_TEXTO_BLANCO,
+                    color=TEXTO_HOME_PRINCIPAL,   # ✅ adaptativo
                 ),
                 " disponibles por carrera. "
                 "Asegura tu lugar en la Gestión 2026 hoy mismo.",
                 font_size="1.125rem",
-                color=COLOR_TEXTO_BLANCO_SUAVE,
+                color=TEXTO_HOME_SUAVE,           # ✅ adaptativo
                 text_align="center",
                 max_width="42rem",
                 margin_top="0.5rem",
@@ -410,8 +480,9 @@ def banner_cta_final() -> rx.Component:
         # ==========================================================
         position="relative",
         width="100%",
-        background=GRADIENTE_OSCURO,
+        background=GRADIENTE_HOME_BANNER,        # ✅ adaptativo
         border_radius=RADIO_EXTRA_GRANDE,
+        border=f"1px solid {BORDE_HOME_AZUL}",   # ✅ adaptativo
         overflow="hidden",
         max_width=ANCHO_MAXIMO_BANNER,
         margin="0 auto",

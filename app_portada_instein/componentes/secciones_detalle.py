@@ -8,7 +8,8 @@ Componentes:
 
 Sistema de color (UX)
 ---------------------
-El COLOR DE MARCA de la carrera se usa de forma SUTIL para decorar:
+El ACENTO VISUAL es ÚNICO para todas las carreras: azul marino neon
+(`AZUL_MARINO_NEON` = `#3b5bdb`). Se usa de forma SUTIL para decorar:
 
 - Bordes de tarjetas.
 - Borde superior grueso de cada tarjeta.
@@ -16,15 +17,23 @@ El COLOR DE MARCA de la carrera se usa de forma SUTIL para decorar:
 - Barra de progreso del plan de estudios.
 
 TODOS los textos e iconos son NEUTROS (`gray-11`/`gray-12`) para
-garantizar legibilidad y elegancia visual. El accent global (`crimson`)
-se reserva para elementos institucionales (navbar, links generales).
+garantizar legibilidad y elegancia visual.
 
 Sistema de diseño:
 - Padding consistente: `PADDING_TARJETA`.
 - Border-radius: `RADIO_TARJETA`.
 - Hover states: borde tintado + sombra elevada.
 - Tipografía: Inter (heredada del tema).
+
+Nota técnica: acento único
+--------------------------
+El proyecto unificó el acento visual bajo un único azul marino. Los
+helpers `color_carrera_adaptativo` y `color_suave_carrera_adaptativo`
+fueron eliminados de `constantes_visuales.py`. Este módulo usa
+directamente las constantes `AZUL_MARINO_NEON` y `FONDO_AZUL_SUAVE`.
 """
+
+from __future__ import annotations
 
 import reflex as rx
 
@@ -37,8 +46,14 @@ from app_portada_instein.componentes.vinetas import (
     vineta_campo_laboral,
     vineta_perfil_profesional,
 )
-from app_portada_instein.dominio.estado_institucional import EstadoInstitucional
+from app_portada_instein.dominio.estado_institucional import (
+    EstadoInstitucional,
+    OpcionAnio,
+)
 from app_portada_instein.infraestructura.constantes_visuales import (
+    # Acento único del proyecto
+    AZUL_MARINO_NEON,
+    FONDO_AZUL_SUAVE,
     # Colores neutros
     COLOR_ACENTO_FONDO,
     COLOR_ACENTO_TEXTO,
@@ -55,9 +70,6 @@ from app_portada_instein.infraestructura.constantes_visuales import (
     RADIO_MEDIO,
     RADIO_PASTILLA,
     SOMBRA_SUAVE,
-    # Helpers de color adaptativo
-    color_carrera_adaptativo,
-    color_suave_carrera_adaptativo,
 )
 
 
@@ -70,28 +82,38 @@ RADIO_TARJETA = "1.25rem"
 
 
 # ======================================================================
-# Helpers de color (delegan en los helpers adaptativos)
+# Helpers de color (delegan en constantes del acento único)
 # ======================================================================
 
 
-def _color_principal() -> rx.Var:
+def _color_principal() -> str:
     """
-    Color principal de la carrera actual, adaptado al color_mode.
+    Color principal del acento global (azul marino neon).
+
+    ✅ REFACTORIZADO: ya no depende de la carrera seleccionada. El
+    proyecto unificó el acento visual bajo un único azul marino.
 
     Usado SOLO para bordes, hover y barra de progreso. NO se usa en
     textos ni iconos para mantener legibilidad neutra.
+
+    Returns:
+        Hex del azul marino neon (`#3b5bdb`).
     """
-    return color_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
+    return AZUL_MARINO_NEON
 
 
 def _color_suave() -> rx.Var:
     """
-    Color suave de la carrera actual, adaptado al color_mode.
+    Color suave de fondo del acento global.
 
-    Disponible para futuros usos (fondos muy sutiles), pero NO se usa
-    en esta versión para mantener la UI limpia.
+    ✅ REFACTORIZADO: usa `FONDO_AZUL_SUAVE` (adaptativo light/dark)
+    en lugar del color suave de la carrera.
+
+    Returns:
+        Var reactiva con el fondo azul marino translúcido, adaptado
+        al color_mode actual.
     """
-    return color_suave_carrera_adaptativo(EstadoInstitucional.carrera_seleccionada)
+    return FONDO_AZUL_SUAVE
 
 
 # ======================================================================
@@ -104,27 +126,28 @@ def _estilo_tarjeta_detalle() -> dict:
     Estilo común para tarjetas de detalle.
 
     Fondo neutro (`gray-1`), borde neutro sutil (`gray-6`), borde
-    superior grueso del color de la carrera, y hover con borde y
-    sombra del color de la carrera.
+    superior grueso del acento azul marino, y hover con borde y
+    sombra tintados con el acento.
 
     El borde superior tintado es el toque distintivo que comunica
-    "esta tarjeta pertenece a esta carrera" sin recargar los textos.
+    "esta tarjeta pertenece al detalle de la carrera" sin recargar
+    los textos.
     """
-    color_carrera = _color_principal()
+    acento = _color_principal()
 
     return {
         "padding": PADDING_TARJETA,
         "border_radius": RADIO_TARJETA,
         "background": COLOR_FONDO_CARTA,
         "border": f"1px solid {COLOR_BORDE_SUAVE}",
-        "border_top": f"4px solid {color_carrera}",
+        "border_top": f"4px solid {acento}",
         "box_shadow": SOMBRA_SUAVE,
         "width": "100%",
         "height": "100%",
         "transition": "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
         "_hover": {
-            "border_color": color_carrera,
-            "box_shadow": f"0 12px 32px -8px {color_carrera}",
+            "border_color": acento,
+            "box_shadow": f"0 12px 32px -8px {acento}",
             "transform": "translateY(-2px)",
         },
     }
@@ -134,25 +157,24 @@ def _badge_contador(texto: str) -> rx.Component:
     """
     Badge pill con el contador de items de una sección.
 
-    Textos e iconos NEUTROS. El borde usa el color de la carrera
-    como acento sutil.
+    Textos e iconos NEUTROS. El borde usa el acento como acento sutil.
     """
-    color_carrera = _color_principal()
+    acento = _color_principal()
 
     return rx.box(
         rx.text(
             texto,
             font_size="0.6875rem",
             font_weight="700",
-            color=COLOR_TEXTO_SECUNDARIO,   # ← neutro (antes color_carrera)
+            color=COLOR_TEXTO_SECUNDARIO,
             text_transform="uppercase",
             letter_spacing="0.05em",
             white_space="nowrap",
         ),
         padding="0.25rem 0.625rem",
         border_radius=RADIO_PASTILLA,
-        background=COLOR_FONDO_SUAVE,       # ← fondo neutro (antes color_suave)
-        border=f"1px solid {color_carrera}", # ← borde con color de carrera
+        background=COLOR_FONDO_SUAVE,
+        border=f"1px solid {acento}",
         flex_shrink="0",
     )
 
@@ -180,11 +202,11 @@ def _encabezado_seccion(
     hijos = [
         # --- Icono en caja neutra ---
         rx.box(
-            rx.icon(icono, size=20, color=COLOR_TEXTO_SECUNDARIO),  # ← neutro
+            rx.icon(icono, size=20, color=COLOR_TEXTO_SECUNDARIO),
             padding="0.625rem",
             border_radius=RADIO_MEDIO,
-            background=COLOR_FONDO_SUAVE,                            # ← neutro
-            border=f"1px solid {COLOR_BORDE_SUAVE}",                 # ← neutro
+            background=COLOR_FONDO_SUAVE,
+            border=f"1px solid {COLOR_BORDE_SUAVE}",
             display="flex",
             align_items="center",
             justify_content="center",
@@ -271,12 +293,15 @@ class EstadoPlanEstudios(rx.State):
 # ======================================================================
 
 
-def _cta_contacto(color_principal: rx.Var) -> rx.Component:
+def _cta_contacto(color_principal: str) -> rx.Component:
     """
     Bloque CTA de contacto con icono, texto y flecha.
 
-    El fondo usa el COLOR DE LA CARRERA (decorativo, texto blanco
+    El fondo usa el COLOR DEL ACENTO (decorativo, texto blanco
     garantiza contraste WCAG en ambos modos).
+
+    Args:
+        color_principal: Color hex del fondo del CTA.
     """
     return enlace_navegacion(
         "/contacto",
@@ -377,10 +402,8 @@ def seccion_informacion() -> rx.Component:
 
     1. Descripción larga con encabezado.
     2. Grid de 4 datos rápidos (duración, título, modalidad, cupos).
-    3. CTA grande de contacto con conversión destacada.
+    3. CTA grande de contacto (comentado por defecto).
     """
-    color_principal = _color_principal()
-
     return rx.vstack(
         # =============================================================
         # 1. Descripción
@@ -407,19 +430,19 @@ def seccion_informacion() -> rx.Component:
                 icono="clock",
                 titulo="Duración",
                 valor=EstadoInstitucional.carrera_seleccionada["duracion"],
-                color_icono=COLOR_TEXTO_SECUNDARIO,   # ← neutro
+                color_icono=COLOR_TEXTO_SECUNDARIO,
             ),
             tarjeta_informacion_pequena(
                 icono="award",
                 titulo="Título",
                 valor="Técnico Superior",
-                color_icono=COLOR_TEXTO_SECUNDARIO,   # ← neutro
+                color_icono=COLOR_TEXTO_SECUNDARIO,
             ),
             tarjeta_informacion_pequena(
                 icono="building-2",
                 titulo="Modalidad",
                 valor=EstadoInstitucional.carrera_seleccionada["modalidad"],
-                color_icono=COLOR_TEXTO_SECUNDARIO,   # ← neutro
+                color_icono=COLOR_TEXTO_SECUNDARIO,
             ),
             tarjeta_informacion_pequena(
                 icono="users",
@@ -428,16 +451,16 @@ def seccion_informacion() -> rx.Component:
                     f"{EstadoInstitucional.carrera_seleccionada['cupos_disponibles']} "
                     f"disponibles"
                 ),
-                color_icono=COLOR_TEXTO_SECUNDARIO,   # ← neutro
+                color_icono=COLOR_TEXTO_SECUNDARIO,
             ),
             columns=rx.breakpoints(initial="1", sm="2", lg="4"),
             spacing="3",
             width="100%",
         ),
         # =============================================================
-        # 3. CTA de contacto (fondo con color de carrera, texto blanco)
+        # 3. CTA de contacto (descomentar si se quiere mostrar)
         # =============================================================
-        # _cta_contacto(color_principal),
+        # _cta_contacto(_color_principal()),
         spacing="4",
         width="100%",
     )
@@ -448,8 +471,13 @@ def seccion_informacion() -> rx.Component:
 # ======================================================================
 
 
-def _opcion_anio_segmento(opcion: dict) -> rx.Component:
-    """Renderiza un item del selector segmentado de años."""
+def _opcion_anio_segmento(opcion: OpcionAnio) -> rx.Component:
+    """
+    Renderiza un item del selector segmentado de años.
+
+    Args:
+        opcion: Dict con `etiqueta` y `valor` del año.
+    """
     return rx.segmented_control.item(
         opcion["etiqueta"],
         value=opcion["valor"],
@@ -460,10 +488,12 @@ def _barra_progreso_plan() -> rx.Component:
     """
     Barra de progreso del plan de estudios.
 
-    Usa el COLOR DE LA CARRERA para el relleno de la barra. Es el
-    único elemento decorativo con color dentro del header del año.
+    Usa el COLOR DEL ACENTO para el relleno de la barra. Es el único
+    elemento decorativo con color dentro del header del año.
     """
-    total_anios = EstadoInstitucional.carrera_seleccionada["plan_estudios"].length()
+    total_anios = (
+        EstadoInstitucional.carrera_seleccionada["plan_estudios"].length()
+    )
     anio_actual = EstadoPlanEstudios.indice_anio_actual + 1
 
     # Cálculo del porcentaje como Var compatible.
@@ -472,19 +502,22 @@ def _barra_progreso_plan() -> rx.Component:
     return rx.flex(
         # --- Texto de progreso ---
         rx.text(
-            "Año " + anio_actual.to_string() + " de " + total_anios.to_string(),
+            "Año "
+            + anio_actual.to_string()
+            + " de "
+            + total_anios.to_string(),
             font_size="0.75rem",
             font_weight="700",
             color=COLOR_TEXTO_SECUNDARIO,
             flex_shrink="0",
             white_space="nowrap",
         ),
-        # --- Barra con color de carrera ---
+        # --- Barra con acento ---
         rx.box(
             rx.box(
                 width=porcentaje,
                 height="100%",
-                background=_color_principal(),  # ← color de carrera
+                background=_color_principal(),
                 border_radius=RADIO_PASTILLA,
                 transition="width 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
             ),
@@ -541,7 +574,7 @@ def seccion_plan_estudios() -> rx.Component:
         # 2. Contenido del año seleccionado
         # =============================================================
         rx.box(
-            # --- Barra de progreso (con color de carrera) ---
+            # --- Barra de progreso (con acento) ---
             _barra_progreso_plan(),
             # --- Header del año (icono NEUTRO) ---
             rx.flex(
@@ -577,12 +610,12 @@ def seccion_plan_estudios() -> rx.Component:
                     rx.icon(
                         "graduation-cap",
                         size=36,
-                        color=COLOR_TEXTO_SECUNDARIO,  # ← neutro (antes color_carrera)
+                        color=COLOR_TEXTO_SECUNDARIO,
                     ),
                     padding="0.875rem",
                     border_radius=RADIO_GRANDE,
-                    background=COLOR_FONDO_SUAVE,       # ← neutro (antes color_suave)
-                    border=f"1px solid {COLOR_BORDE_SUAVE}",  # ← neutro
+                    background=COLOR_FONDO_SUAVE,
+                    border=f"1px solid {COLOR_BORDE_SUAVE}",
                     display="flex",
                     align_items="center",
                     justify_content="center",
